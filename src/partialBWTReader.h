@@ -12,9 +12,9 @@
 using std::vector;
 using std::string;
 
-// Class that handles sequential reading of the BWT from disk to RAM
+// Class that handles sequential reading of the (partial) BWT from disk to RAM
 
-class BWTReader
+class partialBWTReader
 {
  private:
   std::ifstream _fileIn; // File from which we want to read;
@@ -25,19 +25,19 @@ class BWTReader
   vector< NucleoCounter > _occurrencesBeforeStart; // PI vectore, as defined
 
  public:
-  BWTReader ( string inputFilename );
-  BWTReader ( string inputFilename, BWTPosition start, vector< NucleoCounter >& occurrencesBeforeStart );
-  ~BWTReader ( );
+  partialBWTReader ( string inputFilename );
+  partialBWTReader ( string inputFilename, BWTPosition start, vector< NucleoCounter >& occurrencesBeforeStart );
+  ~partialBWTReader ( );
   vector< NucleoCounter >& get_Pi( );
   BWTPosition get_position ( );
   bool move_to ( BWTPosition & p );
 
  private:
   // no need of copy ctor nor assignment operator
-  BWTReader ( ) { }
-  BWTReader ( const BWTReader& other ) 
+  partialBWTReader ( ) { }
+  partialBWTReader ( const partialBWTReader& other ) 
     { }
-  BWTReader& operator= ( const BWTReader& other )
+  partialBWTReader& operator= ( const partialBWTReader& other )
     { return *this; }
 };
 

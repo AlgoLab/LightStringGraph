@@ -1,6 +1,6 @@
-#include <BWTReader.h>
+#include <partialBWTReader.h>
 
-BWTReader::BWTReader ( string inputFilename )
+partialBWTReader::partialBWTReader ( string inputFilename )
 {
   _fileIn.open( inputFilename.c_str() );
   if( _fileIn.fail() )
@@ -21,7 +21,7 @@ BWTReader::BWTReader ( string inputFilename )
   _bufferlen = _fileIn.gcount();
 }
 
-BWTReader::BWTReader ( string inputFilename, BWTPosition start, 
+partialBWTReader::partialBWTReader ( string inputFilename, BWTPosition start, 
 		       vector< NucleoCounter >& occurrencesBeforeStart )
 {
   _fileIn.open( inputFilename.c_str() );
@@ -45,28 +45,28 @@ BWTReader::BWTReader ( string inputFilename, BWTPosition start,
   _bufferlen = _fileIn.gcount();
 }
 
-vector< NucleoCounter >& BWTReader::get_Pi ( )
+vector< NucleoCounter >& partialBWTReader::get_Pi ( )
 {
   return _occurrencesBeforeStart;
 }
 
-BWTReader::~BWTReader ( )
+partialBWTReader::~partialBWTReader ( )
 {
   delete[] _buffer;
   _fileIn.close();
 }
 
-// BWTPosition BWTReader::get_position ( )
+// BWTPosition partialBWTReader::get_position ( )
 // {
 //   return _position;
 // }
 
-BWTPosition BWTReader::get_position ( )
+BWTPosition partialBWTReader::get_position ( )
 {
   return (_start + _position);
 }
 
-bool BWTReader::move_to ( BWTPosition & p )
+bool partialBWTReader::move_to ( BWTPosition & p )
 {
   while ( ( _bufferlen != 0 ) && 
 	  ( _position < _bufferlen ) && 
