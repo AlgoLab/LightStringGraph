@@ -6,6 +6,7 @@
 #include <joined_q_interval.h>
 #include <util.h>
 #include <types.h>
+#include <BWTReader.h>
 
 using std::vector;
 using std::string;
@@ -29,4 +30,17 @@ int main ( int argc, char** argv )
       BWTInputFilenames.push_back( partialBWTname.str() );
       revBWTInputFilenames.push_back( partialrevBWTname.str( ) );
     }
+
+  BWTReader br( BWTInputFilenames[ 0 ] );
+  BWTPosition x = 2045;
+  br.move_to ( x );
+  vector< NucleoCounter > c = br.get_Pi();
+  for (vector< NucleoCounter >::iterator it = c.begin(); 
+       it != c.end();
+       ++it)
+    {
+      std::cout << *it << std::endl;
+    }
+
+  return 0;
 }

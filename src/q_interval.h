@@ -2,10 +2,10 @@
  * Basic class that represent Q-Intervals.
  */
 
-#include <types.h>
-
 #ifndef Q_INTERVAL_H
 #define Q_INTERVAL_H
+
+#include <types.h>
 
 class QInterval
 {

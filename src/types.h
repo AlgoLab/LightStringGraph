@@ -1,8 +1,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define BUFFERSIZE 1024
+
 // Position on a BWT
 typedef unsigned int BWTPosition; // 2^32 positions = ~ 4 billion bases
+
+// Nucleotide counter
+typedef unsigned int NucleoCounter;
 
 // Possible Nucleotide in sequence
 enum Nucleotide

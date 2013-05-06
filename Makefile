@@ -27,7 +27,9 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 read_input_OBJS= \
 	${OBJ_DIR}/main.o \
 	${OBJ_DIR}/q_interval.o \
-	${OBJ_DIR}/joined_q_interval.o
+	${OBJ_DIR}/joined_q_interval.o\
+	${OBJ_DIR}/util.o\
+	${OBJ_DIR}/BWTReader.o
 
 ${BIN_DIR}/build_RNA_seq_graph: ${read_input_OBJS}
 	@echo 'Linking $@'; \
