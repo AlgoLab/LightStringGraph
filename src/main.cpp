@@ -22,7 +22,7 @@ int main ( int argc, char** argv )
   string gsaInputFileName ( argv[ 3 ] );
 
   // create filename for partial bwt
-  for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
+  for ( int i( 0 ); i < ALPHABET_SIZE-1; ++i )
     {
       std::ostringstream partialBWTname, partialrevBWTname;
       partialBWTname << argv[ 1 ] << i;
@@ -30,17 +30,18 @@ int main ( int argc, char** argv )
       BWTInputFilenames.push_back( partialBWTname.str() );
       revBWTInputFilenames.push_back( partialrevBWTname.str( ) );
     }
-
-  BWTReader br( BWTInputFilenames[ 0 ] );
-  BWTPosition x = 2045;
-  br.move_to ( x );
-  vector< NucleoCounter > c = br.get_Pi();
-  for (vector< NucleoCounter >::iterator it = c.begin(); 
-       it != c.end();
+  
+  BWTReader br( BWTInputFilenames );
+  vector< NucleoCounter >* c = br.get_C();
+  int nucl =0;
+  for (vector< NucleoCounter >::iterator it = c->begin(); 
+       it != c->end();
        ++it)
     {
-      std::cout << *it << std::endl;
+      std::cout << ntoc( (Nucleotide) nucl++ ) << ": "  << *it 
+		<< " -> " << *it * sizeof(char) <<  std::endl;
     }
+  delete c;
 
   return 0;
 }

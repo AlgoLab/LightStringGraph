@@ -1,5 +1,5 @@
-#ifndef BWTREADER_H
-#define BWTREADER_H
+#ifndef PARTIAL_BWTREADER_H
+#define PARTIAL_BWTREADER_H
 
 #include <vector>
 #include <string>
@@ -16,7 +16,7 @@ using std::string;
 
 class partialBWTReader
 {
- private:
+private:
   std::ifstream _fileIn; // File from which we want to read;
   char* _buffer;
   BWTPosition _start; // Absolute (buffer) start position in BWT
@@ -24,21 +24,21 @@ class partialBWTReader
   BWTPosition _bufferlen; // Number of char read in the last "read" call
   vector< NucleoCounter > _occurrencesBeforeStart; // PI vectore, as defined
 
- public:
+public:
   partialBWTReader ( string inputFilename );
   partialBWTReader ( string inputFilename, BWTPosition start, vector< NucleoCounter >& occurrencesBeforeStart );
   ~partialBWTReader ( );
   vector< NucleoCounter >& get_Pi( );
-  BWTPosition get_position ( );
+  BWTPosition get_position ( ) const;
   bool move_to ( BWTPosition & p );
 
- private:
+private:
   // no need of copy ctor nor assignment operator
   partialBWTReader ( ) { }
   partialBWTReader ( const partialBWTReader& other ) 
-    { }
+  { }
   partialBWTReader& operator= ( const partialBWTReader& other )
-    { return *this; }
+  { return *this; }
 };
 
 #endif

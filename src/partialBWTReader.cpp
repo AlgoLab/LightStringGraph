@@ -22,7 +22,7 @@ partialBWTReader::partialBWTReader ( string inputFilename )
 }
 
 partialBWTReader::partialBWTReader ( string inputFilename, BWTPosition start, 
-		       vector< NucleoCounter >& occurrencesBeforeStart )
+				     vector< NucleoCounter >& occurrencesBeforeStart )
 {
   _fileIn.open( inputFilename.c_str() );
   if( _fileIn.fail() )
@@ -33,7 +33,7 @@ partialBWTReader::partialBWTReader ( string inputFilename, BWTPosition start,
     }
 
   _start = start;
-  _position = _start;
+  _position = 0;
   
   for( vector< NucleoCounter >::iterator it = occurrencesBeforeStart.begin();
        it != occurrencesBeforeStart.end();
@@ -61,19 +61,25 @@ partialBWTReader::~partialBWTReader ( )
 //   return _position;
 // }
 
-BWTPosition partialBWTReader::get_position ( )
+BWTPosition partialBWTReader::get_position ( ) const
 {
   return (_start + _position);
 }
 
 bool partialBWTReader::move_to ( BWTPosition & p )
 {
-  while ( ( _bufferlen != 0 ) && 
-	  ( _position < _bufferlen ) && 
+  while ( ( _bufferlen != 0 ) &&
+	  ( _position < _bufferlen ) &&
 	  ( _start + _position < p ) )
     {
       char currentChar = _buffer[ _position ];
       ++_occurrencesBeforeStart[ cton( currentChar ) ];
+#ifdef DEBUG_VERBOSE
+      if( cton( currentChar ) == NOT_IN_ALPHABET )
+	std::cout << "Found NOT_IN_ALPHABET in position : " << _start + _position << std::endl;
+      else if (currentChar == 'N')
+	std::cout << "Found N in position : " << _start + _position << std::endl;
+#endif
       ++_position;
       if ( _position == _bufferlen )
 	{
@@ -83,10 +89,10 @@ bool partialBWTReader::move_to ( BWTPosition & p )
 	  _bufferlen = _fileIn.gcount();
 	}
     }
-  if( _start + _position  != p )
+  if( _start + _position  < p )
     {
-#ifdef DEBUG
-      std::cerr << "ERROR: asked to reach position " << p << " but reached position " 
+#ifndef NDEBUG
+      std::cerr << "ERROR: asked to reach position " << p << " but reached position "
 		<< _start + _position << " instead." << std::endl;
 #endif
       return false;
