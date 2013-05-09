@@ -4,7 +4,7 @@ SRC_DIR:=src
 OBJ_DIR:=obj
 BIN_DIR:=bin
 
-CFLAGS+= -g -Wall -O2 -DNDEBUG -march=native -Wno-deprecated
+CFLAGS+= -g -Wall -O2 -DDEBUG -march=native -Wno-deprecated
 CXXFLAGS+= ${CFLAGS}
 LIBS = #-l boost_graph
 
@@ -28,6 +28,7 @@ read_input_OBJS= \
 	${OBJ_DIR}/main.o \
 	${OBJ_DIR}/q_interval.o \
 	${OBJ_DIR}/joined_q_interval.o \
+	${OBJ_DIR}/joined_q_int_manager.o \
 	${OBJ_DIR}/util.o \
 	${OBJ_DIR}/partialBWTReader.o \
 	${OBJ_DIR}/BWTReader.o

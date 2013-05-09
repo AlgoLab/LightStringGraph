@@ -1,8 +1,3 @@
-/*
- * JoinedQInterval represent a couple of q-intervals q1-int on BWT and
- * q2-int on BWT such that q2 = rev(q1).
- */
-
 #ifndef JOINED_Q_INTERVAL_H
 #define JOINED_Q_INTERVAL_H
 
@@ -10,6 +5,11 @@
 #include <vector>
 
 using std::vector;
+
+/***********************************************************************/
+/* JoinedQInterval represent a couple of q-intervals q1-int on BWT and */
+/* q2-int on BWT such that q2 = rev(q1).			       */
+/***********************************************************************/
 
 class JoinedQInterval
 {
@@ -27,13 +27,13 @@ class JoinedQInterval
   const QInterval & get_interval ( ) const;
   const QInterval & get_reverse_interval ( ) const;
 
-  // Backward extend this interval with n and return the new
-  // JoinedQInterval for nQ and rev(Q)n
-  JoinedQInterval* backward_extend_with ( Nucleotide n ) const;
+  /* // Backward extend this interval with n and return the new */
+  /* // JoinedQInterval for nQ and rev(Q)n */
+  /* JoinedQInterval* backward_extend_with ( Nucleotide n ) const; */
 
-  // Backward extend this interval with every possibile nucleotide in
-  // the alphabet
-  vector< JoinedQInterval* >* backward_extend_all ( ) const;
+  /* // Backward extend this interval with every possibile nucleotide in */
+  /* // the alphabet */
+  /* vector< JoinedQInterval* >* backward_extend_all ( ) const; */
 
  private:
   // no need of copy ctor nor assignment operator

@@ -27,9 +27,9 @@ char ntoc ( Nucleotide base )
     case BASE_Z:
       ret = 'Z';
       break;
-    case NOT_IN_ALPHABET:
-      ret = '-';
-      break;
+    // case NOT_IN_ALPHABET:
+    //   ret = '-';
+    //   break;
     default:
       std::cerr << "ERROR: Can't convert Nucleotide int( "
 		<< base << " ) to char. Aborting." << std::endl;
@@ -71,7 +71,7 @@ Nucleotide cton ( char c )
 		<< " int( " << int(c) << " ). Which base is it?"
 		<< std::endl;
 #endif
-      ret = NOT_IN_ALPHABET;
+      //      ret = NOT_IN_ALPHABET;
       break;
       // std::cerr << "ERROR: Can't convert char( '" << c 
       // 		<< "' ) to Nucleotide. Aborting." << std::endl;

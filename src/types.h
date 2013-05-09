@@ -19,7 +19,7 @@ enum Nucleotide
     BASE_T,
     BASE_N,
     BASE_Z,
-    NOT_IN_ALPHABET,
+    //    NOT_IN_ALPHABET,
     ALPHABET_SIZE
   };
 

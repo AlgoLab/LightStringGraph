@@ -10,7 +10,7 @@ BWTReader::BWTReader ( vector< string >& filenamesIN )
       std::exit( -1 );
     }
 
-#ifdef DEBUG_VERBOSE
+#ifdef DEBUG
   std::cout << "Initializing BWTReader on files :" << std::endl;
   for ( vector< string >::iterator it = _filenamesIN.begin();
 	it != _filenamesIN.end();
@@ -41,23 +41,14 @@ bool BWTReader::move_to ( BWTPosition & p )
     {
       if( _nextBWTFilename >= _filenamesIN.size() )
 	{
-#ifdef DEBUG_VERBOSE
-	  std::cerr << "In BWTReader::move_to: " << std::endl;
+	  std::cerr << "In BWTRedear::move_to: " << std::endl;
 	  std::cerr << "ERROR: Can't reach position " << p
 		    << " because the BWT size is " 
-		    << _currentBWT->get_position( ) << std::endl;
-#endif
-	  return false;
+		    << _currentBWT->get_position( ) << std::endl
+		    << "Aborting." << std::endl;
+	  std::exit( -1 );
 	}
-#ifdef DEBUG_VERBOSE
-      std::cout << "BWT trying to move to position " << p << " that is outside current file."
-		<< std::endl << "Switching to file : "
-		<< _filenamesIN[ _nextBWTFilename ] << std::endl;
-#else
-      #ifndef NDEBUG
-      std::cout << "Analyzing file " << _filenamesIN[ _nextBWTFilename ] << std::endl;
-      #endif
-#endif
+      std::cout << "Moving to partialBWT : " << _filenamesIN[ _nextBWTFilename ] << std::endl;
       partialBWTReader* nextBWT = new partialBWTReader( _filenamesIN[ _nextBWTFilename++ ], 
 							_currentBWT->get_position( ),
 							_currentBWT->get_Pi( ) );
@@ -76,39 +67,32 @@ vector< NucleoCounter >* BWTReader::get_C ( )
 {
   BWTPosition pos = 0;
 
-#ifndef NDEBUG
-  std::cout << "Building C vector..." << std::endl;
-#endif
-
-  for ( ; _nextBWTFilename < ALPHABET_SIZE -1; ++_nextBWTFilename)
-    {
-#ifndef NDEBUG
-      std::cout << "Analyzing BWT file: " << _filenamesIN[ 0 ] << std::endl;
-#endif
-      while ( this->move_to( pos ) )
+  for ( ; _nextBWTFilename < ALPHABET_SIZE; ++_nextBWTFilename)
+    {      
+      while ( _currentBWT->move_to( pos ) )
 	{
-	  pos += (BWTPosition) BUFFERSIZE;
+	  pos += BUFFERSIZE;
 	}
-      // partialBWTReader* nextBWT = new partialBWTReader( _filenamesIN[ _nextBWTFilename ],
-      // 							_currentBWT->get_position( ),
-      // 							_currentBWT->get_Pi( ) );
-      // delete _currentBWT;
-      // _currentBWT = nextBWT;
+      partialBWTReader* nextBWT = new partialBWTReader( _filenamesIN[ _nextBWTFilename ], 
+							_currentBWT->get_position( ),
+							_currentBWT->get_Pi( ) );
+      delete _currentBWT;
+      _currentBWT = nextBWT;
     }
 
+  std::cout << "READ " << pos << " CHARS" << std::endl;
+
   vector< NucleoCounter >* C = new vector< NucleoCounter >();
-  NucleoCounter acc =0;
-  C->push_back( acc );
   for( vector< NucleoCounter >::iterator it = _currentBWT->get_Pi().begin();
         it != _currentBWT->get_Pi().end();
         ++it )
      {
-       acc += *it;
-       C->push_back(acc);
+       C->push_back(*it);
      }
 
   // Get back to the first partial BWT
   reset ( );
+
   return C;
 }
 

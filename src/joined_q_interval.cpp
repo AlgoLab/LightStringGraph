@@ -6,6 +6,10 @@ JoinedQInterval::JoinedQInterval ( const BWTPosition & begin, const BWTPosition 
 {
 }
 
+JoinedQInterval::~JoinedQInterval ( )
+{
+}
+
 BWTPosition JoinedQInterval::get_size ( ) const
 {
   return _int.get_size();
