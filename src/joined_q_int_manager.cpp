@@ -18,9 +18,6 @@ JoinedQIntervalManager::JoinedQIntervalManager ( vector< string >& filenames )
       std::ofstream temp ((*it).c_str(), std::ios::binary);
       temp.close();
     }
-  _inputFile = NULL;
-  _init_new_outputfiles( );
-  
   _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), 
 				  std::ios::binary );
   _nextInputFile = 1;
@@ -33,6 +30,7 @@ JoinedQIntervalManager::JoinedQIntervalManager ( vector< string >& filenames )
       _inputFile = NULL;
       std::exit( -1 );
     }
+  _init_new_outputfiles( );
 }
 
 JoinedQIntervalManager::~JoinedQIntervalManager ( )
@@ -49,7 +47,7 @@ JoinedQIntervalManager::~JoinedQIntervalManager ( )
     {
       _inputFile->close();
       delete _inputFile;
-      _inputFIle = NULL;
+      _inputFile = NULL;
     }
   for( vector< JoinedQInterval* >::iterator it = _buffer.begin();
        it != _buffer.end();
@@ -98,8 +96,11 @@ void JoinedQIntervalManager::swap_files( )
 	it != _outputFiles.end( );
 	++it)
     {
+      (*it)->flush();
       (*it)->close();
+      delete *it;
     }
+  _outputFiles.clear();
   for ( vector< string >::iterator it = _filenames.begin( );
 	it != _filenames.end( );
 	++it)
@@ -131,10 +132,10 @@ bool JoinedQIntervalManager::add_q_interval ( JoinedQInterval& i, Nucleotide n )
     {
 #ifdef DEBUG_VERBOSE
       std::cerr << "ERROR: Can't add joined-q-interval [ "
-		<< i->get_interval().get_begin()
-		<< " - " << i->get_interval().get_end() << " , " 
-		<< i->get_revese_interval().get_begin() << " - "
-		<< i->get_reverse_interval().get_end() << " ] to file #" << n
+		<< i.get_interval().get_begin()
+		<< " - " << i.get_interval().get_end() << " , " 
+		<< i.get_reverse_interval().get_begin() << " - "
+		<< i.get_reverse_interval().get_end() << " ] to file #" << n
 		<< std::endl;
 #endif
       return false;

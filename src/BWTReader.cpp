@@ -50,13 +50,8 @@ bool BWTReader::move_to ( BWTPosition & p )
 	  return false;
 	}
 #ifdef DEBUG_VERBOSE
-      std::cout << "BWT trying to move to position " << p << " that is outside current file."
-		<< std::endl << "Switching to file : "
-		<< _filenamesIN[ _nextBWTFilename ] << std::endl;
-#else
-      #ifndef NDEBUG
-      std::cout << "Analyzing file " << _filenamesIN[ _nextBWTFilename ] << std::endl;
-      #endif
+      std::cout << "BWT trying to move to position " << p << " that is outside current file." << std::endl;
+      std::cout << "Open BWT file: " << _filenamesIN[ _nextBWTFilename ] << std::endl;
 #endif
       partialBWTReader* nextBWT = new partialBWTReader( _filenamesIN[ _nextBWTFilename++ ], 
 							_currentBWT->get_position( ),
@@ -74,17 +69,12 @@ vector< NucleoCounter >& BWTReader::get_Pi ( )
 
 vector< NucleoCounter >* BWTReader::get_C ( )
 {
-  BWTPosition pos = 0;
-
-#ifndef NDEBUG
   std::cout << "Building C vector..." << std::endl;
-#endif
+
+  BWTPosition pos = 0;
 
   for ( ; _nextBWTFilename < ALPHABET_SIZE -1; ++_nextBWTFilename)
     {
-#ifndef NDEBUG
-      std::cout << "Analyzing BWT file: " << _filenamesIN[ 0 ] << std::endl;
-#endif
       while ( this->move_to( pos ) )
 	{
 	  pos += (BWTPosition) BUFFERSIZE;
@@ -116,5 +106,8 @@ void BWTReader::reset ( )
 {
   delete _currentBWT;
   _currentBWT = new partialBWTReader ( _filenamesIN[ 0 ] );
+#ifdef DEBUG_VERBOSE
+      std::cout << "(RESET) Open BWT file: " << _filenamesIN[ 0 ] << std::endl;
+#endif
   _nextBWTFilename = 1;
 }

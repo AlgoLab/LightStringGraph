@@ -9,6 +9,8 @@
 #include <types.h>
 #include <BWTReader.h>
 
+#include "search.h"
+
 using std::vector;
 using std::string;
 
@@ -55,15 +57,24 @@ int main ( int argc, char** argv )
 
   imgr.swap_files();
 
-  JoinedQInterval* j = imgr.get_next_interval();
-  while( j != NULL )
+  // JoinedQInterval* j = imgr.get_next_interval();
+  // while( j != NULL )
+  //   {
+  //     std::cout << "Q-interval [ " << j->get_interval().get_begin()
+  //     		<< " , " << j->get_interval().get_end() << " ) " << std::endl
+  //     		<< "revQ-interval [ " << j->get_reverse_interval().get_begin()
+  //     		<< " , " << j->get_reverse_interval().get_end() << " ) " 
+  // 		<< std::endl;
+  //     j = imgr.get_next_interval();
+  //   }
+
+  for( int i( 0 ); i < 3; ++i )
     {
-      std::cout << "Q-interval [ " << j->get_interval().get_begin()
-      		<< " , " << j->get_interval().get_end() << " ) " << std::endl
-      		<< "revQ-interval [ " << j->get_reverse_interval().get_begin()
-      		<< " , " << j->get_reverse_interval().get_end() << " ) " 
-		<< std::endl;
-      j = imgr.get_next_interval();
+      std::cout << "Left search step #" << i+1 << std::endl;
+      br.reset( );
+      search_step_left( br, imgr, *c );
+      std::cout << "No more q-intervals, swapping files." << std::endl;
+      imgr.swap_files( );
     }
 
   delete c;

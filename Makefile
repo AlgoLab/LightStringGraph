@@ -31,7 +31,8 @@ read_input_OBJS= \
 	${OBJ_DIR}/joined_q_int_manager.o \
 	${OBJ_DIR}/util.o \
 	${OBJ_DIR}/partialBWTReader.o \
-	${OBJ_DIR}/BWTReader.o
+	${OBJ_DIR}/BWTReader.o \
+	${OBJ_DIR}/search.o
 
 ${BIN_DIR}/build_RNA_seq_graph: ${read_input_OBJS}
 	@echo 'Linking $@'; \

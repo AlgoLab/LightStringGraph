@@ -54,10 +54,9 @@ class BWTReader
   /*************************/
   vector< NucleoCounter >* get_C ( );
 
- private:
   void reset ( );
 
-
+ private:
   // no need of copy ctor nor assignment operator
   BWTReader ( ) { };
   BWTReader ( const BWTReader& other )
