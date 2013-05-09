@@ -20,14 +20,14 @@ JoinedQIntervalManager::JoinedQIntervalManager ( vector< string >& filenames )
     }
   _inputFile = NULL;
   _init_new_outputfiles( );
-  _nextInputFile = 0;
   
-  _inputFile = new std::ifstream( _filenames[ _nextInputFile ].c_str( ), 
+  _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), 
 				  std::ios::binary );
+  _nextInputFile = 1;
 
   if( _inputFile->fail() )
     {
-      std::cerr << "ERROR: Can't open file : " << _filenames[ _nextInputFile ] << std::endl
+      std::cerr << "ERROR: Can't open file : " << _filenames[ 0 ] << std::endl
 		<< "Aborting..." << std::endl;
       delete _inputFile;
       _inputFile = NULL;
@@ -43,17 +43,20 @@ JoinedQIntervalManager::~JoinedQIntervalManager ( )
     {
       (*it)->close();
       delete *it;
+      *it = NULL;
     }
   if( _inputFile != NULL )
     {
       _inputFile->close();
       delete _inputFile;
+      _inputFIle = NULL;
     }
   for( vector< JoinedQInterval* >::iterator it = _buffer.begin();
        it != _buffer.end();
        ++it )
     {
       delete *it;
+      *it = NULL;
     }
 }
 
@@ -118,14 +121,24 @@ void JoinedQIntervalManager::swap_files( )
   _init_new_outputfiles( );
   _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), 
 				  std::ios::binary );
-  _nextInputFile = 0;
+  _nextInputFile = 1;
 }
 
 
 bool JoinedQIntervalManager::add_q_interval ( JoinedQInterval& i, Nucleotide n )
 {
   if ( (unsigned int) n >= _outputFiles.size() )
-    return false;
+    {
+#ifdef DEBUG_VERBOSE
+      std::cerr << "ERROR: Can't add joined-q-interval [ "
+		<< i->get_interval().get_begin()
+		<< " - " << i->get_interval().get_end() << " , " 
+		<< i->get_revese_interval().get_begin() << " - "
+		<< i->get_reverse_interval().get_end() << " ] to file #" << n
+		<< std::endl;
+#endif
+      return false;
+    }
 #ifdef DEBUG_VERBOSE
   std::cout << "WRITING " << i.get_interval().get_begin() << " "
 	    << i.get_interval().get_end() << " "
@@ -151,6 +164,7 @@ void JoinedQIntervalManager::_init_new_outputfiles ( )
 
 void JoinedQIntervalManager::_populate_buffer()
 {
+  // TODO: Refactor this method, there are too many nested if/else
   bool isThereMore = true;
   while ( _buffer.size() < BUFFERSIZE && isThereMore)
     {
@@ -160,9 +174,9 @@ void JoinedQIntervalManager::_populate_buffer()
 	  delete _inputFile;
 	  if( _nextInputFile < _filenames.size() )
 	    {
-	      _inputFile = new std::ifstream( _filenames[ _nextInputFile ].c_str( ),
+	      _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
 					      std::ios::binary );
-	      ++_nextInputFile;
+	      // ++_nextInputFile;
 	    }
 	  else
 	    {
@@ -182,10 +196,10 @@ void JoinedQIntervalManager::_populate_buffer()
 		  _inputFile->close();
 		  delete _inputFile;
 		  _inputFile = NULL;
-		  ++_nextInputFile;
+		  // ++_nextInputFile;
 		  if( _nextInputFile < _filenames.size() )
 		    {
-		      _inputFile = new std::ifstream( _filenames[ _nextInputFile ].c_str(),
+		      _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str(),
 						      std::ios::binary );
 		      isThereMore = true;
 		    }
