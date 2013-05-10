@@ -1,7 +1,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define BUFFERSIZE 1024
+#define BUFFERSIZE 10240
+
+#define TAU 20
 
 // Position on a BWT
 typedef unsigned int BWTPosition; // 2^32 positions = ~ 4 billion bases

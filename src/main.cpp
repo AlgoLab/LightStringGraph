@@ -68,13 +68,20 @@ int main ( int argc, char** argv )
   //     j = imgr.get_next_interval();
   //   }
 
-  for( int i( 0 ); i < 3; ++i )
+  build_tau_intervals( br, imgr, *c, TAU);
+
+  for( int i( 0 ); i < 50; ++i )
     {
+      vector< JoinedQInterval* >* LT;
       std::cout << "Left search step #" << i+1 << std::endl;
       br.reset( );
-      search_step_left( br, imgr, *c );
-      std::cout << "No more q-intervals, swapping files." << std::endl;
+      LT = search_step_left( br, imgr, *c );
       imgr.swap_files( );
+      for( vector< JoinedQInterval* >::iterator it = (*LT).begin();
+	   it != (*LT).end();
+	   ++it)
+	delete *it;
+      delete LT;	   
     }
 
   delete c;
