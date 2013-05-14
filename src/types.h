@@ -1,9 +1,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define BUFFERSIZE 10240
+#define BUFFERSIZE 1024
 
-#define TAU 3
+#define TAU 10
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >

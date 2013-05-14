@@ -30,7 +30,7 @@ int main ( int argc, char** argv )
 
   string gsaInputFileName ( argv[ 3 ] );
 
-  // create filename for partial bwt
+  // create filenames and add them to the previous vectors
   for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
     {
       std::ostringstream partialBWTname, partialrevBWTname, qIntFilename, 
@@ -53,7 +53,10 @@ int main ( int argc, char** argv )
   BWTReader revbr( revBWTInputFilenames );
 
   vector< NucleoCounter >* c = br.get_C( );
-  vector< NucleoCounter >* rev_c = revbr.get_C( );
+  vector< NucleoCounter >* rev_c = revbr.get_C( ); // Actually there's no need
+						   // for this. Maybe we can
+						   // simply check if c and
+						   // rev_c are equal.
   
   std::cout << "C size: " << c->size() << std::endl;
   std::cout << "C contains : " << std::endl;
@@ -67,17 +70,6 @@ int main ( int argc, char** argv )
     }
 
   imgr.swap_files();
-
-  // JoinedQInterval* j = imgr.get_next_interval();
-  // while( j != NULL )
-  //   {
-  //     std::cout << "Q-interval [ " << j->get_interval().get_begin()
-  //     		<< " , " << j->get_interval().get_end() << " ) " << std::endl
-  //     		<< "revQ-interval [ " << j->get_reverse_interval().get_begin()
-  //     		<< " , " << j->get_reverse_interval().get_end() << " ) " 
-  // 		<< std::endl;
-  //     j = imgr.get_next_interval();
-  //   }
 
   build_tau_intervals( br, imgr, *c, TAU);
 
@@ -95,7 +87,7 @@ int main ( int argc, char** argv )
       RT = search_step_right( revbr, revimgr, *rev_c, LT );
       revimgr.swap_files( );
  
-     for( deque< EdgeInterval* >::iterator it = (*LT).begin( );
+      for( deque< EdgeInterval* >::iterator it = (*LT).begin( );
 	   it != (*LT).end( ); ++it )
 	{
 	  if( (*it) != NULL )
@@ -123,10 +115,9 @@ int main ( int argc, char** argv )
      rt_int_in_GSA$ ?
        std::cout << "All RT intervals are in GSA[$]." << std::endl :
        std::cout << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
-       
 
-      delete LT;	   
-      delete RT;
+     delete LT;	   
+     delete RT;
     }
 
   delete c;

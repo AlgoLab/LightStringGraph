@@ -212,15 +212,17 @@ deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMana
 	    }
 	  else
 	    {
-	      //	      std::cout << "2ELSE" << std::endl;
 	      for( int base( 1 ); base < ALPHABET_SIZE; ++base )
 		{
 		  BWTPosition new_begin = C[ base ] + occ_begin[ base ];
 		  BWTPosition new_end   = C[ base ] + occ_end[ base ];
-		  EdgeInterval i( interval_from_mgr->get_first_interval( ).get_begin( ),
-				  interval_from_mgr->get_first_interval( ).get_end( ),
-				  new_begin, new_end, interval_from_mgr->get_len( ) +1 );
-		  imgr.add_interval( i, (Nucleotide) base );
+		  if( new_end > new_begin )
+		    {
+		      EdgeInterval i( interval_from_mgr->get_first_interval( ).get_begin( ),
+				      interval_from_mgr->get_first_interval( ).get_end( ),
+				      new_begin, new_end, interval_from_mgr->get_len( ) +1 );
+		      imgr.add_interval( i, (Nucleotide) base );
+		    }
 		}
 	    }
 	  interval_from_mgr = imgr.get_next_interval( );
