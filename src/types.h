@@ -3,12 +3,16 @@
 
 #define BUFFERSIZE 10240
 
-#define TAU 10
+#define TAU 3
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
+#define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
 
 // Position on a BWT
 typedef unsigned int BWTPosition; // 2^32 positions = ~ 4 billion bases
+
+// Edge Length
+typedef unsigned int EdgeLength; // should be enough for short reads
 
 // Nucleotide counter
 typedef unsigned int NucleoCounter;

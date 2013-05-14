@@ -27,6 +27,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
 read_input_OBJS= \
 	${OBJ_DIR}/main.o \
 	${OBJ_DIR}/q_interval.o \
+	${OBJ_DIR}/edge_joined_interval.o \
 	${OBJ_DIR}/joined_q_interval.o \
 	${OBJ_DIR}/util.o \
 	${OBJ_DIR}/partialBWTReader.o \
