@@ -41,7 +41,7 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
 		  std::cout << "  NEW DIMENSION: " << new_end - new_begin << std::endl;
 #endif
 		  JoinedQInterval new_interval ( new_begin, new_end, new_rev_begin, new_rev_end );
-		  jqmgr.add_q_interval( new_interval, (Nucleotide) base );
+		  jqmgr.add_interval( new_interval, (Nucleotide) base );
 		}
 	      else if ( new_end == new_begin + 1 )
 		{
@@ -108,7 +108,7 @@ vector< JoinedQInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManag
 #endif
 	      ++nwintc;
 	      JoinedQInterval new_interval ( new_begin, new_end, new_rev_begin, new_rev_end );
-	      jqmgr.add_q_interval( new_interval, (Nucleotide) base );
+	      jqmgr.add_interval( new_interval, (Nucleotide) base );
 	    }
 	  else if ( base == BASE_$ && new_end - new_begin >= 1 )
 	    {

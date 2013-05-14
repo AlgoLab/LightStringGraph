@@ -20,6 +20,7 @@ class JoinedQInterval
   // ctor
   JoinedQInterval ( const BWTPosition & begin, const BWTPosition & end,
 		    const BWTPosition & revbegin, const BWTPosition & revend );
+  JoinedQInterval ( ) :  _int( 0, 0), _revint( 0, 0 ) { };
   // destructor
   ~JoinedQInterval ( );
   

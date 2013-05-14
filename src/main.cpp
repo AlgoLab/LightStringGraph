@@ -52,7 +52,7 @@ int main ( int argc, char** argv )
       std::cout << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl ) << std::endl;
       JoinedQInterval jint ( c->at( nucl ), c->at( nucl+1 ),
 			     c->at( nucl ), c->at( nucl+1 ) );
-      imgr.add_q_interval ( jint, (Nucleotide) nucl );
+      imgr.add_interval ( jint, (Nucleotide) nucl );
     }
 
   imgr.swap_files();
@@ -70,7 +70,7 @@ int main ( int argc, char** argv )
 
   build_tau_intervals( br, imgr, *c, TAU);
 
-  for( int i( 0 ); i < 50; ++i )
+  for( int i( 0 ); i < 10; ++i )
     {
       vector< JoinedQInterval* >* LT;
       std::cout << "Left search step #" << i+1 << std::endl;

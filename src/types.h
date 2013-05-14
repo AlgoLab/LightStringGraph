@@ -3,7 +3,9 @@
 
 #define BUFFERSIZE 10240
 
-#define TAU 20
+#define TAU 10
+
+#define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 
 // Position on a BWT
 typedef unsigned int BWTPosition; // 2^32 positions = ~ 4 billion bases

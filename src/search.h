@@ -6,6 +6,7 @@
 #include "BWTReader.h"
 #include "joined_q_int_manager.h"
 #include "joined_q_interval.h"
+#include "interval_manager.h"
 #include "types.h"
 #include "util.h"
 
