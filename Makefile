@@ -28,7 +28,6 @@ read_input_OBJS= \
 	${OBJ_DIR}/main.o \
 	${OBJ_DIR}/q_interval.o \
 	${OBJ_DIR}/joined_q_interval.o \
-	${OBJ_DIR}/joined_q_int_manager.o \
 	${OBJ_DIR}/util.o \
 	${OBJ_DIR}/partialBWTReader.o \
 	${OBJ_DIR}/BWTReader.o \
