@@ -34,13 +34,13 @@ read_input_OBJS= \
 	${OBJ_DIR}/BWTReader.o \
 	${OBJ_DIR}/search.o
 
-${BIN_DIR}/build_RNA_seq_graph: ${read_input_OBJS}
+${BIN_DIR}/stringGraph: ${read_input_OBJS}
 	@echo 'Linking $@'; \
 	mkdir -p ${BIN_DIR}; \
 	${CXX} ${CXXFLAGS} -o $@ $^ ${LIBS}
 
 .PHONY: read_input
-read_input: ${BIN_DIR}/build_RNA_seq_graph
+read_input: ${BIN_DIR}/stringGraph
 
 .PHONY: clean
 clean:

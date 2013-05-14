@@ -17,26 +17,65 @@ using std::vector;
 using std::string;
 using std::deque;
 
+
+void show_usage(){
+    std::cerr << "Usage: stringGraph -B <BWTFilenamePrefix> ";
+    std::cerr << "-R <RevBWTFilenamePrefix> ";
+    std::cerr << "-G <gsaFilename>" << std::endl;
+    std::cerr << std::endl << "Options:" << std::endl;
+    std::cerr << "\t-B, --BWT \t <BWTFilenamePrefix>" << std::endl;
+    std::cerr << "\t-R, --RevBWT \t <RevBWTFilenamePrefix>" << std::endl;
+    std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
+    std::cerr << std::endl;
+}
+
+/****************/
+/* Program Main */
+/****************/
 int main ( int argc, char** argv )
 {
-  // buildgraph BWTFilenamePrefix revBWTFilenamePrefix gsaFilename
-  //            argv[ 1 ]         argv[ 2 ]            argv[ 3 ]
+    if(argc < 6){
+        show_usage();
+        return 1;
+    }
 
-  // TODO: manage non positional args
+    string bwt_pre = "";
+    string rev_bwt_pre = "";
+    string gsa_file = "";
+    for (int i = 1; i < argc; i++) {
+        if (i + 1 != argc){
+            if (string(argv[i]) == "--BWT" || string(argv[i]) == "-B") {
+                bwt_pre = string(argv[++i]);
+            } else if (string(argv[i]) == "--RevBWT" || string(argv[i]) == "-R") {
+                rev_bwt_pre = string(argv[++i]);
+            } else if (string(argv[i]) == "--GSA" || string(argv[i]) == "-G") {
+                gsa_file = string(argv[++i]);
+            } else {
+                std::cerr << "Invalid arguments, please try again.\n";
+                return 1;
+            }
+        }
+    }
+
+    if ( bwt_pre == "" || rev_bwt_pre == "" || gsa_file == "") {
+        std::cerr << "Missing argument(s)." << std::endl;
+        show_usage();
+        return 1;
+    }
   vector< string > BWTInputFilenames;
   vector< string > revBWTInputFilenames;
   vector< string > qIntFilenames;
   vector< string > revqIntFilenames;
 
-  string gsaInputFileName ( argv[ 3 ] );
+  string gsaInputFileName (gsa_file);
 
   // create filenames and add them to the previous vectors
   for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
     {
       std::ostringstream partialBWTname, partialrevBWTname, qIntFilename, 
 	revqIntFilename;
-      partialBWTname << argv[ 1 ] << i;
-      partialrevBWTname << argv[ 2 ] << i;
+      partialBWTname << bwt_pre << i;
+      partialrevBWTname << rev_bwt_pre << i;
       qIntFilename << ".QINT-" << i;
       revqIntFilename << ".revQINT-" << i;
 
@@ -48,7 +87,7 @@ int main ( int argc, char** argv )
   
   JoinedQIntervalManager imgr( qIntFilenames );
   EdgeJoinedQIntervalManager revimgr( revqIntFilenames );
-  
+
   BWTReader br( BWTInputFilenames );
   BWTReader revbr( revBWTInputFilenames );
 
@@ -57,7 +96,7 @@ int main ( int argc, char** argv )
 						   // for this. Maybe we can
 						   // simply check if c and
 						   // rev_c are equal.
-  
+
   std::cout << "C size: " << c->size() << std::endl;
   std::cout << "C contains : " << std::endl;
 
@@ -86,7 +125,7 @@ int main ( int argc, char** argv )
       std::cout << "Right search step #" << i+1 << std::endl;
       RT = search_step_right( revbr, revimgr, *rev_c, LT );
       revimgr.swap_files( );
- 
+
       for( deque< EdgeInterval* >::iterator it = (*LT).begin( );
 	   it != (*LT).end( ); ++it )
 	{
@@ -116,7 +155,7 @@ int main ( int argc, char** argv )
        std::cout << "All RT intervals are in GSA[$]." << std::endl :
        std::cout << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
 
-     delete LT;	   
+     delete LT;
      delete RT;
     }
 
