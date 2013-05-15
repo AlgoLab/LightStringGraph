@@ -15,8 +15,7 @@ class BWTReader
 {
  private:
   vector< string > _filenamesIN;   // Names of BWT sections
-  unsigned short _nextBWTFilename; // index of next BWTFilename in
-				   // _filenamesIN
+  unsigned short _nextBWTFilename; // index of next BWTFilename in _filenamesIN
   partialBWTReader* _currentBWT;
   
  public:

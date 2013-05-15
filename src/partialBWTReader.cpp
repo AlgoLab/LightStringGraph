@@ -68,6 +68,12 @@ BWTPosition partialBWTReader::get_position ( ) const
 
 bool partialBWTReader::move_to ( BWTPosition & p )
 {
+  if( p < _start + _position )
+    {
+      std::cerr << "Can't move to " << p << " because the current position is "
+		<< _start + _position << std::endl;
+      std::exit( -1 );
+    }
   while ( ( _bufferlen != 0 ) &&
 	  ( _position < _bufferlen ) &&
 	  ( _start + _position < p ) )
