@@ -91,20 +91,24 @@ int main ( int argc, char** argv )
   BWTReader br( BWTInputFilenames );
   BWTReader revbr( revBWTInputFilenames );
 
+  std::cout << "Building vector C..";
+  std::cout.flush( );
+
   vector< NucleoCounter >* c = br.get_C( );
   vector< NucleoCounter >* rev_c = revbr.get_C( ); // Actually there's no need
 						   // for this. Maybe we can
 						   // simply check if c and
 						   // rev_c are equal.
+  std::cout << "done." << std::endl;
 
   std::cout << "C size: " << c->size() << std::endl;
   std::cout << "C contains : " << std::endl;
 
-  for (int nucl( 0 ); (unsigned int) nucl < ALPHABET_SIZE; ++nucl)
+  for (int nucl( BASE_A ); (unsigned int) nucl < ALPHABET_SIZE; ++nucl)
     {
       std::cout << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl ) << std::endl;
       JoinedQInterval jint ( c->at( nucl ), c->at( nucl+1 ),
-			     c->at( nucl ), c->at( nucl+1 ) );
+  			     c->at( nucl ), c->at( nucl+1 ) );
       imgr.add_interval ( jint, (Nucleotide) nucl );
     }
 
@@ -127,29 +131,43 @@ int main ( int argc, char** argv )
       revimgr.swap_files( );
 
       for( deque< EdgeInterval* >::iterator it = (*LT).begin( );
-	   it != (*LT).end( ); ++it )
-	{
-	  if( (*it) != NULL )
-	    delete *it;
-	}
+  	   it != (*LT).end( ); ++it )
+  	{
+  	  if( (*it) != NULL )
+  	    delete *it;
+  	}
 
      bool rt_int_in_GSA$ = true;
 
      for( deque< EdgeInterval* >::iterator it = (*RT).begin( );
-	   it != (*RT).end( ); ++it )
-	{
-#ifdef DEBUG_VERBOSE_OUTPUT
-	  std::cout << "Confronto tra intervallo [" << (*it)->get_first_interval( ).get_begin( )
-		    << ", " << (*it)->get_first_interval( ).get_end( ) << ") e intervallo ["
-		    << (*it)->get_second_interval( ).get_begin( ) << ", "
-		    << (*it)->get_second_interval( ).get_end( ) << ")" << std::endl;
-#endif
-	  if( (*it)->get_second_interval( ).get_end( ) > (*c)[ BASE_A ] ||
-	      (*it)->get_first_interval( ).get_end( ) > (*c)[ BASE_A ] )
-	    rt_int_in_GSA$ = false;
-	  if( (*it) != NULL )
-	    delete *it;
-	}
+  	   it != (*RT).end( ); ++it )
+  	{
+  	  if( (*it)->get_second_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
+  	    {
+	      
+  	      std::cout << "SECOND " << (*it)->get_second_interval( ).get_end( ) << " < "
+  			<< (BWTPosition) c->at(BASE_A) << std::endl;
+  	      // std::cout << "ERROR: interval not in GSA[ $ ]: [ " << (*it)->get_second_interval( ).get_begin( )
+  	      // 		<< ", " << (*it)->get_second_interval( ).get_end( ) << " ) & [ "
+  	      // 		<< (*it)->get_second_interval( ).get_begin( ) << ", "
+  	      // 		<< (*it)->get_second_interval( ).get_end( ) << " ) - GSA LIMIT: "
+  	      // 		<< c->at( BASE_A ) << std::endl;
+  	      rt_int_in_GSA$ = false;
+  	    }
+  	  if( (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
+  	    {
+  	      std::cout << "ERROR: interval not in GSA[ $ ]: [ " << (*it)->get_second_interval( ).get_begin( )
+  	      		<< ", " << (*it)->get_second_interval( ).get_end( ) << " ) & [ "
+  	      		<< (*it)->get_first_interval( ).get_begin( ) << ", "
+  	      		<< (*it)->get_first_interval( ).get_end( ) << " ) - GSA LIMIT: "
+  	      		<< c->at( BASE_A ) << std::endl;
+  	      std::cout << "FIRST " << (*it)->get_first_interval( ).get_end( ) << " < "
+  			<< (BWTPosition) c->at(BASE_A) << std::endl;
+  	      rt_int_in_GSA$ = false;
+  	    }
+
+  	  delete *it;
+  	}
       
      rt_int_in_GSA$ ?
        std::cout << "All RT intervals are in GSA[$]." << std::endl :
