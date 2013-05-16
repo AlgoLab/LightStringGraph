@@ -4,12 +4,10 @@
 #include <sstream>
 #include <iostream>
 
-#include <joined_q_interval.h>
-#include <joined_q_int_manager.h>
-#include <util.h>
-#include <types.h>
-#include <BWTReader.h>
-
+#include "BWTReader.h"
+#include "joined_q_interval.h"
+#include "util.h"
+#include "types.h"
 #include "search.h"
 #include "edge_joined_interval.h"
 
@@ -116,7 +114,7 @@ int main ( int argc, char** argv )
 
   build_tau_intervals( br, imgr, *c, TAU);
 
-  for( int i( 0 ); i < 10; ++i )
+  for( int i( 0 ); i < 85; ++i )
     {
       deque< EdgeInterval* >* LT;
       deque< EdgeInterval* >* RT;
@@ -136,35 +134,30 @@ int main ( int argc, char** argv )
   	  if( (*it) != NULL )
   	    delete *it;
   	}
+      
+      // All intervals got from search_step_right should be in GSA[ $ ]
+      bool rt_int_in_GSA$ = true; 
 
-     bool rt_int_in_GSA$ = true;
-
-     for( deque< EdgeInterval* >::iterator it = (*RT).begin( );
+      for( deque< EdgeInterval* >::iterator it = (*RT).begin( );
   	   it != (*RT).end( ); ++it )
   	{
-  	  if( (*it)->get_second_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
+  	  if( (*it)->get_second_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) ||
+	      (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
   	    {
-	      
-  	      std::cout << "SECOND " << (*it)->get_second_interval( ).get_end( ) << " < "
-  			<< (BWTPosition) c->at(BASE_A) << std::endl;
-  	      // std::cout << "ERROR: interval not in GSA[ $ ]: [ " << (*it)->get_second_interval( ).get_begin( )
-  	      // 		<< ", " << (*it)->get_second_interval( ).get_end( ) << " ) & [ "
-  	      // 		<< (*it)->get_second_interval( ).get_begin( ) << ", "
-  	      // 		<< (*it)->get_second_interval( ).get_end( ) << " ) - GSA LIMIT: "
-  	      // 		<< c->at( BASE_A ) << std::endl;
+  	      std::cout << "ERROR: interval not in GSA[ $ ]: [ "
+			<< (*it)->get_first_interval( ).get_begin( ) << ", "
+			<< (*it)->get_first_interval( ).get_end( )
+			<< " ) & [ "
+  	      		<< (*it)->get_second_interval( ).get_begin( ) << ", "
+  	      		<< (*it)->get_second_interval( ).get_end( )
+			<< " ) - GSA LIMIT: " << c->at( BASE_A ) << std::endl;
   	      rt_int_in_GSA$ = false;
   	    }
-  	  if( (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
-  	    {
-  	      std::cout << "ERROR: interval not in GSA[ $ ]: [ " << (*it)->get_second_interval( ).get_begin( )
-  	      		<< ", " << (*it)->get_second_interval( ).get_end( ) << " ) & [ "
-  	      		<< (*it)->get_first_interval( ).get_begin( ) << ", "
-  	      		<< (*it)->get_first_interval( ).get_end( ) << " ) - GSA LIMIT: "
-  	      		<< c->at( BASE_A ) << std::endl;
-  	      std::cout << "FIRST " << (*it)->get_first_interval( ).get_end( ) << " < "
-  			<< (BWTPosition) c->at(BASE_A) << std::endl;
-  	      rt_int_in_GSA$ = false;
-  	    }
+	  
+	  // TODO:
+	  // check_if_irreducible( (*it)->get_first_interval( ),  // Q as suffix
+	  //                       (*it)->get_second_interval( ), // Q as prefix
+	  //                       (*it)->get_len( ) );
 
   	  delete *it;
   	}

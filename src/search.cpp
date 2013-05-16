@@ -141,12 +141,12 @@ deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMana
   while( ( interval_from_mgr != NULL ) || ( interval_from_lt != NULL ) )
     {
       while( interval_from_lt != NULL && interval_from_mgr != NULL &&
-	     EqualSecondEdgeInterval( interval_from_lt, interval_from_mgr ) )
+	     EqualFirstEdgeInterval( interval_from_lt, interval_from_mgr ) )
 	{
-	  // TODO: Merge first intervals from interval_from_lt and
-	  // interval_from_mgr (the ones related to Q as suffix)
-	  interval_from_mgr = imgr.get_next_interval( );
+	  // TODO:
+	  // Merge second interval because the extension is the same
 	  ++mrgintc;
+	  interval_from_mgr = imgr.get_next_interval( );
 	}
 
       if( interval_from_lt != NULL && 
@@ -155,41 +155,44 @@ deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMana
 	{
 	  // interval_from_lt comes first than interval_from_mgr or interval
 	  // manager can't provide any other new joined intervals
-	  BWTPosition begin_first_interval = interval_from_lt->get_first_interval( ).get_begin( );
-	  b.move_to( begin_first_interval );
-	  BWTPosition begin_first_interval_in_$ = b.get_Pi( )[ BASE_$ ];
-	  
-	  BWTPosition begin = interval_from_lt->get_second_interval( ).get_begin( );
+
+	  BWTPosition begin = interval_from_lt->get_first_interval( ).get_begin( );
 	  b.move_to( begin );
 	  vector< NucleoCounter > occ_begin( b.get_Pi( ) );
-	  
-	  BWTPosition end_first_interval_in_$ = occ_begin[ BASE_$ ];
 
-	  BWTPosition end = interval_from_lt->get_second_interval( ).get_end( );
+	  BWTPosition end = interval_from_lt->get_first_interval( ).get_end( );
 	  b.move_to( end );
 	  vector< NucleoCounter > occ_end( b.get_Pi( ) );
+	  
+	  // Check if Q is a suffix
+	  BWTPosition end_second_interval = interval_from_lt->get_second_interval( ).get_end( );
+	  b.move_to( end_second_interval );
+	  vector< NucleoCounter > occ_end_second_interval( b.get_Pi( ) );
 
-	  if( occ_end[ BASE_$ ] > occ_begin[ BASE_$ ] )
+	  if( occ_end_second_interval[ BASE_$ ] > occ_end[ BASE_$ ] )
 	    {
-	      // Q also is a suffix
-	      for( int base( 1 ); base < ALPHABET_SIZE; ++base )
+	      // Q is a suffix
+	      // extend for every base the $Q-interval (first interval in interval_from_lt)
+	      for( int base( BASE_A ); base < ALPHABET_SIZE; ++ base )
 		{
 		  BWTPosition new_int_begin = C[ base ] + occ_begin[ base ];
-		  BWTPosition new_int_end   = C[ base ] + occ_end[ base ];
+		  BWTPosition new_int_end = C[ base ] + occ_end[ base ];
+		  BWTPosition Q_as_suffix_begin = occ_end[ BASE_$ ];
+		  BWTPosition Q_as_suffix_end = occ_end_second_interval[ BASE_$ ];
 		  if( new_int_end > new_int_begin )
 		    {
 		      ++nwintc;
-		      EdgeInterval eInt( begin_first_interval_in_$, end_first_interval_in_$,
-					// interval_from_lt->get_first_interval( ).get_begin( ),
-					// interval_from_lt->get_first_interval( ).get_end( ),
-					 new_int_begin, new_int_end, 1 );
-		      imgr.add_interval( eInt, (Nucleotide) base );
-		    } // ~if
-		} // ~for
-	    } // ~if $ in interval
+		      //                   cQ'$-int-b     cQ'$-int-e   $Q'-int-b          $Q'-int-e        len
+		      EdgeInterval newint( new_int_begin, new_int_end, Q_as_suffix_begin, Q_as_suffix_end, 1 );
+		      imgr.add_interval( newint, (Nucleotide) base );
+		    }
+		}
+	    }
 	  else
 	    {
-	      // else Q is not a suffix, don't care
+	      // else Q is not a suffix, don't care and reject the interval
+	      // TODO: check if some interval from mgr has been merged in
+	      // interval_from_lt
 	      ++rejintc;
 	    }
 
@@ -204,30 +207,36 @@ deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMana
 	  else
 	    interval_from_lt = NULL;
 	}
+
+
       else if( interval_from_mgr != NULL && 
 	       ( ( interval_from_lt == NULL)  ||  
 		 CompareEdgeInterval( interval_from_mgr, interval_from_lt ) ) )
 	{
 	  // interval_from_mgr
-	  BWTPosition begin = interval_from_mgr->get_second_interval( ).get_begin( );
+
+	  BWTPosition begin = interval_from_mgr->get_first_interval( ).get_begin( );
 	  b.move_to( begin );
 	  vector< NucleoCounter > occ_begin( b.get_Pi( ) );
-	  BWTPosition end = interval_from_mgr->get_second_interval( ).get_end( );
+	  BWTPosition end = interval_from_mgr->get_first_interval( ).get_end( );
 	  b.move_to( end );
 	  vector< NucleoCounter > occ_end( b.get_Pi( ) );
+
 	  if( occ_end[ BASE_$ ] > occ_begin[ BASE_$ ] )
 	    {
-	      // we can now save intervals to compare
+	      // we can now save intervals that we want compare
 	      BWTPosition begin_$ = occ_begin[ BASE_$ ];
 	      BWTPosition end_$ = occ_end[ BASE_$ ];
 	      EdgeInterval* i = 
-		new EdgeInterval( interval_from_mgr->get_first_interval( ).get_begin( ),
-				  interval_from_mgr->get_first_interval( ).get_end( ),
-				  begin_$, end_$, interval_from_mgr->get_len( ) +1 );
+		new EdgeInterval( begin_$, end_$, 
+				  interval_from_mgr->get_second_interval( ).get_begin( ),
+				  interval_from_mgr->get_second_interval( ).get_end( ),
+				  interval_from_mgr->get_len( ) );
 	      suffix_prefix_comp->push_back( i );
 	    }
 	  else
 	    {
+	      // extend the interval
 	      for( int base( 1 ); base < ALPHABET_SIZE; ++base )
 		{
 		  BWTPosition new_begin = C[ base ] + occ_begin[ base ];
@@ -235,15 +244,16 @@ deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMana
 		  if( new_end > new_begin )
 		    {
 		      ++nwintc;
-		      EdgeInterval i( interval_from_mgr->get_first_interval( ).get_begin( ),
-				      interval_from_mgr->get_first_interval( ).get_end( ),
-				      new_begin, new_end, interval_from_mgr->get_len( ) +1 );
+		      EdgeInterval i( new_begin, new_end, 
+				      interval_from_mgr->get_second_interval( ).get_begin( ),
+				      interval_from_mgr->get_second_interval( ).get_end( ),
+				      interval_from_mgr->get_len( ) +1 );
 		      imgr.add_interval( i, (Nucleotide) base );
 		    } // ~if
 		} // ~for
-	    } // ~if BASE_$ in interval
+	    } // ~if/else BASE_$ in interval
 	  interval_from_mgr = imgr.get_next_interval( );
-	} // ~if interval from LT
+	} // ~if/else interval from LT
     } // ~while exits interval
 
   std::cout << "--> Sorting RT" << std::endl;
@@ -276,7 +286,7 @@ bool CompareJoinedQInterval( JoinedQInterval* a, JoinedQInterval* b)
 
 bool CompareEdgeInterval( EdgeInterval* a, EdgeInterval* b )
 {
-  return (a->get_second_interval( ).get_begin( ) < b->get_second_interval( ).get_begin( ) );
+  return (a->get_first_interval( ).get_begin( ) < b->get_first_interval( ).get_begin( ) );
 }
 
 bool EqualSecondEdgeInterval( EdgeInterval* a, EdgeInterval* b )

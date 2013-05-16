@@ -14,24 +14,38 @@
 
 using std::deque;
 
-void build_tau_intervals( BWTReader&, JoinedQIntervalManager&, vector< NucleoCounter >&, int);
+// Build all the Q-intervals such that |Q| = T
+void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< NucleoCounter >& C, int T );
 
-deque< EdgeInterval* >* search_step_left( BWTReader&, JoinedQIntervalManager&, 
-					  vector< NucleoCounter >& );
+// Left step search.  
+// Given the Q-intervals in jqmgr returns a deque of tuple of intervals
+// ( $Q-interval{begin, end}, Q-interval{begin, end} ).
+deque< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< NucleoCounter >& C );
 
-deque< EdgeInterval* >* search_step_right( BWTReader&, EdgeJoinedQIntervalManager&, 
-					   vector< NucleoCounter >&, deque< EdgeInterval* >* );
+// Right step search
+// Given the Q-intervals in imgr and in LT extends them and returns a deque of
+// tuples of intervals ( suffix-int{begin end}, prefix-int{begin, end} ) such
+// that the first interval identifies the reads that have Q as suffix and the
+// second the reads that have Q as prefix.
+// IT DELETES THE CONTENT OF LT
+deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, vector< NucleoCounter >& C, deque< EdgeInterval* >* LT );
 
-BWTPosition OccLT( vector< NucleoCounter >&, Nucleotide );
-			
-bool CompareJoinedQInterval( JoinedQInterval*, JoinedQInterval*);
+// Count the occurrences of characters lexicographically smaller than base.
+BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
 
-bool CompareEdgeInterval( EdgeInterval*, EdgeInterval* );
+// Returns true if a.reverse comes first than b.reverse, false otherwise
+bool CompareJoinedQInterval( JoinedQInterval* a, JoinedQInterval* b );
 
-bool EqualFirstEdgeInterval( EdgeInterval*, EdgeInterval* );
+// Returns true if a.first comes first than b.first, false otherwise
+bool CompareEdgeInterval( EdgeInterval* a, EdgeInterval* b );
 
-bool EqualSecondEdgeInterval( EdgeInterval* , EdgeInterval* );
+// Returns true if a.first is the same as b.first, false otherwise
+bool EqualFirstEdgeInterval( EdgeInterval* a, EdgeInterval* b );
 
-bool int_overlap( const QInterval&, const QInterval& );
+// Returns true if a.second is the same as b.second, false otherwise
+bool EqualSecondEdgeInterval( EdgeInterval* a, EdgeInterval* b );
+
+// Legacy. Don't you dare using it.
+bool int_overlap( const QInterval& a, const QInterval& b );
 
 #endif
