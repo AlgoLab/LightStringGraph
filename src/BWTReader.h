@@ -5,11 +5,13 @@
 #include <string>
 #include <cstdlib>
 
-#include <types.h>
-#include <partialBWTReader.h>
+#include "types.h"
+#include "partialBWTReader.h"
 
 using std::vector;
 using std::string;
+
+// Read a BWT splitted in multiple files
 
 class BWTReader
 {

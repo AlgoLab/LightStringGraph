@@ -1,4 +1,4 @@
-#include <BWTReader.h>
+#include "BWTReader.h"
 
 BWTReader::BWTReader ( vector< string >& filenamesIN )
   : _filenamesIN( filenamesIN )
@@ -53,9 +53,9 @@ bool BWTReader::move_to ( BWTPosition & p )
       std::cout << "BWT trying to move to position " << p << " that is outside current file." << std::endl;
       std::cout << "Open BWT file: " << _filenamesIN[ _nextBWTFilename ] << std::endl;
 #endif
-      partialBWTReader* nextBWT = new partialBWTReader( _filenamesIN[ _nextBWTFilename++ ], 
-							_currentBWT->get_position( ),
-							_currentBWT->get_Pi( ) );
+      partialBWTReader* nextBWT =
+	new partialBWTReader( _filenamesIN[ _nextBWTFilename++ ], _currentBWT->get_position( ), _currentBWT->get_Pi( ) );
+
       delete _currentBWT;
       _currentBWT = nextBWT;
     }
