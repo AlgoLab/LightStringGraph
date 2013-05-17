@@ -21,7 +21,7 @@ private:
   vector< std::ofstream* > _outputFiles; // New intervals (interval_t) will be
 					 // written here
   vector< interval_t* > _buffer;
-  typename vector< interval_t* >::iterator _nextInterval;
+  // typename vector< interval_t* >::iterator _nextInterval;
 
 public:
   
@@ -136,21 +136,37 @@ public:
    *************************************************************/
   interval_t* get_next_interval ( )
   {
-    if( _nextInterval == _buffer.end( ) )
+    interval_t* i = NULL;
+    while( !((*_inputFile) >> &i) && (unsigned int) _nextInputFile < _filenames.size( ) )
       {
-	for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-	     it != _buffer.end( ); ++it )
-	    if( (*it) != NULL )
-		delete *it;
-	_buffer.clear( );
-	_populate_buffer( );
-	_nextInterval = _buffer.begin( );
-	if( _buffer.size( ) == 0 )
-	  return NULL;
+	_inputFile->close( );
+	delete _inputFile;
+	_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
+					std::ios::binary );
       }
-    interval_t* i = *_nextInterval;
-    ++_nextInterval;
+    if( _nextInputFile == _filenames.size( ) && i == NULL )
+      {
+	_inputFile->close( );
+	delete _inputFile;
+	_inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
+	_nextInputFile = 1;
+      }
     return i;
+    /* if( _nextInterval == _buffer.end( ) ) */
+    /*   { */
+    /* 	for( typename vector< interval_t* >::iterator it = _buffer.begin( ); */
+    /* 	     it != _buffer.end( ); ++it ) */
+    /* 	    if( (*it) != NULL ) */
+    /* 		delete *it; */
+    /* 	_buffer.clear( ); */
+    /* 	_populate_buffer( ); */
+    /* 	_nextInterval = _buffer.begin( ); */
+    /* 	if( _buffer.size( ) == 0 ) */
+    /* 	  return NULL; */
+    /*   } */
+    /* interval_t* i = *_nextInterval; */
+    /* ++_nextInterval; */
+    /* return i; */
   } // get_next_interval
 
   /*****************************************************************************
@@ -165,7 +181,8 @@ public:
 #endif
 	return false;
       }
-    (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
+    (*(_outputFiles[ (int) n ])) << i;
+    // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
     return true;  
   } // add_interval
 
@@ -184,58 +201,58 @@ private:
 
   void _populate_buffer()
   {
-    // TODO: Refactor this method, there are too many nested if/else
-    bool isThereMore = true;
-    while ( _buffer.size() < BUFFERSIZE && isThereMore)
-      {
-	if( _inputFile != NULL && _inputFile->eof() )
-	  {
-	    _inputFile->close();
-	    delete _inputFile;
-	    if( _nextInputFile < _filenames.size() )
-	      {
-		_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
-						std::ios::binary );
-		// ++_nextInputFile;
-	      }
-	    else
-	      {
-		_inputFile = NULL;
-	      }
-	  }
-	else
-	  {
-	    if( _inputFile != NULL )
-	      {
-		interval_t* intervalRead = new interval_t();
-		_inputFile->read( (char *) intervalRead, sizeof( interval_t ) );
-		isThereMore = ( _inputFile->gcount() > 0 ) ? true : false ;
-		if( !isThereMore )
-		  {	 
-		    delete intervalRead;
-		    _inputFile->close();
-		    delete _inputFile;
-		    _inputFile = NULL;
-		    // ++_nextInputFile;
-		    if( _nextInputFile < _filenames.size() )
-		      {
-			_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str(),
-							std::ios::binary );
-			isThereMore = true;
-		      }
-		  }
-		else
-		  {
-		    _buffer.push_back( intervalRead );
-		  }
-	      }
-	    else
-	      {
-		isThereMore = false;
-	      }
-	  }
-      }
-    _nextInterval = _buffer.begin( );
+    // // TODO: Refactor this method, there are too many nested if/else
+    // bool isThereMore = true;
+    // while ( _buffer.size() < BUFFERSIZE && isThereMore)
+    //   {
+    // 	if( _inputFile != NULL && _inputFile->eof() )
+    // 	  {
+    // 	    _inputFile->close();
+    // 	    delete _inputFile;
+    // 	    if( _nextInputFile < _filenames.size() )
+    // 	      {
+    // 		_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
+    // 						std::ios::binary );
+    // 		// ++_nextInputFile;
+    // 	      }
+    // 	    else
+    // 	      {
+    // 		_inputFile = NULL;
+    // 	      }
+    // 	  }
+    // 	else
+    // 	  {
+    // 	    if( _inputFile != NULL )
+    // 	      {
+    // 		interval_t* intervalRead = new interval_t();
+    // 		_inputFile->read( (char *) intervalRead, sizeof( interval_t ) );
+    // 		isThereMore = ( _inputFile->gcount() > 0 ) ? true : false ;
+    // 		if( !isThereMore )
+    // 		  {	 
+    // 		    delete intervalRead;
+    // 		    _inputFile->close();
+    // 		    delete _inputFile;
+    // 		    _inputFile = NULL;
+    // 		    // ++_nextInputFile;
+    // 		    if( _nextInputFile < _filenames.size() )
+    // 		      {
+    // 			_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str(),
+    // 							std::ios::binary );
+    // 			isThereMore = true;
+    // 		      }
+    // 		  }
+    // 		else
+    // 		  {
+    // 		    _buffer.push_back( intervalRead );
+    // 		  }
+    // 	      }
+    // 	    else
+    // 	      {
+    // 		isThereMore = false;
+    // 	      }
+    // 	  }
+    //   }
+    // _nextInterval = _buffer.begin( );
   }
 
   

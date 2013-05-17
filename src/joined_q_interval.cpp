@@ -1,4 +1,4 @@
-#include <joined_q_interval.h>
+#include "joined_q_interval.h"
 
 JoinedQInterval::JoinedQInterval ( const BWTPosition & begin, const BWTPosition & end,
 				   const BWTPosition & revbegin, const BWTPosition & revend ) 

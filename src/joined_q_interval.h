@@ -1,10 +1,14 @@
 #ifndef JOINED_Q_INTERVAL_H
 #define JOINED_Q_INTERVAL_H
 
-#include <q_interval.h>
 #include <vector>
+#include <fstream>
+
+#include "q_interval.h"
 
 using std::vector;
+using std::ofstream;
+using std::ifstream;
 
 /***********************************************************************/
 /* JoinedQInterval represent a couple of q-intervals q1-int on BWT and */
@@ -27,6 +31,9 @@ class JoinedQInterval
   BWTPosition get_size ( ) const;
   const QInterval & get_interval ( ) const;
   const QInterval & get_reverse_interval ( ) const;
+
+  friend ofstream& operator<<( ofstream&, const JoinedQInterval& );
+  friend ifstream& operator>>( ifstream&, JoinedQInterval** );
 
   /* // Backward extend this interval with n and return the new */
   /* // JoinedQInterval for nQ and rev(Q)n */

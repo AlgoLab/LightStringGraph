@@ -110,11 +110,12 @@ int main ( int argc, char** argv )
       imgr.add_interval ( jint, (Nucleotide) nucl );
     }
 
+  std::cout.flush( );
   imgr.swap_files();
 
   build_tau_intervals( br, imgr, *c, TAU);
 
-  for( int i( 0 ); i < 85; ++i )
+  for( int i( 0 ); i < 2; ++i )
     {
       deque< EdgeInterval* >* LT;
       deque< EdgeInterval* >* RT;
@@ -139,28 +140,29 @@ int main ( int argc, char** argv )
       bool rt_int_in_GSA$ = true; 
 
       for( deque< EdgeInterval* >::iterator it = (*RT).begin( );
-  	   it != (*RT).end( ); ++it )
-  	{
-  	  if( (*it)->get_second_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) ||
-	      (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
-  	    {
-  	      std::cout << "ERROR: interval not in GSA[ $ ]: [ "
-			<< (*it)->get_first_interval( ).get_begin( ) << ", "
-			<< (*it)->get_first_interval( ).get_end( )
-			<< " ) & [ "
-  	      		<< (*it)->get_second_interval( ).get_begin( ) << ", "
-  	      		<< (*it)->get_second_interval( ).get_end( )
-			<< " ) - GSA LIMIT: " << c->at( BASE_A ) << std::endl;
-  	      rt_int_in_GSA$ = false;
-  	    }
+	   it != (*RT).end( ); ++it )
+	{
+      // 	{
+      // 	  if( (*it)->get_second_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) ||
+      // 	      (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
+      // 	    {
+      // 	      std::cout << "ERROR: interval not in GSA[ $ ]: [ "
+      // 			<< (*it)->get_first_interval( ).get_begin( ) << ", "
+      // 			<< (*it)->get_first_interval( ).get_end( )
+      // 			<< " ) & [ "
+      // 	      		<< (*it)->get_second_interval( ).get_begin( ) << ", "
+      // 	      		<< (*it)->get_second_interval( ).get_end( )
+      // 			<< " ) - GSA LIMIT: " << c->at( BASE_A ) << std::endl;
+      // 	      rt_int_in_GSA$ = false;
+      // 	    }
 	  
-	  // TODO:
-	  // check_if_irreducible( (*it)->get_first_interval( ),  // Q as suffix
-	  //                       (*it)->get_second_interval( ), // Q as prefix
-	  //                       (*it)->get_len( ) );
-
-  	  delete *it;
-  	}
+      // TODO:
+      // check_if_irreducible( (*it)->get_first_interval( ),  // Q as suffix
+      //                       (*it)->get_second_interval( ), // Q as prefix
+      //                       (*it)->get_len( ) );
+      
+	  delete *it;
+	}
       
      rt_int_in_GSA$ ?
        std::cout << "All RT intervals are in GSA[$]." << std::endl :
