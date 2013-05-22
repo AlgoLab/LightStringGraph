@@ -56,14 +56,14 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
 }
 
 
-deque< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
+vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
 					  vector< NucleoCounter >& C )
 {
   JoinedQInterval* jqin;
   unsigned long int nwintc =0; // new intervals counter
   unsigned long int nwltc =0; // new left terminated intervals
   unsigned long int uniquebkwe =0; // unique backward extension
-  deque< EdgeInterval* >* LT = new deque< EdgeInterval* >(); // Left-terminated
+  vector< EdgeInterval* >* LT = new vector< EdgeInterval* >(); // Left-terminated
 							     // intervals
   while( (jqin = jqmgr.get_next_interval()) )
     {
@@ -122,209 +122,187 @@ deque< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& 
 #endif
 
   std::cout << "--> Sorting LT" << std::endl;
-  std::sort( LT->begin(), LT->end(), CompareEdgeInterval );
+  std::sort( LT->begin(), LT->end(), CompareEdgeIntervalReverse );
   return LT;
 }
 
-deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, 
-					   vector< NucleoCounter >& C, deque< EdgeInterval* >* LT )
+vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, 
+					   vector< NucleoCounter >& C, vector< EdgeInterval* >* LT )
 {
-  deque< EdgeInterval* >* suffix_prefix_comp = new deque< EdgeInterval* >( );
-  EdgeInterval* interval_from_mgr = imgr.get_next_interval( );
-  EdgeInterval* interval_from_lt = NULL;
-  unsigned long int nwintc =0; // new intervals counter
-  unsigned long int rejintc =0; // Intervals from LT not right-terminal
-  unsigned long int mrgintc =0; // Merged intervals
+  // LETS TRY IT AGAIN DAMMIT
 
+  vector< EdgeInterval* >* edges_to_test = new vector< EdgeInterval* >( );
+  EdgeInterval* i_l = NULL; // interval from LT
+  EdgeInterval* i_m = imgr.get_next_interval( ); // interval from imgr
+
+  unsigned long int nwintc =0; // new interval counter
+  unsigned long int rejintc =0; // rejected LT interval counter
+  unsigned long int mrgintc =0; // intervals from imgr merged with the ones from LT
+
+  // read first interval from LT if it exists
   if( LT->size( ) > 0 )
     {
-      interval_from_lt = LT->front( );
-      LT->pop_front( );
+      i_l = LT->back( );
+      LT->pop_back( );
     }
 
-  while( ( interval_from_mgr != NULL ) || ( interval_from_lt != NULL ) )
+  while( ( i_l != NULL ) || ( i_m != NULL ) )
     {
-      while( interval_from_lt != NULL && interval_from_mgr != NULL &&
-	     EqualFirstEdgeInterval( interval_from_lt, interval_from_mgr ) )
+      bool merged = false;
+      while( ( i_l != NULL ) && ( i_m != NULL ) && EqualFirstEdgeInterval( i_l, i_m ) )
+      	{
+      	  // Need to merge i_lt and i_mgr because the first interval (the one we
+      	  // need to extend) is the same. Note that we don't know if i_lt is
+      	  // right-terminal as for now
+      	  ++mrgintc;
+	  merged = true;
+      	  for( unsigned int i( 0 ); i < i_m->get_second_interval( ).size( ); ++i )
+      	    {
+	      i_l->add_suffix_interval( i_m->get_second_interval( )[ i ],
+					i_m->get_len( )[ i ] );
+      	    }
+      	  delete i_m;
+      	  i_m = imgr.get_next_interval( );
+      	} // ~while merge
+
+      if( ( i_l != NULL ) && ( ( i_m == NULL ) || CompareEdgeInterval( i_l, i_m ) ) )
 	{
-	  // TODO:
-	  // Merge second interval because the extension is the same
-	  ++mrgintc;
-	  for( unsigned int ind( 0 ); ind < interval_from_mgr->get_second_interval( ).size( );
-	       ++ind )
-	    {
-	      interval_from_lt->add_suffix_interval( interval_from_mgr->get_second_interval( )[ ind ],
-						     interval_from_mgr->get_len( )[ ind ] );
-	    }
-	  delete interval_from_mgr;
-	  interval_from_mgr = imgr.get_next_interval( );
-	}
+	  // Check if the new interval that comes from the left search is right
+	  // terminated. If it is extend and save to imgr, if it isn't check if
+	  // we have merged elements and extend them rejecting the new interval.
+	  BWTPosition begin_f_i = i_l->get_first_interval( ).get_begin( );    // begin of Q'$-interval (same as begin Q'-interval)
+	  BWTPosition end_f_i = i_l->get_first_interval( ).get_end( );        // end of Q'$-interval
+	  BWTPosition end_s_i = i_l->get_second_interval( )[ 0 ]->get_end( ); // end of Q'-interval
 
-      if( interval_from_lt != NULL && 
-	  ( ( interval_from_mgr == NULL)  ||  
-	    CompareEdgeInterval( interval_from_lt, interval_from_mgr ) ) )
-	{
-	  // interval_from_lt comes first than interval_from_mgr or interval
-	  // manager can't provide any other new joined intervals
+	  b.move_to( begin_f_i );
+	  vector< NucleoCounter > occ_b( b.get_Pi( ) );
+	  b.move_to( end_f_i );
+	  vector< NucleoCounter > occ_e_f( b.get_Pi( ) );
+	  b.move_to( end_s_i );
+	  vector< NucleoCounter > occ_e( b.get_Pi( ) );
 
-	  BWTPosition begin = interval_from_lt->get_first_interval( ).get_begin( );
-	  b.move_to( begin );
-	  vector< NucleoCounter > occ_begin( b.get_Pi( ) );
+	  bool new_interval_is_right_terminal = ( occ_e[ BASE_$ ] > occ_e_f[ BASE_$ ] ) ? true : false ;
 
-	  BWTPosition end = interval_from_lt->get_first_interval( ).get_end( );
-	  b.move_to( end );
-	  vector< NucleoCounter > occ_end( b.get_Pi( ) );
-	  
-	  // Check if Q is a suffix
-	  BWTPosition end_second_interval = interval_from_lt->get_second_interval( )[ 0 ]->get_end( );
-	  b.move_to( end_second_interval );
-	  vector< NucleoCounter > occ_end_second_interval( b.get_Pi( ) );
-
-	  if( occ_end_second_interval[ BASE_$ ] > occ_end[ BASE_$ ] )
+	  if( !new_interval_is_right_terminal )
 	    {
-	      // Q is a suffix
-	      // extend for every base the $Q-interval (first interval in interval_from_lt)
-	      for( int base( BASE_A ); base < ALPHABET_SIZE; ++ base )
-		{
-		  BWTPosition new_int_begin = C[ base ] + occ_begin[ base ];
-		  BWTPosition new_int_end = C[ base ] + occ_end[ base ];
-		  BWTPosition Q_as_suffix_begin = occ_end[ BASE_$ ];
-		  BWTPosition Q_as_suffix_end = occ_end_second_interval[ BASE_$ ];
-		  if( new_int_end > new_int_begin )
-		    {
-		      ++nwintc;
-		      //                   cQ'$-int-b     cQ'$-int-e   $Q'-int-b          $Q'-int-e        len
-		      EdgeInterval newint( new_int_begin, new_int_end, Q_as_suffix_begin, Q_as_suffix_end, 1 );
-		      for( unsigned int temp( 1 ); temp < interval_from_lt->get_second_interval( ).size( );
-			   ++temp )
-			{
-			  newint.add_suffix_interval( interval_from_lt->get_second_interval( )[ temp ],
-						      interval_from_lt->get_len( )[ temp ] +1 );
-			}
-		      imgr.add_interval( newint, (Nucleotide) base );
-		    }
-		}
-	    }
-	  else if ( interval_from_lt->get_second_interval( ).size( ) > 1 )
-	    {
-	      // Intervals merged from interval_from mgr that we have to extend
-	      for( int base( BASE_A ); base < ALPHABET_SIZE; ++ base )
-		{
-		  BWTPosition new_int_begin = C[ base ] + occ_begin[ base ];
-		  BWTPosition new_int_end = C[ base ] + occ_end[ base ];
-		  if( new_int_end > new_int_begin )
-		    {
-		      ++nwintc;
-		      //                   cQ'$-int-b     cQ'$-int-e   $Q'-int-b          $Q'-int-e        len
-		      EdgeInterval newint( new_int_begin, new_int_end, 
-					   interval_from_lt->get_second_interval( )[ 1 ]->get_begin( ),
-					   interval_from_lt->get_second_interval( )[ 1 ]->get_end( ),
-					   interval_from_lt->get_len( )[ 1 ] +1 );
-		      for( unsigned int temp( 2 ); temp < interval_from_lt->get_second_interval( ).size( );
-			   ++temp )
-			{
-			  newint.add_suffix_interval( interval_from_lt->get_second_interval( )[ temp ],
-						      interval_from_lt->get_len( )[ temp ] +1 );
-			}
-		      imgr.add_interval( newint, (Nucleotide) base );
-		    }
-		}	      
-	    }
-	  else
-	    {
-	      // else Q is not a suffix, don't care and reject the interval
 	      ++rejintc;
 	    }
-
-	  delete interval_from_lt;
-	  
-	  // get next interval from LT, if it exists
-	  if( LT->size( ) > 0 ) 
+	  if( new_interval_is_right_terminal || merged )
 	    {
-	      interval_from_lt = LT->front( );
-	      LT->pop_front( );
-	    }
-	  else
-	    interval_from_lt = NULL;
-	}
-
-
-      else if( interval_from_mgr != NULL && 
-	       ( ( interval_from_lt == NULL)  ||  
-		 CompareEdgeInterval( interval_from_mgr, interval_from_lt ) ) )
-	{
-	  // interval_from_mgr
-	  BWTPosition begin = interval_from_mgr->get_first_interval( ).get_begin( );
-	  b.move_to( begin );
-	  vector< NucleoCounter > occ_begin( b.get_Pi( ) );
-	  BWTPosition end = interval_from_mgr->get_first_interval( ).get_end( );
-	  b.move_to( end );
-	  vector< NucleoCounter > occ_end( b.get_Pi( ) );
-
-	  if( occ_end[ BASE_$ ] > occ_begin[ BASE_$ ] )
-	    {
-	      // we can now save intervals that we want compare
-	      BWTPosition begin_$ = occ_begin[ BASE_$ ];
-	      BWTPosition end_$ = occ_end[ BASE_$ ];
-	      EdgeInterval* i = 
-		new EdgeInterval( begin_$, end_$, 
-				  interval_from_mgr->get_second_interval( )[ 0 ]->get_begin( ),
-				  interval_from_mgr->get_second_interval( )[ 0 ]->get_end( ),
-				  interval_from_mgr->get_len( )[ 0 ] );
-	      for( unsigned int temp( 1 ); temp < interval_from_mgr->get_second_interval( ).size( );
-		   ++temp )
+	      for( int base( BASE_$ ); base < ALPHABET_SIZE; ++base )
 		{
-		  i->add_suffix_interval( interval_from_mgr->get_second_interval( )[ temp ],
-					  interval_from_mgr->get_len( )[ temp ] );
-		}
-	      suffix_prefix_comp->push_back( i );
-	    }
-	  else
-	    {
-	      // extend the interval
-	      for( int base( 1 ); base < ALPHABET_SIZE; ++base )
-		{
-		  BWTPosition new_begin = C[ base ] + occ_begin[ base ];
-		  BWTPosition new_end   = C[ base ] + occ_end[ base ];
-		  if( new_end > new_begin )
+		  BWTPosition new_int_begin = C[ base ] + occ_b[ base ];
+		  BWTPosition new_int_end = C[ base ] + occ_e_f[ base ];
+		  if( new_int_end > new_int_begin )
 		    {
-		      ++nwintc;
-		      EdgeInterval i( new_begin, new_end, 
-				      interval_from_mgr->get_second_interval( )[ 0 ]->get_begin( ),
-				      interval_from_mgr->get_second_interval( )[ 0 ]->get_end( ),
-				      interval_from_mgr->get_len( )[ 0 ] +1 );
-		      for( unsigned int temp( 1 ); temp < interval_from_mgr->get_second_interval( ).size( );
-			   ++temp )
+		      BWTPosition first_suffix_begin = new_interval_is_right_terminal ? 
+			occ_e_f[ BASE_$ ] : i_l->get_second_interval( )[ 1 ]->get_begin( );
+		      BWTPosition first_suffix_end = new_interval_is_right_terminal ?
+			occ_e[ BASE_$ ] : i_l->get_second_interval( )[ 1 ]->get_end( );
+		      EdgeInterval* new_interval =
+			new EdgeInterval( new_int_begin, new_int_end, first_suffix_begin,
+					  first_suffix_end, new_interval_is_right_terminal ? 
+					  1 : i_l->get_len( )[ 1 ]+1 );
+		      // Add other suffix if they exists
+		      for( unsigned int i( new_interval_is_right_terminal ? 1 : 2 ); 
+			   i < i_l->get_second_interval( ).size( ); ++i )
+			new_interval->add_suffix_interval( i_l->get_second_interval( )[ i ],
+							   i_l->get_len( )[ i ] +1 );
+		      if( base == BASE_$ )
 			{
-			  i.add_suffix_interval( interval_from_mgr->get_second_interval( )[ temp ],
-						 interval_from_mgr->get_len( )[ temp ] +1 );
+			  edges_to_test->push_back( new_interval );
 			}
+		      else
+			{
+			  ++nwintc;
+			  imgr.add_interval( *new_interval, (Nucleotide) base );
+			  delete new_interval;
+			}
+		    }
+		  else
+		    {
+		      // Non existent intervals, don't care
+		    } // ~if new_int_end > new_int_begin
+		} // ~for base
+	    }
 
-		      imgr.add_interval( i, (Nucleotide) base );
-		    } // ~if
+	  delete i_l;
+	  if( LT->size( ) > 0 )
+	    {
+	      i_l = LT->back( );
+	      LT->pop_back( );
+	    }
+	  else
+	    i_l = NULL;
+	} // ~if i_l comes first than i_m
+      else if( ( i_m != NULL ) && ( ( i_l == NULL ) || CompareEdgeInterval( i_m, i_l ) ) )
+	{
+	  // Extend the interval that comes from the interval manager. If it
+	  // extend with $ append it to edges_to_test
+	  BWTPosition begin_f = i_m->get_first_interval( ).get_begin( );  // begin of Q'$-interval (same as begin Q'-interval)
+	  BWTPosition end_f = i_m->get_first_interval( ).get_end( );      // end of Q'$-interval
+
+	  b.move_to( begin_f );
+	  vector< NucleoCounter > occ_b( b.get_Pi( ) );
+	  b.move_to( end_f );
+	  vector< NucleoCounter > occ_e( b.get_Pi( ) );
+
+	  if( occ_e[ BASE_$ ] > occ_b[ BASE_$ ] )
+	    {
+	      BWTPosition new_int_begin = occ_b[ BASE_$ ];
+	      BWTPosition new_int_end = occ_e[ BASE_$ ];
+	      EdgeInterval* new_interval =
+		new EdgeInterval( new_int_begin, new_int_end, i_m->get_second_interval( )[ 0 ]->get_begin( ),
+				  i_m->get_second_interval( )[ 0 ]->get_end( ), i_m->get_len( )[ 0 ] );
+	      for( unsigned int i( 1 ); i < i_m->get_second_interval( ).size( ); ++i )
+		{
+		  new_interval->add_suffix_interval( i_m->get_second_interval( )[ i ],
+						     i_m->get_len( )[ i ] );
+		}
+	      edges_to_test->push_back( new_interval );
+	    }
+	  else
+	    {
+	      for( int base( BASE_A ); base < ALPHABET_SIZE; ++base )
+		{
+		  BWTPosition new_int_begin = C[ base ] + occ_b[ base ];
+		  BWTPosition new_int_end = C[ base ] + occ_e[ base ];
+		  if( new_int_end > new_int_begin )
+		    {
+		      EdgeInterval* new_interval =
+			new EdgeInterval( new_int_begin, new_int_end, i_m->get_second_interval( )[ 0 ]->get_begin( ),
+					  i_m->get_second_interval( )[ 0 ]->get_end( ), i_m->get_len( )[ 0 ] +1 );
+		      for( unsigned int i( 1 ); i < i_m->get_second_interval( ).size( ); ++i )
+			{
+			  new_interval->add_suffix_interval( i_m->get_second_interval( )[ i ],
+							     i_m->get_len( )[ i ] +1 );
+			}
+		      ++nwintc;
+		      imgr.add_interval( *new_interval, (Nucleotide) base );
+		      delete new_interval;
+		    } // ~if new_int_end > new_int_begin
 		} // ~for
-	    } // ~if/else BASE_$ in interval
-	  delete interval_from_mgr;
-	  interval_from_mgr = imgr.get_next_interval( );
-	}
+	    }	  
+	  delete i_m;
+	  i_m = imgr.get_next_interval( );
+	} // ~if i_m comes first than i_l
       else
 	{
-	  std::cerr << "DON'T KNOW WHAT I AM DOING" << std::endl;
-	  std::cerr.flush( );
-	}// ~if/else interval from LT
-    } // ~while exits interval
+	  std::cerr << "ERROR: This shouldn't happen. " << std::endl;
+	}
+    } // ~while interval exists
 
   std::cout << "--> Sorting RT" << std::endl;
-  std::sort( suffix_prefix_comp->begin( ), suffix_prefix_comp->end( ), CompareEdgeInterval );
+  std::sort( edges_to_test->begin( ), edges_to_test->end( ), CompareEdgeIntervalReverse );
 #ifdef DEBUG
   std::cout << "--> Generated " << nwintc << " new intervals on BWT'" << std::endl;
   std::cout << "--> Merged " << mrgintc << " intervals from lt and from interval manager" << std::endl;
   std::cout << "--> Rejected " << rejintc << " intervals from LT " << std::endl;
-  std::cout << "--> Got " << suffix_prefix_comp->size( ) << " new intervals on GSA to test." 
+  std::cout << "--> Got " << edges_to_test->size( ) << " new intervals on GSA to test." 
 	    << std::endl;
 #endif
 
-  return suffix_prefix_comp;
+  return edges_to_test;
 }
 
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
@@ -345,6 +323,11 @@ bool CompareJoinedQInterval( JoinedQInterval* a, JoinedQInterval* b)
 bool CompareEdgeInterval( EdgeInterval* a, EdgeInterval* b )
 {
   return (a->get_first_interval( ).get_begin( ) < b->get_first_interval( ).get_begin( ) );
+}
+
+bool CompareEdgeIntervalReverse( EdgeInterval* a, EdgeInterval* b )
+{
+  return (!CompareEdgeInterval( a, b ));
 }
 
 bool EqualSecondEdgeInterval( EdgeInterval* a, EdgeInterval* b )

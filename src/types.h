@@ -3,7 +3,7 @@
 
 #define BUFFERSIZE 1024
 
-#define TAU 2
+#define TAU 4
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >

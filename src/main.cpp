@@ -115,59 +115,69 @@ int main ( int argc, char** argv )
 
   build_tau_intervals( br, imgr, *c, TAU);
 
-  for( int i( 0 ); i < 2; ++i )
+  for( int i( 0 ); i < 4; ++i )
     {
-      deque< EdgeInterval* >* LT;
-      deque< EdgeInterval* >* RT;
+      vector< EdgeInterval* >* LT;
+      vector< EdgeInterval* >* RT;
 
       std::cout << "Left search step #" << i+1 << std::endl;
       br.reset( );
       revbr.reset( );
       LT = search_step_left( br, imgr, *c );
+      std::cout << "LT SIZE : " << LT->size( ) << std::endl;
       imgr.swap_files( );
       std::cout << "Right search step #" << i+1 << std::endl;
       RT = search_step_right( revbr, revimgr, *rev_c, LT );
+      std::cout << "RT SIZE: " << RT->size( ) << std::endl;
+      std::cout << "LT SIZE AFTER RIGHT SEARCH: " << LT->size( ) << std::endl;
       revimgr.swap_files( );
 
-      for( deque< EdgeInterval* >::iterator it = (*LT).begin( );
-  	   it != (*LT).end( ); ++it )
-  	{
-  	  if( (*it) != NULL )
-  	    delete *it;
-  	}
-      
       // All intervals got from search_step_right should be in GSA[ $ ]
       bool rt_int_in_GSA$ = true; 
 
-      for( deque< EdgeInterval* >::iterator it = (*RT).begin( );
-	   it != (*RT).end( ); ++it )
-	{
+      std::cout << "Analysis and delete" << std::endl;
+
+      // if( RT->begin( ) == RT->end( ) )
       // 	{
-      // 	  if( (*it)->get_second_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) ||
-      // 	      (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
-      // 	    {
-      // 	      std::cout << "ERROR: interval not in GSA[ $ ]: [ "
-      // 			<< (*it)->get_first_interval( ).get_begin( ) << ", "
-      // 			<< (*it)->get_first_interval( ).get_end( )
-      // 			<< " ) & [ "
-      // 	      		<< (*it)->get_second_interval( ).get_begin( ) << ", "
-      // 	      		<< (*it)->get_second_interval( ).get_end( )
-      // 			<< " ) - GSA LIMIT: " << c->at( BASE_A ) << std::endl;
-      // 	      rt_int_in_GSA$ = false;
-      // 	    }
-	  
-      // TODO:
-      // check_if_irreducible( (*it)->get_first_interval( ),  // Q as suffix
-      //                       (*it)->get_second_interval( ), // Q as prefix
-      //                       (*it)->get_len( ) );
-      
+      // 	  std::cout << "BEGIN AND END ARE THE SAME?" << std::endl;
+      // 	  std::cout << RT->size( ) << std::endl;
+      // 	}
+
+      for( vector< EdgeInterval* >::iterator it = RT->begin( );
+       	   it != RT->end( ); ++it )
+      	{
 	  delete *it;
 	}
+
+      // 	    //   (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
+      // 	    // {
+      // 	    //   std::cout << "ERROR: interval not in GSA[ $ ]: [ "
+      // 	    // 		<< (*it)->get_first_interval( ).get_begin( ) << ", "
+      // 	    // 		<< (*it)->get_first_interval( ).get_end( )
+      // 	    // 		<< " ) & [ "
+      // 	    //   		<< (*it)->get_second_interval( ).get_begin( ) << ", "
+      // 	    //   		<< (*it)->get_second_interval( ).get_end( )
+      // 	    // 		<< " ) - GSA LIMIT: " << c->at( BASE_A ) << std::endl;
+      // 	    //   rt_int_in_GSA$ = false;
+      // 	    // }
+	  
+      // // TODO:
+      // // check_if_irreducible( (*it)->get_first_interval( ),  // Q as prefix
+      // //                       (*it)->get_second_interval( ), // Q as suffix
+      // //                       (*it)->get_len( ) );
+      
+      // 	  delete *it;
+      // 	}
       
      rt_int_in_GSA$ ?
        std::cout << "All RT intervals are in GSA[$]." << std::endl :
        std::cout << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
-
+     
+     std::cout << "Delete LT & RT" << std::endl;
+     LT->clear( );
+     RT->clear( );
+     vector< EdgeInterval* >( ).swap( *LT ); // Memory trick
+     vector< EdgeInterval* >( ).swap( *RT );
      delete LT;
      delete RT;
     }

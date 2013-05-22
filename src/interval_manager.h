@@ -20,7 +20,7 @@ private:
   std::ifstream* _inputFile; // Current input stream
   vector< std::ofstream* > _outputFiles; // New intervals (interval_t) will be
 					 // written here
-  vector< interval_t* > _buffer;
+  // vector< interval_t* > _buffer;
   // typename vector< interval_t* >::iterator _nextInterval;
 
 public:
@@ -78,12 +78,12 @@ public:
 	delete _inputFile;
 	_inputFile = NULL;
       }
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-	 it != _buffer.end( ); ++it )
-      {
-	delete *it;
-	*it = NULL;
-      }
+    /* for( typename vector< interval_t* >::iterator it = _buffer.begin( ); */
+    /* 	 it != _buffer.end( ); ++it ) */
+    /*   { */
+    /* 	delete *it; */
+    /* 	*it = NULL; */
+    /*   } */
   } // ~IntervalManager
 
   /****************************************************************************

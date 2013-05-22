@@ -89,8 +89,8 @@ ofstream& operator<<( ofstream& out, const EdgeInterval& edgeint )
   out.write( (char *) &end, sizeof( BWTPosition ) );
 
   // Then we write the length of _suffixI (that should be the same as _len)
-  unsigned long num_of_suffix = edgeint._suffixI.size( );
-  out.write( (char *) &num_of_suffix, sizeof( unsigned long ) );
+  unsigned int num_of_suffix = edgeint._suffixI.size( );
+  out.write( (char *) &num_of_suffix, sizeof( unsigned int ) );
   // out.write( (char *) &( (unsigned long) edgeint._suffixI.size( ) ),
   // 	     sizeof( unsigned long ) );
 
@@ -122,8 +122,8 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
   //  in.read( &extend_e, sizeof( BWTPosition ) );
   
   // Then we read the number of intervals in _suffixI (an unsigned long)
-  unsigned long length =0;
-  in.read( (char *) &length, sizeof( unsigned long ) );
+  unsigned int length =0;
+  in.read( (char *) &length, sizeof( unsigned int ) );
   //  in.read( &length, sizeof( unsigned long ) );
   
   // We read the first _suffixI (we are sure that at least ONE interval is in
@@ -149,8 +149,8 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
 	  in.read( (char *) &suffix_b, sizeof( BWTPosition ) );
 	  in.read( (char *) &suffix_e, sizeof( BWTPosition ) );
 	  in.read( (char *) &suffix_len, sizeof( EdgeLength ) );
-	  QInterval* temp = new QInterval( suffix_b, suffix_e );
-	  (*edgeint)->add_suffix_interval( temp, suffix_len );
+	  QInterval temp( suffix_b, suffix_e );
+	  (*edgeint)->add_suffix_interval( &temp, suffix_len );
 	}
     }
   else

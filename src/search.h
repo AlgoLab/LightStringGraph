@@ -2,6 +2,7 @@
 #define SEARCH_H
 
 #include <algorithm>
+#include <vector>
 #include <deque>
 
 #include "BWTReader.h"
@@ -12,6 +13,7 @@
 #include "types.h"
 #include "util.h"
 
+using std::vector;
 using std::deque;
 
 // Build all the Q-intervals such that |Q| = T
@@ -20,7 +22,7 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< N
 // Left step search.  
 // Given the Q-intervals in jqmgr returns a deque of tuple of intervals
 // ( $Q-interval{begin, end}, Q-interval{begin, end} ).
-deque< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< NucleoCounter >& C );
+vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< NucleoCounter >& C );
 
 // Right step search
 // Given the Q-intervals in imgr and in LT extends them and returns a deque of
@@ -28,7 +30,7 @@ deque< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& 
 // that the first interval identifies the reads that have Q as suffix and the
 // second the reads that have Q as prefix.
 // IT DELETES THE CONTENT OF LT
-deque< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, vector< NucleoCounter >& C, deque< EdgeInterval* >* LT );
+vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, vector< NucleoCounter >& C, vector< EdgeInterval* >* LT );
 
 // Count the occurrences of characters lexicographically smaller than base.
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
@@ -38,6 +40,9 @@ bool CompareJoinedQInterval( JoinedQInterval* a, JoinedQInterval* b );
 
 // Returns true if a.first comes first than b.first, false otherwise
 bool CompareEdgeInterval( EdgeInterval* a, EdgeInterval* b );
+
+// Returns false if a.first comes first than b.first, false otherwise
+bool CompareEdgeIntervalReverse( EdgeInterval* a, EdgeInterval* b );
 
 // Returns true if a.first is the same as b.first, false otherwise
 bool EqualFirstEdgeInterval( EdgeInterval* a, EdgeInterval* b );

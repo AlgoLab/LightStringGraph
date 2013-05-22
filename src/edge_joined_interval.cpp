@@ -44,16 +44,15 @@ EdgeInterval::~EdgeInterval( )
 {
   for( vector< QInterval* >::iterator it = _suffixI.begin( );
        it != _suffixI.end( ); ++it )
-    {
-      delete (*it);
-    }
+    delete *it;
+  _len.clear( );
+  _suffixI.clear( );
 }
 
 void EdgeInterval::add_suffix_interval( const QInterval* q_int, EdgeLength len )
 {
   // Adds a suffix interal tu _suffixI
-  QInterval* new_interval =
-    new QInterval( q_int->get_begin( ), q_int->get_end( ) );
+  QInterval* new_interval = new QInterval( q_int->get_begin( ), q_int->get_end( ) );
   _suffixI.push_back( new_interval );
   _len.push_back( len );
 }
