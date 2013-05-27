@@ -15,6 +15,8 @@ low_mem: all
 .PHONY: all
 all:action read_input
 
+build_gsa:action bgsa
+
 .PHONY: action
 action:
 	@echo "Compiling..."
@@ -34,13 +36,28 @@ read_input_OBJS= \
 	${OBJ_DIR}/BWTReader.o \
 	${OBJ_DIR}/search.o
 
+input_bgsa_OBJS= \
+	${OBJ_DIR}/reconstruct_gsa.o \
+	${OBJ_DIR}/partialBWTReader.o \
+	${OBJ_DIR}/BWTReader.o \
+	${OBJ_DIR}/util.o \
+	${OBJ_DIR}/q_interval.o \
+	${OBJ_DIR}/edge_joined_interval.o \
+	${OBJ_DIR}/joined_q_interval.o
+
 ${BIN_DIR}/stringGraph: ${read_input_OBJS}
+	@echo 'Linking $@'; \
+	mkdir -p ${BIN_DIR}; \
+	${CXX} ${CXXFLAGS} -o $@ $^ ${LIBS}
+
+${BIN_DIR}/bgsa: ${input_bgsa_OBJS}
 	@echo 'Linking $@'; \
 	mkdir -p ${BIN_DIR}; \
 	${CXX} ${CXXFLAGS} -o $@ $^ ${LIBS}
 
 .PHONY: read_input
 read_input: ${BIN_DIR}/stringGraph
+bgsa: ${BIN_DIR}/bgsa
 
 .PHONY: clean
 clean:
