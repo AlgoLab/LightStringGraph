@@ -115,7 +115,7 @@ int main ( int argc, char** argv )
 
   build_tau_intervals( br, imgr, *c, TAU);
 
-  for( int i( 0 ); i < 4; ++i )
+  for( int i( 0 ); i < 81; ++i )
     {
       vector< EdgeInterval* >* LT;
       vector< EdgeInterval* >* RT;
@@ -124,24 +124,15 @@ int main ( int argc, char** argv )
       br.reset( );
       revbr.reset( );
       LT = search_step_left( br, imgr, *c );
-      std::cout << "LT SIZE : " << LT->size( ) << std::endl;
       imgr.swap_files( );
       std::cout << "Right search step #" << i+1 << std::endl;
       RT = search_step_right( revbr, revimgr, *rev_c, LT );
-      std::cout << "RT SIZE: " << RT->size( ) << std::endl;
-      std::cout << "LT SIZE AFTER RIGHT SEARCH: " << LT->size( ) << std::endl;
       revimgr.swap_files( );
 
       // All intervals got from search_step_right should be in GSA[ $ ]
       bool rt_int_in_GSA$ = true; 
 
       std::cout << "Analysis and delete" << std::endl;
-
-      // if( RT->begin( ) == RT->end( ) )
-      // 	{
-      // 	  std::cout << "BEGIN AND END ARE THE SAME?" << std::endl;
-      // 	  std::cout << RT->size( ) << std::endl;
-      // 	}
 
       for( vector< EdgeInterval* >::iterator it = RT->begin( );
        	   it != RT->end( ); ++it )

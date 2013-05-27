@@ -2,8 +2,9 @@
 #define TYPES_H
 
 #define BUFFERSIZE 1024
+#define IM_BUFFERSIZE 256
 
-#define TAU 4
+#define TAU 20
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
@@ -30,5 +31,12 @@ enum Nucleotide
     //    NOT_IN_ALPHABET,
     ALPHABET_SIZE
   };
+
+// As defined in BEETL/src/shared/Config.hh (ElementType)
+struct GSAEntry
+{
+  unsigned int sa; // suffix array position
+  unsigned int numSeq; // sequence number
+};
 
 #endif

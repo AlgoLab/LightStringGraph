@@ -43,7 +43,7 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
 		  ++uniquebkwe;
 		}
 	    } // ~for
-	  delete jqin;
+	  // delete jqin;
 	} // ~while
       b.reset();
       jqmgr.swap_files();
@@ -110,7 +110,7 @@ vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager&
 	      ++uniquebkwe;
 	    }
 	} // ~for
-      delete jqin;
+      // delete jqin;
     } // ~while
 
 #ifdef DEBUG
@@ -161,7 +161,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	      i_l->add_suffix_interval( i_m->get_second_interval( )[ i ],
 					i_m->get_len( )[ i ] );
       	    }
-      	  delete i_m;
+      	  // delete i_m;
       	  i_m = imgr.get_next_interval( );
       	} // ~while merge
 
@@ -283,7 +283,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 		    } // ~if new_int_end > new_int_begin
 		} // ~for
 	    }	  
-	  delete i_m;
+	  // delete i_m;
 	  i_m = imgr.get_next_interval( );
 	} // ~if i_m comes first than i_l
       else

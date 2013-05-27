@@ -7,6 +7,8 @@
 #include <sstream>
 #include <cstdlib>
 
+#include "util.h"
+
 using std::vector;
 using std::string;
 
@@ -20,8 +22,8 @@ private:
   std::ifstream* _inputFile; // Current input stream
   vector< std::ofstream* > _outputFiles; // New intervals (interval_t) will be
 					 // written here
-  // vector< interval_t* > _buffer;
-  // typename vector< interval_t* >::iterator _nextInterval;
+  vector< interval_t* > _buffer;
+  typename vector< interval_t* >::iterator _nextInterval;
 
 public:
   
@@ -56,7 +58,8 @@ public:
 	_inputFile = NULL;
 	std::exit( -1 );
       }
-    _nextInputFile = 1;
+    _nextInputFile = 0;
+    _populate_buffer( );
     _init_new_outputfiles( );
   } // IntervalManager
 
@@ -78,12 +81,12 @@ public:
 	delete _inputFile;
 	_inputFile = NULL;
       }
-    /* for( typename vector< interval_t* >::iterator it = _buffer.begin( ); */
-    /* 	 it != _buffer.end( ); ++it ) */
-    /*   { */
-    /* 	delete *it; */
-    /* 	*it = NULL; */
-    /*   } */
+    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
+	 it != _buffer.end( ); ++it )
+      {
+	delete *it;
+	*it = NULL;
+      }
   } // ~IntervalManager
 
   /****************************************************************************
@@ -129,6 +132,7 @@ public:
     _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), 
 				    std::ios::binary );
     _nextInputFile = 1;
+    _populate_buffer( );
   } // swap_files
 
   /*************************************************************
@@ -136,22 +140,28 @@ public:
    *************************************************************/
   interval_t* get_next_interval ( )
   {
-    interval_t* i = NULL;
-    while( !((*_inputFile) >> &i) && (unsigned int) _nextInputFile < _filenames.size( ) )
+    if( _nextInterval == _buffer.end( ) )
       {
-	_inputFile->close( );
-	delete _inputFile;
-	_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
-					std::ios::binary );
+	_populate_buffer( );
       }
-    if( _nextInputFile == _filenames.size( ) && i == NULL )
-      {
-	_inputFile->close( );
-	delete _inputFile;
-	_inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
-	_nextInputFile = 1;
-      }
+    interval_t* i = ( _buffer.size( ) == 0 ) ? NULL : *_nextInterval++;
     return i;
+    /* interval_t* i = NULL; */
+    /* while( !((*_inputFile) >> &i) && (unsigned int) _nextInputFile < _filenames.size( ) ) */
+    /*   { */
+    /* 	_inputFile->close( ); */
+    /* 	delete _inputFile; */
+    /* 	_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ), */
+    /* 					std::ios::binary ); */
+    /*   } */
+    /* if( _nextInputFile == _filenames.size( ) && i == NULL ) */
+    /*   { */
+    /* 	_inputFile->close( ); */
+    /* 	delete _inputFile; */
+    /* 	_inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary ); */
+    /* 	_nextInputFile = 1; */
+    /*   } */
+    /* return i; */
     /* if( _nextInterval == _buffer.end( ) ) */
     /*   { */
     /* 	for( typename vector< interval_t* >::iterator it = _buffer.begin( ); */
@@ -201,6 +211,33 @@ private:
 
   void _populate_buffer()
   {
+    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
+	 it != _buffer.end( ); ++it )
+      {
+	if(*it != NULL)
+	  delete *it;
+      }
+    _buffer.clear( );
+
+    interval_t* i = NULL;
+    while( _buffer.size( ) < IM_BUFFERSIZE && 
+	   ( ( _inputFile && ((*_inputFile) >> &i ) ) || ( _nextInputFile < _filenames.size( ) ) ) )
+      {
+	if( i == NULL )
+	  {
+	    // end of file
+	    _inputFile->close( );
+	    delete _inputFile;
+	    _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
+					    std::ios::binary );
+	  }
+	else
+	  {
+	    _buffer.push_back( i );
+	    i = NULL;
+	  }
+      }
+    _nextInterval = _buffer.begin( );
     // // TODO: Refactor this method, there are too many nested if/else
     // bool isThereMore = true;
     // while ( _buffer.size() < BUFFERSIZE && isThereMore)
