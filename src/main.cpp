@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "BWTReader.h"
+#include "GSAReader.h"
 #include "joined_q_interval.h"
 #include "util.h"
 #include "types.h"
@@ -65,7 +66,9 @@ int main ( int argc, char** argv )
   vector< string > qIntFilenames;
   vector< string > revqIntFilenames;
 
-  string gsaInputFileName (gsa_file);
+  string gsaInputFileName( gsa_file );
+
+  GSAReader gsardr( gsaInputFileName );
 
   // create filenames and add them to the previous vectors
   for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
@@ -115,7 +118,11 @@ int main ( int argc, char** argv )
 
   build_tau_intervals( br, imgr, *c, TAU);
 
-  for( int i( 0 ); i < 81; ++i )
+  // temporary
+  SGraph sg;
+  Precedencies p;
+
+  for( int i( 0 ); i < 36; ++i )
     {
       vector< EdgeInterval* >* LT;
       vector< EdgeInterval* >* RT;
@@ -125,6 +132,7 @@ int main ( int argc, char** argv )
       revbr.reset( );
       LT = search_step_left( br, imgr, *c );
       imgr.swap_files( );
+
       std::cout << "Right search step #" << i+1 << std::endl;
       RT = search_step_right( revbr, revimgr, *rev_c, LT );
       revimgr.swap_files( );
@@ -137,29 +145,39 @@ int main ( int argc, char** argv )
       for( vector< EdgeInterval* >::iterator it = RT->begin( );
        	   it != RT->end( ); ++it )
       	{
+	  for( unsigned int j =0; j < (*it)->get_second_interval( ).size( ); ++j )
+	    {
+	      vector< GSAEntry* >* first_interval =
+		gsardr.get( (*it)->get_first_interval( ).get_begin( ),
+			    (*it)->get_first_interval( ).get_end( ) );
+	      vector< GSAEntry* >* second_interval =
+		gsardr.get( (*it)->get_second_interval( )[ j ]->get_begin( ),
+			    (*it)->get_second_interval( )[ j ]->get_end( ) );
+	      EdgeLength len = (*it)->get_len( )[ j ];
+	      
+	      for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
+		   it_f != first_interval->end( ); ++it_f )
+		{
+		  for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
+		       it_s != second_interval->end( ); ++it_s )
+		    {
+		      checkIfIrreducible( sg, p, *it_f, *it_s, len );
+		    }
+		}
+
+	      for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
+		   it_f != first_interval->end( ); ++it_f )
+		  delete *it_f;
+	      delete first_interval;
+
+	      for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
+		   it_s != second_interval->end( ); ++it_s )
+		  delete *it_s;
+	      delete second_interval;
+	    }
 	  delete *it;
 	}
 
-      // 	    //   (*it)->get_first_interval( ).get_end( ) > ( (BWTPosition) c->at( BASE_A ) ) )
-      // 	    // {
-      // 	    //   std::cout << "ERROR: interval not in GSA[ $ ]: [ "
-      // 	    // 		<< (*it)->get_first_interval( ).get_begin( ) << ", "
-      // 	    // 		<< (*it)->get_first_interval( ).get_end( )
-      // 	    // 		<< " ) & [ "
-      // 	    //   		<< (*it)->get_second_interval( ).get_begin( ) << ", "
-      // 	    //   		<< (*it)->get_second_interval( ).get_end( )
-      // 	    // 		<< " ) - GSA LIMIT: " << c->at( BASE_A ) << std::endl;
-      // 	    //   rt_int_in_GSA$ = false;
-      // 	    // }
-	  
-      // // TODO:
-      // // check_if_irreducible( (*it)->get_first_interval( ),  // Q as prefix
-      // //                       (*it)->get_second_interval( ), // Q as suffix
-      // //                       (*it)->get_len( ) );
-      
-      // 	  delete *it;
-      // 	}
-      
      rt_int_in_GSA$ ?
        std::cout << "All RT intervals are in GSA[$]." << std::endl :
        std::cout << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
@@ -167,10 +185,46 @@ int main ( int argc, char** argv )
      std::cout << "Delete LT & RT" << std::endl;
      LT->clear( );
      RT->clear( );
-     vector< EdgeInterval* >( ).swap( *LT ); // Memory trick
+     vector< EdgeInterval* >( ).swap( *LT ); // Memory trick?
      vector< EdgeInterval* >( ).swap( *RT );
      delete LT;
      delete RT;
+    }
+
+  // for( std::map< unsigned int, SGEdge* >::iterator it =sg.begin( );
+  //      it != sg.end( ); ++it )
+  //   std::cout << it->second->first_read << " -> " << it->second->second_read
+  // 	      << " \t | " << it->second->len << std::endl;
+
+  //temporary: find first element
+  unsigned int begin_of_graph =0;
+  for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
+       it != sg.end( ); ++it )
+    {
+      if( p.find( (*it).second->first_read ) == p.end( ) )
+  	{
+  	  begin_of_graph = (*it).second->first_read;
+  	}      
+    }
+
+  bool ended = false;
+
+  while( !ended )
+    {
+      std::cout << "Edge : " << sg[ begin_of_graph ]->first_read << " -> "
+  		<< sg[ begin_of_graph ]->second_read << " len: "
+  		<< sg[ begin_of_graph ]->len << std::endl;
+      ended = ( sg.find( sg[begin_of_graph]->second_read ) == sg.end( ) );
+      if( !ended )
+  	{
+  	  begin_of_graph = sg[begin_of_graph]->second_read;
+  	}
+    }
+  for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
+       it != sg.end( ); ++it )
+    {
+      delete (*it).second;
+      (*it).second = NULL;
     }
 
   delete c;

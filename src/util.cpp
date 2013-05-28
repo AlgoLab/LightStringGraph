@@ -27,9 +27,6 @@ char ntoc ( Nucleotide base )
     case BASE_Z:
       ret = 'Z';
       break;
-    // case NOT_IN_ALPHABET:
-    //   ret = '-';
-    //   break;
     default:
       std::cerr << "ERROR: Can't convert Nucleotide int( "
 		<< base << " ) to char. Aborting." << std::endl;
@@ -71,13 +68,61 @@ Nucleotide cton ( char c )
 		<< " int( " << int(c) << " ). Which base is it?"
 		<< std::endl;
 #endif
-      //      ret = NOT_IN_ALPHABET;
       break;
-      // std::cerr << "ERROR: Can't convert char( '" << c 
-      // 		<< "' ) to Nucleotide. Aborting." << std::endl;
-      // std::exit( -1 );
     }
   return ret;
+}
+
+void checkIfIrreducible( SGraph& s, Precedencies& p, GSAEntry* prefixI, GSAEntry* suffixI, EdgeLength& len )
+{
+  // Check if the edge beetween suffixI->numSeq and prefixI->numSeq is the best
+  // found until now with length len
+  std::cout << "check suffixI->numSeq = " << suffixI->numSeq << "  prefixI->numSeq = "
+	    << prefixI->numSeq << " len : " << len << "     ->";
+  if( s.find( suffixI->numSeq ) == s.end( ) )
+    {
+      // Add
+      std::cout << "ADD" << std::endl;
+      SGEdge* e = new SGEdge( );
+      e->first_read = suffixI->numSeq;
+      e->second_read = prefixI->numSeq;
+      e->len = len;
+      
+      s.insert( std::pair< unsigned int, SGEdge* >( e->first_read, e ) );
+
+      if( p.find( prefixI->numSeq ) != p.end( ) )
+	p.find( prefixI->numSeq )->second.push_back( suffixI->numSeq );
+      else
+	{
+	  vector< unsigned int > v;
+	  v.push_back( suffixI->numSeq );
+	  p.insert( std::pair< unsigned int, vector< unsigned int > >( prefixI->numSeq,
+								       v ) );
+	}
+    }
+  else
+    {
+      SGEdge* e1 = (* (s.find( suffixI->numSeq ))).second;
+      if( e1->len > len )
+	{
+	  std::cout << "EDIT" << std::endl;
+	  e1->len = len;
+	  e1->first_read = suffixI->numSeq;
+	  e1->second_read = prefixI->numSeq;
+	  if( p.find( prefixI->numSeq ) != p.end( ) )
+	    p.find( prefixI->numSeq )->second.push_back( suffixI->numSeq );
+	  else
+	    {
+	      vector< unsigned int > v;
+	      v.push_back( suffixI->numSeq );
+	      p.insert( std::pair< unsigned int, vector< unsigned int > >( prefixI->numSeq,
+									   v ) );
+	    }
+	}
+      else
+	std::cout << "REJECT" << std::endl;
+    }
+  std::cout << "SG SIZE " << s.size( ) << "   P SIZE " << p.size( ) << std::endl;
 }
 
 ofstream& operator<<( ofstream& out, const EdgeInterval& edgeint )
@@ -91,21 +136,20 @@ ofstream& operator<<( ofstream& out, const EdgeInterval& edgeint )
   // Then we write the length of _suffixI (that should be the same as _len)
   unsigned int num_of_suffix = edgeint._suffixI.size( );
   out.write( (char *) &num_of_suffix, sizeof( unsigned int ) );
-  // out.write( (char *) &( (unsigned long) edgeint._suffixI.size( ) ),
-  // 	     sizeof( unsigned long ) );
 
   // Then, for each interval in _suffixI and for each length in _len we store
   // the interval and the related length.
   for( unsigned int i( 0 ); i < edgeint._suffixI.size( ); ++i )
     {
       begin = edgeint._suffixI[ i ]->get_begin( );
-      out.write( (char *) &begin, sizeof( BWTPosition ) );
       end = edgeint._suffixI[ i ]->get_end( );
-      out.write( (char *) &end, sizeof( BWTPosition ) );
       EdgeLength length = edgeint._len[ i ];
-      out.write( (char *) &length, sizeof( EdgeLength ) );
-      // out.write( (char *) &( edgeint._suffixI[ i ]->get_begin( ) ), sizeof( BWTPosition ) );
-      // out.write( (char *) &( edgeint._len[ i ] ), sizeof ( EdgeLength ) );
+      if( begin != end )
+	{
+	  out.write( (char *) &begin, sizeof( BWTPosition ) );
+	  out.write( (char *) &end, sizeof( BWTPosition ) );
+	  out.write( (char *) &length, sizeof( EdgeLength ) );
+	}
     }
   out.flush( );
   return out;
@@ -116,27 +160,21 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
   // First we read the _extendI interval
   BWTPosition extend_b =0;
   in.read( (char *) &extend_b, sizeof( BWTPosition ) );
-  // in.read( &extend_b, sizeof( BWTPosition ) );
   BWTPosition extend_e =0;
   in.read( (char *) &extend_e, sizeof( BWTPosition ) );
-  //  in.read( &extend_e, sizeof( BWTPosition ) );
   
   // Then we read the number of intervals in _suffixI (an unsigned long)
   unsigned int length =0;
   in.read( (char *) &length, sizeof( unsigned int ) );
-  //  in.read( &length, sizeof( unsigned long ) );
   
   // We read the first _suffixI (we are sure that at least ONE interval is in
   // _suffixI)
   BWTPosition suffix_b =0;
   in.read( (char *) &suffix_b, sizeof( BWTPosition ) );
-  //  in.read( &suffix_b, sizeof( BWTPosition ) );
   BWTPosition suffix_e =0;
-  in.read( (char *) &suffix_b, sizeof( BWTPosition ) );
-  //  in.read( &suffix_e, sizeof( BWTPosition ) );
+  in.read( (char *) &suffix_e, sizeof( BWTPosition ) );
   EdgeLength suffix_len =0;
   in.read( (char *) &suffix_len, sizeof( EdgeLength ) );
-  //  in.read( &suffix_len, sizeof( EdgeLength ) );
 
   if( extend_b != extend_e )
     {
@@ -149,8 +187,11 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
 	  in.read( (char *) &suffix_b, sizeof( BWTPosition ) );
 	  in.read( (char *) &suffix_e, sizeof( BWTPosition ) );
 	  in.read( (char *) &suffix_len, sizeof( EdgeLength ) );
-	  QInterval temp( suffix_b, suffix_e );
-	  (*edgeint)->add_suffix_interval( &temp, suffix_len );
+	  if( suffix_e > suffix_b )
+	    {
+	      QInterval temp( suffix_b, suffix_e );
+	      (*edgeint)->add_suffix_interval( &temp, suffix_len );
+	    }
 	}
     }
   else
@@ -163,19 +204,10 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
 ofstream& operator<<( ofstream& out, const JoinedQInterval& jint )
 {
   // First we store the _int interval
-
-  // std::cout << "WRITE JOINED Q INTERVAL " << jint._int.get_begin( )
-  // 	    << " " << jint._int.get_end( ) << " "
-  // 	    << jint._revint.get_begin( ) << " "
-  // 	    << jint._revint.get_end( ) << std::endl;
   BWTPosition begin = jint._int.get_begin( );
   BWTPosition end = jint._int.get_end( );
   out.write( (char *) &begin, sizeof( BWTPosition ) );
   out.write( (char *) &end, sizeof( BWTPosition ) );
-  // out.write( (char *) &(jint._int.get_begin( )),
-  // 	     sizeof( BWTPosition ) );
-  // out.write( (char *) &(jint._int.get_end( )),
-  // 	     sizeof( BWTPosition ) );
 
   // Then we write the _revint interval
   begin = jint._revint.get_begin( );
@@ -183,8 +215,6 @@ ofstream& operator<<( ofstream& out, const JoinedQInterval& jint )
   out.write( (char *) &begin, sizeof( BWTPosition ) );
   out.write( (char *) &end, sizeof( BWTPosition ) );
   out.flush( );
-  // out.write( (char *) &(jint._revint.get_begin( )), sizeof( BWTPosition ) );
-  // out.write( (char *) &(jint._revint.get_end( )), sizeof( BWTPosition ) );
 
   return out;
 }

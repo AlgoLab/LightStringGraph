@@ -187,6 +187,10 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	    {
 	      ++rejintc;
 	    }
+	  else
+	    {
+	      std::cout << "New suffix interval " << occ_e[ BASE_$ ] << "," << occ_e_f[ BASE_$ ] << std::endl;
+	    }
 	  if( new_interval_is_right_terminal || merged )
 	    {
 	      for( int base( BASE_$ ); base < ALPHABET_SIZE; ++base )

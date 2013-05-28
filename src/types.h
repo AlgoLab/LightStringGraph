@@ -1,10 +1,15 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <map>
+#include <vector>
+
+using std::vector;
+
 #define BUFFERSIZE 1024
 #define IM_BUFFERSIZE 256
 
-#define TAU 20
+#define TAU 15
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
@@ -32,11 +37,22 @@ enum Nucleotide
     ALPHABET_SIZE
   };
 
-// As defined in BEETL/src/shared/Config.hh (ElementType)
+// As defined in BEETL/src/shared/Tools.hh (ElementType)
 struct GSAEntry
 {
   unsigned int sa; // suffix array position
   unsigned int numSeq; // sequence number
 };
+
+// temporary
+struct SGEdge
+{
+  unsigned int first_read;
+  unsigned int second_read;
+  EdgeLength len;
+};
+
+typedef std::map< unsigned int, SGEdge* > SGraph;
+typedef std::map< unsigned int, vector< unsigned int > > Precedencies;
 
 #endif
