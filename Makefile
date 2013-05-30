@@ -13,8 +13,9 @@ low_mem: CXXFLAGS=${CFLAGS} -D LOW_MEM_USG
 low_mem: all
 
 .PHONY: all
-all:action read_input
+all:action string_graph bgsa
 
+string_graph: action read_input
 build_gsa:action bgsa
 
 .PHONY: action
