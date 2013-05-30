@@ -77,17 +77,13 @@ void checkIfIrreducible( SGraph& s, Precedencies& p, GSAEntry* prefixI, GSAEntry
 {
   // Check if the edge beetween suffixI->numSeq and prefixI->numSeq is the best
   // found until now with length len
-  std::cout << "check suffixI->numSeq = " << suffixI->numSeq << "  prefixI->numSeq = "
-	    << prefixI->numSeq << " len : " << len << "     ->";
   if( s.find( suffixI->numSeq ) == s.end( ) )
     {
       // Add
-      std::cout << "ADD" << std::endl;
       SGEdge* e = new SGEdge( );
       e->first_read = suffixI->numSeq;
       e->second_read = prefixI->numSeq;
       e->len = len;
-      
       s.insert( std::pair< unsigned int, SGEdge* >( e->first_read, e ) );
 
       if( p.find( prefixI->numSeq ) != p.end( ) )
@@ -105,7 +101,6 @@ void checkIfIrreducible( SGraph& s, Precedencies& p, GSAEntry* prefixI, GSAEntry
       SGEdge* e1 = (* (s.find( suffixI->numSeq ))).second;
       if( e1->len > len )
 	{
-	  std::cout << "EDIT" << std::endl;
 	  e1->len = len;
 	  e1->first_read = suffixI->numSeq;
 	  e1->second_read = prefixI->numSeq;
@@ -119,10 +114,7 @@ void checkIfIrreducible( SGraph& s, Precedencies& p, GSAEntry* prefixI, GSAEntry
 									   v ) );
 	    }
 	}
-      else
-	std::cout << "REJECT" << std::endl;
     }
-  std::cout << "SG SIZE " << s.size( ) << "   P SIZE " << p.size( ) << std::endl;
 }
 
 ofstream& operator<<( ofstream& out, const EdgeInterval& edgeint )

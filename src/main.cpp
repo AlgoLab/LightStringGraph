@@ -92,22 +92,22 @@ int main ( int argc, char** argv )
   BWTReader br( BWTInputFilenames );
   BWTReader revbr( revBWTInputFilenames );
 
-  std::cout << "Building vector C..";
-  std::cout.flush( );
+  std::cerr << "Building vector C..";
+  std::cerr.flush( );
 
   vector< NucleoCounter >* c = br.get_C( );
   vector< NucleoCounter >* rev_c = revbr.get_C( ); // Actually there's no need
 						   // for this. Maybe we can
 						   // simply check if c and
 						   // rev_c are equal.
-  std::cout << "done." << std::endl;
+  std::cerr << "done." << std::endl;
 
-  std::cout << "C size: " << c->size() << std::endl;
-  std::cout << "C contains : " << std::endl;
+  //  std::cerr << "C size: " << c->size() << std::endl;
+  std::cerr << "C contains : " << std::endl;
 
   for (int nucl( BASE_A ); (unsigned int) nucl < ALPHABET_SIZE; ++nucl)
     {
-      std::cout << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl ) << std::endl;
+      std::cerr << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl ) << std::endl;
       JoinedQInterval jint ( c->at( nucl ), c->at( nucl+1 ),
   			     c->at( nucl ), c->at( nucl+1 ) );
       imgr.add_interval ( jint, (Nucleotide) nucl );
@@ -119,28 +119,28 @@ int main ( int argc, char** argv )
   build_tau_intervals( br, imgr, *c, TAU);
 
   // temporary
-  SGraph sg;
-  Precedencies p;
+  SGraph sg; // String graph
+  Precedencies p; // p[ x ] = y if exists an edge y->x in sg
 
-  for( int i( 0 ); i < 36; ++i )
+  for( int i( 0 ); i < 36; ++i ) // TODO: while exists interval in imgr or revimgr
     {
       vector< EdgeInterval* >* LT;
       vector< EdgeInterval* >* RT;
 
-      std::cout << "Left search step #" << i+1 << std::endl;
+      std::cerr << "Left search step #" << i+1 << std::endl;
       br.reset( );
       revbr.reset( );
       LT = search_step_left( br, imgr, *c );
       imgr.swap_files( );
 
-      std::cout << "Right search step #" << i+1 << std::endl;
+      std::cerr << "Right search step #" << i+1 << std::endl;
       RT = search_step_right( revbr, revimgr, *rev_c, LT );
       revimgr.swap_files( );
 
       // All intervals got from search_step_right should be in GSA[ $ ]
       bool rt_int_in_GSA$ = true; 
 
-      std::cout << "Analysis and delete" << std::endl;
+      std::cerr << "Analysis and delete" << std::endl;
 
       for( vector< EdgeInterval* >::iterator it = RT->begin( );
        	   it != RT->end( ); ++it )
@@ -179,10 +179,9 @@ int main ( int argc, char** argv )
 	}
 
      rt_int_in_GSA$ ?
-       std::cout << "All RT intervals are in GSA[$]." << std::endl :
-       std::cout << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
+       std::cerr << "All RT intervals are in GSA[$]." << std::endl :
+       std::cerr << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
      
-     std::cout << "Delete LT & RT" << std::endl;
      LT->clear( );
      RT->clear( );
      vector< EdgeInterval* >( ).swap( *LT ); // Memory trick?
@@ -191,24 +190,20 @@ int main ( int argc, char** argv )
      delete RT;
     }
 
-  // for( std::map< unsigned int, SGEdge* >::iterator it =sg.begin( );
-  //      it != sg.end( ); ++it )
-  //   std::cout << it->second->first_read << " -> " << it->second->second_read
-  // 	      << " \t | " << it->second->len << std::endl;
-
-  //temporary: find first element
+  // TODO: find first read in a better way
   unsigned int begin_of_graph =0;
   for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
        it != sg.end( ); ++it )
     {
-      if( p.find( (*it).second->first_read ) == p.end( ) )
+      if( p.find( it->second->first_read ) == p.end( ) )
   	{
-  	  begin_of_graph = (*it).second->first_read;
+  	  begin_of_graph = it->second->first_read;
   	}      
     }
 
   bool ended = false;
 
+  // print edges
   while( !ended )
     {
       std::cout << "Edge : " << sg[ begin_of_graph ]->first_read << " -> "
@@ -220,11 +215,13 @@ int main ( int argc, char** argv )
   	  begin_of_graph = sg[begin_of_graph]->second_read;
   	}
     }
+
+  // delete sg
   for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
        it != sg.end( ); ++it )
     {
-      delete (*it).second;
-      (*it).second = NULL;
+      delete it->second;
+      it->second = NULL;
     }
 
   delete c;

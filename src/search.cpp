@@ -6,12 +6,12 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
   JoinedQInterval* jqin;
   for( int i( 0 ); i < T; ++i)
     {
-      std::cout << "Building tau intervals - " << i+1 << "/" << TAU << std::endl;
+      std::cerr << "Building tau intervals - " << i+1 << "/" << TAU << std::endl;
       unsigned long int nwintc =0; // new intervals
       unsigned long int uniquebkwe =0; // unique backward extension
       while( (jqin = jqmgr.get_next_interval()) )
 	{
-	  // std::cout << jqin->get_interval( ).get_begin( ) << std::endl
+	  // std::cerr << jqin->get_interval( ).get_begin( ) << std::endl
 	  // 	    << jqin->get_interval( ).get_end( ) << std::endl;
 	  // Get occ at the beginning and end of the interval
 	  BWTPosition begin = jqin->get_interval().get_begin();
@@ -48,8 +48,8 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
       b.reset();
       jqmgr.swap_files();
 #ifdef DEBUG
-      std::cout << "--> Generated " << nwintc << " new intervals." << std::endl;
-      std::cout << "--> Rejected " << uniquebkwe << " unique backward extension"
+      std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
+      std::cerr << "--> Rejected " << uniquebkwe << " unique backward extension"
 		<< std::endl;
 #endif
     } // ~for
@@ -114,14 +114,14 @@ vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager&
     } // ~while
 
 #ifdef DEBUG
-  std::cout << "--> Generated " << nwintc << " new intervals." << std::endl;
-  std::cout << "--> Generated " << nwltc << " new left-terminated intervals."
+  std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
+  std::cerr << "--> Generated " << nwltc << " new left-terminated intervals."
 	    << std::endl;
-  std::cout << "--> Rejected " << uniquebkwe << " unique backward extension"
+  std::cerr << "--> Rejected " << uniquebkwe << " unique backward extension"
 	    << std::endl;
 #endif
 
-  std::cout << "--> Sorting LT" << std::endl;
+  std::cerr << "--> Sorting LT" << std::endl;
   std::sort( LT->begin(), LT->end(), CompareEdgeIntervalReverse );
   return LT;
 }
@@ -184,13 +184,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	  bool new_interval_is_right_terminal = ( occ_e[ BASE_$ ] > occ_e_f[ BASE_$ ] ) ? true : false ;
 
 	  if( !new_interval_is_right_terminal )
-	    {
 	      ++rejintc;
-	    }
-	  else
-	    {
-	      std::cout << "New suffix interval " << occ_e[ BASE_$ ] << "," << occ_e_f[ BASE_$ ] << std::endl;
-	    }
 	  if( new_interval_is_right_terminal || merged )
 	    {
 	      for( int base( BASE_$ ); base < ALPHABET_SIZE; ++base )
@@ -296,13 +290,13 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	}
     } // ~while interval exists
 
-  std::cout << "--> Sorting RT" << std::endl;
+  std::cerr << "--> Sorting RT" << std::endl;
   std::sort( edges_to_test->begin( ), edges_to_test->end( ), CompareEdgeIntervalReverse );
 #ifdef DEBUG
-  std::cout << "--> Generated " << nwintc << " new intervals on BWT'" << std::endl;
-  std::cout << "--> Merged " << mrgintc << " intervals from lt and from interval manager" << std::endl;
-  std::cout << "--> Rejected " << rejintc << " intervals from LT " << std::endl;
-  std::cout << "--> Got " << edges_to_test->size( ) << " new intervals on GSA to test." 
+  std::cerr << "--> Generated " << nwintc << " new intervals on BWT'" << std::endl;
+  std::cerr << "--> Merged " << mrgintc << " intervals from lt and from interval manager" << std::endl;
+  std::cerr << "--> Rejected " << rejintc << " intervals from LT " << std::endl;
+  std::cerr << "--> Got " << edges_to_test->size( ) << " new intervals on GSA to test." 
 	    << std::endl;
 #endif
 
@@ -311,6 +305,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 {
+  // Count occurrences of bases lexicographically less than base given occ
   BWTPosition p =0;
 
   for(unsigned int i( 0 ); i < (unsigned int) base; ++i )
