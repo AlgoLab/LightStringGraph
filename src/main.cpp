@@ -122,7 +122,7 @@ int main ( int argc, char** argv )
   SGraph sg; // String graph
   Precedencies p; // p[ x ] = y if exists an edge y->x in sg
 
-  for( int i( 0 ); i < 36; ++i ) // TODO: while exists interval in imgr or revimgr
+  for( int i( 0 ); i < CYCNUM; ++i ) // TODO: while exists interval in imgr or revimgr
     {
       vector< EdgeInterval* >* LT;
       vector< EdgeInterval* >* RT;
@@ -191,38 +191,56 @@ int main ( int argc, char** argv )
     }
 
   // TODO: find first read in a better way
-  unsigned int begin_of_graph =0;
-  for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
-       it != sg.end( ); ++it )
-    {
-      if( p.find( it->second->first_read ) == p.end( ) )
-  	{
-  	  begin_of_graph = it->second->first_read;
-  	}      
-    }
+  // unsigned int begin_of_graph =0;
+  // for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
+  //      it != sg.end( ); ++it )
+  //   {
+  //     if( p.find( it->second->first_read ) == p.end( ) )
+  // 	{
+  // 	  begin_of_graph = it->second->first_read;
+  // 	}      
+  //   }
 
-  bool ended = false;
+  // bool ended = false;
 
-  // print edges
-  while( !ended )
-    {
-      std::cout << "Edge : " << sg[ begin_of_graph ]->first_read << " -> "
-  		<< sg[ begin_of_graph ]->second_read << " len: "
-  		<< sg[ begin_of_graph ]->len << std::endl;
-      ended = ( sg.find( sg[begin_of_graph]->second_read ) == sg.end( ) );
-      if( !ended )
-  	{
-  	  begin_of_graph = sg[begin_of_graph]->second_read;
-  	}
-    }
+  // // print edges
+  // while( !ended )
+  //   {
+  //     std::cout << "Edge : " << sg[ begin_of_graph ]->first_read << " -> "
+  // 		<< sg[ begin_of_graph ]->second_read << " len: "
+  // 		<< sg[ begin_of_graph ]->len << std::endl;
+  //     ended = ( sg.find( sg[begin_of_graph]->second_read ) == sg.end( ) );
+  //     if( !ended )
+  // 	{
+  // 	  begin_of_graph = sg[begin_of_graph]->second_read;
+  // 	}
+  //   }
+
+  std::cerr << "SG SIZE : " << sg.size( ) << std::endl;
+
+  std::cerr << "Output edges.." << std::endl;
 
   // delete sg
+  bool first_edge = true;
+
+  std::cout << "{" << std::endl << "\t\"edges\": [" << std::endl;
   for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
        it != sg.end( ); ++it )
     {
+      if( !first_edge )
+	std::cout << "," << std::endl;
+      else
+	first_edge = false;
+      std::cout << "\t\t{" << std::endl
+		<< "\t\t\t\"from\" : " << it->second->first_read << "," << std::endl
+		<< "\t\t\t\"to\" : " << it->second->second_read << "," << std::endl
+		<< "\t\t\t\"length\" : " << it->second->len << std::endl
+		<< "\t\t}";
       delete it->second;
       it->second = NULL;
     }
+  std::cout << std::endl << "\t]" << std::endl << "}" << std::endl;
+  
 
   delete c;
   delete rev_c;

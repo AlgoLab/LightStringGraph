@@ -9,7 +9,8 @@ using std::vector;
 #define BUFFERSIZE 1024
 #define IM_BUFFERSIZE 256
 
-#define TAU 15
+#define TAU 50
+#define CYCNUM 160
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >

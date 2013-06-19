@@ -129,7 +129,6 @@ vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager&
 vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, 
 					   vector< NucleoCounter >& C, vector< EdgeInterval* >* LT )
 {
-  // LETS TRY IT AGAIN DAMMIT
 
   vector< EdgeInterval* >* edges_to_test = new vector< EdgeInterval* >( );
   EdgeInterval* i_l = NULL; // interval from LT
@@ -286,7 +285,8 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	} // ~if i_m comes first than i_l
       else
 	{
-	  std::cerr << "ERROR: This shouldn't happen. " << std::endl;
+	  std::cerr << "ERROR: This shouldn't happen." << std::endl;
+	  std::exit( -1 );
 	}
     } // ~while interval exists
 
