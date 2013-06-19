@@ -68,28 +68,24 @@ int main( int argc, char** argv )
   
   NucleoCounter sentinelnum =0;
 
-  std::cout << "Reconstructing GSA from " << inputGSA << " to " << outputGSA
+  std::cerr << "Reconstructing GSA from " << inputGSA << " to " << outputGSA
 	    << "*..." << std::endl;
 
   GSAEntry x;
 
-  int line =1;
-
   while( gsain >> x )
     {
-      std::cout << (line++) << ": ( " << x.sa << " , " << x.numSeq << ")" << std::endl;
       if( x.sa == 0 )
 	{
-	  std::cout << "found" << std::endl;
 	  gsaout << x;
 	  ++sentinelnum;
 	  if( sentinelnum % 5678 == 0 )
-	    std::cout << "\rNumber of $ found : " << sentinelnum;
+	    std::cerr << "\rNumber of $ found : " << sentinelnum;
 	}
     }
 
-  std::cout << "\rNumber of $ found : " << sentinelnum << std::endl;
-  std::cout << "..done" << std::endl;
+  std::cerr << "\rNumber of $ found : " << sentinelnum << std::endl;
+  std::cerr << "..done" << std::endl;
   
   gsain.close( );
   gsaout.close( );
