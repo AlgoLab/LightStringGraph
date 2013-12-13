@@ -1,40 +1,39 @@
 @article{Simpson10,
-	author = {Simpson, Jared T. and Durbin, Richard}, 
-	title = {Efficient construction of an assembly string graph using the FM-index},
-	volume = {26}, 
-	number = {12}, 
-	pages = {i367-i373}, 
-	year = {2010}, 
-	doi = {10.1093/bioinformatics/btq217}, 
-	abstract ={Motivation: Sequence assembly is a difficult problem whose importance has grown again recently as the cost of sequencing has dramatically dropped. Most new sequence assembly software has started by building a de Bruijn graph, avoiding the overlap-based methods used previously because of the computational cost and complexity of these with very large numbers of short reads. Here, we show how to use suffix array-based methods that have formed the basis of recent very fast sequence mapping algorithms to find overlaps and generate assembly string graphs asymptotically faster than previously described algorithms.Results: Standard overlap assembly methods have time complexity O(N2), where N is the sum of the lengths of the reads. We use the Ferragina–Manzini index (FM-index) derived from the Burrows–Wheeler transform to find overlaps of length at least τ among a set of reads. As well as an approach that finds all overlaps then implements transitive reduction to produce a string graph, we show how to output directly only the irreducible overlaps, significantly shrinking memory requirements and reducing compute time to O(N), independent of depth. Overlap-based assembly methods naturally handle mixed length read sets, including capillary reads or long reads promised by the third generation sequencing technologies. The algorithms we present here pave the way for overlap-based assembly approaches to be developed that scale to whole vertebrate genome de novo assembly.Contact: js18@sanger.ac.uk}, 
-	URL = {http://bioinformatics.oxfordjournals.org/content/26/12/i367.abstract}, 
-	eprint = {http://bioinformatics.oxfordjournals.org/content/26/12/i367.full.pdf+html}, 
-	journal = {Bioinformatics} 
+  author =       {Simpson, Jared T. and Durbin, Richard},
+  title =        {Efficient construction of an assembly string graph
+                  using the {FM}-index},
+  volume =       26,
+  number =       12,
+  pages =        {i367-i373},
+  year =         2010,
+  doi =          {10.1093/bioinformatics/btq217},
+  journal =      {Bioinformatics}
 }
 
 @article{Simpson12,
-	author = {Simpson, Jared T. and Durbin, Richard}, 
-	title = {Efficient de novo assembly of large genomes using compressed data structures},
-	volume = {22}, 
-	pages = {549-556},	
-	year = {2012}, 
-	doi = {10.1101/gr.126953.111}, 
-	journal = {Genome Research} 
+  author =       {Simpson, Jared T. and Durbin, Richard},
+  title =        {Efficient de novo assembly of large genomes using
+                  compressed data structures},
+  volume =       22,
+  pages =        {549-556},
+  year =         2012,
+  doi =          {10.1101/gr.126953.111},
+  journal =      {Genome Research}
 }
 
 @inproceedings{Lacroix08,
-	author={Lacroix, Vincent and Sammeth, Michael and Guigo, Roderic and Bergeron, Anne},
-	title={Exact Transcriptome Reconstruction from Short Sequence Reads},
-	year={2008},
-	isbn={978-3-540-87360-0},
-	booktitle={Algorithms in Bioinformatics},
-	volume={5251},
-	series={Lecture Notes in Computer Science},
-	editor={Crandall, KeithA. and Lagergren, Jens},
-	doi={10.1007/978-3-540-87361-7_5},
-	url={http://dx.doi.org/10.1007/978-3-540-87361-7_5},
-	publisher={Springer Berlin Heidelberg},
-	pages={50-63}
+  author =       {Lacroix, Vincent and Sammeth, Michael and Guigo,
+                  Roderic and Bergeron, Anne},
+  title =        {Exact Transcriptome Reconstruction from Short Sequence
+                  Reads},
+  year =         2008,
+  booktitle =    {Algorithms in Bioinformatics},
+  volume =       5251,
+  series =       {Lecture Notes in Computer Science},
+  editor =       {Crandall, KeithA. and Lagergren, Jens},
+  doi =          {10.1007/978-3-540-87361-7_5},
+  publisher =    {Springer Berlin Heidelberg},
+  pages =        {50-63}
 }
 
 @inproceedings{Myers05,
@@ -48,32 +47,31 @@
 }
 
 @inproceedings{Bauer11,
-	year={2011},
-	isbn={978-3-642-21457-8},
-	booktitle={Combinatorial Pattern Matching},
-	volume={6661},
-	series={Lecture Notes in Computer Science},
-	editor={Giancarlo, Raffaele and Manzini, Giovanni},
-	doi={10.1007/978-3-642-21458-5_20},
-	title={Lightweight BWT Construction for Very Large String Collections},
-	url={http://dx.doi.org/10.1007/978-3-642-21458-5_20},
-	publisher={Springer Berlin Heidelberg},
-	keywords={BWT; text indexes; next-generation sequencing},
-	author={Bauer, Markus J. and Cox, Anthony J. and Rosone, Giovanna},
-	pages={219-231}
+  year =         2011,
+  booktitle =    {Combinatorial Pattern Matching},
+  volume =       6661,
+  series =       {Lecture Notes in Computer Science},
+  editor =       {Giancarlo, Raffaele and Manzini, Giovanni},
+  doi =          {10.1007/978-3-642-21458-5_20},
+  title =        {Lightweight {BWT} Construction for Very Large String
+                  Collections},
+  publisher =    {Springer Berlin Heidelberg},
+  author =       {Bauer, Markus J. and Cox, Anthony J. and Rosone,
+                  Giovanna},
+  pages =        {219-231}
 }
 
-@incollection{Cox12,
-	year={2012},
-	isbn={978-3-642-33121-3},
-	booktitle={Algorithms in Bioinformatics},
-	volume={7534},
-	series={Lecture Notes in Computer Science},
-	editor={Raphael, Ben and Tang, Jijun},
-	doi={10.1007/978-3-642-33122-0_17},
-	title={Comparing DNA Sequence Collections by Direct Comparison of Compressed Text Indexes},
-	url={http://dx.doi.org/10.1007/978-3-642-33122-0_17},
-	publisher={Springer Berlin Heidelberg},
-	author={Cox, Anthony J. and Jakobi, Tobias and Rosone, Giovanna and Schulz-Trieglaff, Ole B.},
-	pages={214-224}
+@inproceedings{Cox12,
+  year =         2012,
+  booktitle =    {Algorithms in Bioinformatics},
+  volume =       7534,
+  series =       {Lecture Notes in Computer Science},
+  editor =       {Raphael, Ben and Tang, Jijun},
+  doi =          {10.1007/978-3-642-33122-0_17},
+  title =        {Comparing {DNA} Sequence Collections by Direct
+                  Comparison of Compressed Text Indexes},
+  publisher =    {Springer Berlin Heidelberg},
+  author =       {Cox, Anthony J. and Jakobi, Tobias and Rosone,
+                  Giovanna and Schulz-Trieglaff, Ole B.},
+  pages =        {214-224}
 }

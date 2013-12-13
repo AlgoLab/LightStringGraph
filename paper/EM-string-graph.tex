@@ -1,24 +1,19 @@
-\documentclass[11pt]{article}
-% Arxiv
-\pdfoutput=1
+\documentclass[runningheads,envcountsame,a4paper]{llncs}
+\pdfpagesattr{/CropBox [92 112 523 778]}
+
 \usepackage[utf8]{inputenc}
-\usepackage{verbatim}
-\usepackage{amsmath,amssymb,array}
-\usepackage{amsthm}
+\usepackage{microtype}
+%\usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{float}
 \usepackage[algoruled,linesnumbered,noend]{algorithm2e}
 \usepackage{ifdraft}
 \usepackage{enumitem}
 \usepackage{cite}
-\usepackage{rotating}
 \usepackage{multirow}
-\usepackage{verbatim}
 \usepackage{url}
-\usepackage{amsthm}
 \usepackage{xspace}
 \usepackage{graphicx}
-\usepackage[algoruled,linesnumbered,noend]{algorithm2e}
-\bibliographystyle{plain}
 
 \newcommand{\coll}[1]{\url{#1}}
 
@@ -33,19 +28,13 @@
   \marginpar{\framebox{\Large *}}%
 }
 
-\usepackage{tikz}
-\usetikzlibrary{shapes,arrows}
-\usetikzlibrary{snakes}
-\usetikzlibrary{positioning,patterns}
-\usepackage{subfigure}
-
-\usepackage{rotating}
-
+% \usepackage{tikz}
+% \usetikzlibrary{shapes,arrows}
+% \usetikzlibrary{snakes}
+% \usetikzlibrary{positioning,patterns}
 
 
 \newcommand{\mathfrc}[1]{\text{\fontfamily{frc}\selectfont#1}}
-
-
 
 \usepackage{booktabs}
 \newcommand{\otoprule}{\midrule[\heavyrulewidth]}
@@ -54,76 +43,31 @@
 \newcolumntype{T}[1]{>{\tsize} #1}
 \newcolumntype{W}{>{\raggedleft\arraybackslash}X}
 \newcolumntype{C}{>{\centering\arraybackslash}X}
-\usepackage{multirow}
-\usepackage{longtable}
 \usepackage{array}
 
 
-\newcommand{\nheader}[1]{\multicolumn{1}{c}{#1}}
-\newcommand{\header}[1]{\multicolumn{1}{c}{\headsize #1}}
-\newcommand{\headertwo}[1]{\multicolumn{2}{c}{\headsize #1}}
-\newcommand{\notfound}{\multicolumn{8}{c}{\tsize did not complete the task}}
-\newcommand{\tsize}{\scriptsize}
-\newcommand{\headsize}{\scriptsize}
-
-\newcommand{\plaintable}{%
-  \setlength{\extrarowheight}{0ex}%
-}
-\newcommand{\plainlongtable}{%
-  \setlength{\extrarowheight}{-0.45ex}%
-}
-
-\newcommand{\longtableheader}[4]{
-\caption[#3]{#2}\\
-\toprule #4 \otoprule
-\endfirsthead
-\caption[]{#3}\\
-\toprule #4 \otoprule
-\endhead
-\midrule
-\multicolumn{#1}{r}{\tsize (continue)}\\
-\endfoot
-\bottomrule
-\endlastfoot
-}
-
 \newcommand{\inputdata}[1]{\noindent \emph{Input: }#1\\*}
 \newcommand{\outputdata}[1]{\noindent \emph{Output: }#1\\}
-\newcommand{\ie}{i.e.~}
-\newcommand{\st}{s.t.~}
-\newcommand{\wrt}{w.r.t.~}
-\newcommand{\ExGene}{\ensuremath{\langle B,F\rangle}}
-\newcommand{\Path}{\ensuremath{\mathcal{P}}}
-\newcommand{\nil}{\ensuremath{\bot}}
-\newcommand{\card}[1]{\ensuremath{|#1|}}
-\DeclareMathOperator{\prefix}{pre}
-\DeclareMathOperator{\suffix}{suf}
-\DeclareMathOperator{\enc}{enc}
-\DeclareMathOperator{\FH}{LH}
-\DeclareMathOperator{\SH}{RH}
+\newcommand{\etal}{\textit{et al.}\xspace}
+\newcommand{\ie}{\textit{i.e.},\xspace}
+\newcommand{\st}{s.t.\xspace}
+\newcommand{\wrt}{w.r.t.\xspace}
 \renewcommand{\l}{\ensuremath{\ell}}
 \renewcommand{\emptyset}{\ensuremath{\varnothing}}
 
 
 \begin{document}
 
-\newtheorem{theorem}{theorem}[section]
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{observation}[theorem]{Observation}
-\newtheorem{corollary}[theorem]{Corollary}
-\newtheorem{claim}[theorem]{Claim}
-\newtheorem{property}[theorem]{Property}
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{problem}{problem}
-%\newtheorem{example}{example}[section]
-
-
-
 \title{A lightweight  assembly of generalized string graphs}
 
-\author{ P. Bonizzoni, G. Della Vedova, Y. Pirola, M. Previtali,  R. Rizzi}
+\author{%
+  Paola Bonizzoni \and
+  Gianluca Della Vedova \and
+  Yuri Pirola \and
+  Marco Previtali \and
+  Raffaella Rizzi
+}
+\authorrunning{Bonizzoni \etal}
 
 % \institute{DISCo,
 %   Univ. Milano-Bicocca,
@@ -141,7 +85,7 @@
 
 \section{Introduction}
 The construction of  string graphs has been prosed as an alternative approach to de novo  genome assembly based on De Brujin graphs.
-A string-graph assembled from reads, is obtained by finding all overlaps between reads and building an overlap graphs and  then implementing 
+A string-graph assembled from reads, is obtained by finding all overlaps between reads and building an overlap graphs and  then implementing
 transitive reduction to produce a string graph where only irreducible overlaps are considered.
 The main  formulation was proposed by Gene Myers \cite{Myers05}.
 The string graph method in genome assembly applies to reads of variable lengths and thus it is of particular interest for the next generation sequencing data.
@@ -150,12 +94,12 @@ In recent works, Simpson and Durbin \cite{Simpson10} show  how to output directl
 requirements and reducing compute time to be linear in the total size of the input data, while making use of the efficient implementation of the FM-index.
 
 descrizione The FM-index .... [inserire citazione FM-index]
- 
+
  With the advent of NGS data, the investigation of the BWT has moved towards its use in indexing huge collections of texts, represented by the reads of variable length.
  The notion  of Extended Borrows Wheeler has been proposed to deal with a collection of texts \cite{Bauer11} and iits potentiality in  Bioinformatics  to index read data has been investigated in ....
- 
+
 While the BWT has been deeply used for the alignment of reads to a reference genome, for the first time the BWT has been explored as a tool for de novo assembly.
- 
+
 In \cite{Simpson10} Durbin addresses the problem of having a more efficient space FM-index implementation of the string graph problem.
 
 ---results----
@@ -172,14 +116,14 @@ definizioni varie su BWT ed altro....
 
 A set of strings is \emph{irreducible} if each string is not a prefix of some other string.
 \begin{definition}
-Given two reads $r_1$ and $r_2$ and a parameter $\tau$, $r_2$ \emph{extends} $r_1$ if they overlap for at least $\tau$ bp (where $\tau$ is a parameter). 
+Given two reads $r_1$ and $r_2$ and a parameter $\tau$, $r_2$ \emph{extends} $r_1$ if they overlap for at least $\tau$ bp (where $\tau$ is a parameter).
 \end{definition}
 We call \emph{extension} the suffix $\alpha$ of $r_2$ exceeding the overlap.
 
 \subsection*{The \emph{Generalized String Graph}}
 
-We generalize the notion of String Graph in order to apply this notion to   assembling RNA-seq data into splicing graph \cite{Simpson10, Simpson12}. 
-When assembling RNA-seq data with an overlap graph, the final output graph is not a line path, since the graph should represent the alternative transcripts derived by the alternative splicing  
+We generalize the notion of String Graph in order to apply this notion to   assembling RNA-seq data into splicing graph \cite{Simpson10, Simpson12}.
+When assembling RNA-seq data with an overlap graph, the final output graph is not a line path, since the graph should represent the alternative transcripts derived by the alternative splicing
 on the gene structure. In fact, RNA-seq data are classified into {\em spliced} and  {\em  unspliced} reads. Unspliced reads are reads that cover regions that are either coding or not coding ones, i.e. they are absent or present in a transcript sequence. On the contrary a  spliced read $r$ contains  of  at least two consecutive substrings   $r_i $, $r_{i+1}$ such that  there exists at least two transcripts where  $r_i$ is present in a transcript sequence  together with $r_{i+1}$ while $r_i$ is present and $r_{i+1}$ is absent in the transcript sequence.
 
 In order to include this case we give a more general notion of irreducible edges of an overlap graph. Under the assumption that a read is not included in another one, the transitive reduction of an overlap graph, by which we get a string graph from an overlap graph, corresponds to require that the set of reads that extends a read $r$ is irreducible. This definition includes also the case of  splicing graphs...
@@ -201,7 +145,7 @@ We want to solve the problem of finding, in external memory, a $SG$ from a set $
 
 \section*{The approach}
 
-%The algorithm considers all the common substrings $Q$ of length $\geq \tau$, and, for each $Q$, it searches for the set $S_Q$ of the reads having $Q$ as a suffix and the set $P_Q$ of the reads having $Q$ as a prefix. Reads in $P_Q$ extend each one of the reads in $S_Q$. The algorithm adds to the arc-set of a read $r$ 
+%The algorithm considers all the common substrings $Q$ of length $\geq \tau$, and, for each $Q$, it searches for the set $S_Q$ of the reads having $Q$ as a suffix and the set $P_Q$ of the reads having $Q$ as a prefix. Reads in $P_Q$ extend each one of the reads in $S_Q$. The algorithm adds to the arc-set of a read $r$
 %
 %An iterative procedure considers common strings $Q$ of increasing length, starting from the minumum value $\tau$.
 %At each step, Then, the algorithm analyzes the extension of each read in PQ, after the overlap Q.
@@ -210,14 +154,14 @@ Our approach is based on handling common substrings in $R$, by means of the Burr
 
 Let $\Sigma=\{\sigma_1, \sigma_2, \ldots, \sigma_n\}$ be an ordered alphabet, and $\sigma_1$ is the symbol $\$$. Let $B$ be the BWT of the set $R$ of reads defined over the alphabet $\{\sigma_2, \ldots, \sigma_n\}$.
 
-A $Q$-interval $[b,e)$ of $B$ is the interval containing symbols preceeding the string $Q$ in $R$. In this framework, the \emph{length} of a $Q$-interval is the length of the string $Q$, while the \emph{width} of a $Q$-interval $[b, e)$ is the difference $(e-b)$. A $Q$-interval on $B$ of width $>1$ represents a string $Q$ having more than one occurrence in $R$ (\ie common substring). 
+A $Q$-interval $[b,e)$ of $B$ is the interval containing symbols preceeding the string $Q$ in $R$. In this framework, the \emph{length} of a $Q$-interval is the length of the string $Q$, while the \emph{width} of a $Q$-interval $[b, e)$ is the difference $(e-b)$. A $Q$-interval on $B$ of width $>1$ represents a string $Q$ having more than one occurrence in $R$ (\ie common substring).
 
 In the following, we denote with $R(q)=R(b,e)$ the reads containing the BWT symbols of the interval $q=[b,e)$.
 
 Let $B'$ be the BWT of the set $R'$ of the reversed reads.
 
 \begin{definition}
-A $Q$-interval $[b,e)$ on $B$ and a $Q'$-interval $[b',e')$ on $B'$ are \emph{linked} iff $Q=rev(Q')$. 
+A $Q$-interval $[b,e)$ on $B$ and a $Q'$-interval $[b',e')$ on $B'$ are \emph{linked} iff $Q=rev(Q')$.
 \end{definition}
 
 Two linked intervals must have the same width, and it holds $(e-b)=(e'-b')$.
@@ -238,25 +182,25 @@ A \emph{S-interval} is a $rev(Q)$-interval $[b',e')$ on $B'$ having $m>0$ backwa
 In the following, we call \emph{\$-interval} a BWT interval related to suffixes starting with $\$$, and denote with $X(q)$ the set of all the backward extensions of the interval $q$ with each one of the symbols $\sigma \in \Sigma$.
 
 \begin{definition}
-An \emph{extension pair} of dimension $L$ is a couple $(q'', q')$ of intervals on $B’$, such that $q''$ is a $rev(\beta)rev(S)\$$-interval, $q'$ is a $\$rev(S)$-interval,
+An \emph{extension pair} of dimension $L$ is a couple $(q'', q')$ of intervals on $B'$, such that $q''$ is a $rev(\beta)rev(S)\$$-interval, $q'$ is a $\$rev(S)$-interval,
 and $|rev(\beta)rev(S)| = L$.
 \end{definition}
 
-The interval $q''$ represents reads sharing a prefix $S\beta$, and $q'$ represents reads sharing a suffix $S$. The length of the string $\beta$ is called the \emph{extension} of the pair, while the string $S$ is called the \emph{seed}. In other words, the reads related to $q'$ are extended by the reads related to $q''$, and all the extensions start with the string $\beta$. 
+The interval $q''$ represents reads sharing a prefix $S\beta$, and $q'$ represents reads sharing a suffix $S$. The length of the string $\beta$ is called the \emph{extension} of the pair, while the string $S$ is called the \emph{seed}. In other words, the reads related to $q'$ are extended by the reads related to $q''$, and all the extensions start with the string $\beta$.
 
 
 \section*{Description of the algorithm}
 
 The idea of our algorithm is building, in sequential iterations, the $Q$-intervals on $B$ and the $rev(Q)$-intervals on $B'$ of increasing length $l$, starting from a minimum value $\tau$.
 
-Our algorithm is based on the two methods presented in \cite{Bauer11, Cox12}. The first one builds the BWT of a collection of strings in $|\Sigma|$ external files, each one containing the BWT segment related to suffixes starting with the symbol $\sigma$. The second method allows to construct (in external files) BWT intervals of increasing length. 
+Our algorithm is based on the two methods presented in \cite{Bauer11, Cox12}. The first one builds the BWT of a collection of strings in $|\Sigma|$ external files, each one containing the BWT segment related to suffixes starting with the symbol $\sigma$. The second method allows to construct (in external files) BWT intervals of increasing length.
 In particular, the procedure \emph{processInterval} gives the sorted list (lexicographical order) of the intervals of a given length $l$, from the sorted list of the intervals of length $l-1$ (intervals of length $1$ can be easily obtained by means of the FM-index function $C$).
-Each list (containing intervals of a given length $l$) is partioned in $|\Sigma|$ external files, each one containing the intervals related to a string starting with the same symbol $\sigma$. 
+Each list (containing intervals of a given length $l$) is partioned in $|\Sigma|$ external files, each one containing the intervals related to a string starting with the same symbol $\sigma$.
 
 At the beginning, an empty set $R_r$ is initialized for each $r \in R$. At each iteration $j$ (starting from $j=0$), the following lists are used:
 \begin{itemize}
-\item $\mathcal{Q}_j$, containing the $Q$-intervals $[b, e)$ on $B$ of width $>1$ and length $(j+\tau)$, each one with its linked $rev(Q)$-interval $[b’, e’)$ on $B'$.
-\item $\mathcal{T}$, containing the $rev(Q)$-intervals $[b’, e’)$ of length $(j+\tau)$ which are $P$-intervals, each one with its dimension $n$.
+\item $\mathcal{Q}_j$, containing the $Q$-intervals $[b, e)$ on $B$ of width $>1$ and length $(j+\tau)$, each one with its linked $rev(Q)$-interval $[b', e')$ on $B'$.
+\item $\mathcal{T}$, containing the $rev(Q)$-intervals $[b', e')$ of length $(j+\tau)$ which are $P$-intervals, each one with its dimension $n$.
 \item $\mathcal{E}_j$, containing the extension pairs $(q'', q')$ of dimension $(j+\tau)$, each one with its extension $e$ $> 0$
 \end{itemize}
 
@@ -272,13 +216,13 @@ have a length $< (j+\tau)$ and are the common substrings considered at the previ
 At the first iteration $j=0$, the list $\mathcal{Q}_0$ contains the common substrings of length $\tau$, and $\mathcal{E}_0$ is empty. The iterations stop when both $\mathcal{Q}_j$ and $\mathcal{E}_j$ are empty.
 
 During the $j$-th iteration, each $Q$-interval $[b, e)$ in $\mathcal{Q}_j$ is backward extended in order to compute (i) the list $\mathcal{Q}_{j+1}$ of the intervals of length $(j+\tau+1)$, and (ii) the list $\mathcal{T}$ of the \emph{P-intervals} of length $(j+\tau)$.
-The list $\mathcal{Q}_{j+1}$ will be used during the next iteration $(j+1)$, and represents common strings of length increased by $1$. The list $\mathcal{T}$ is computed by taking into account that a \emph{P-interval} $[b’, e’)$ with dimension $n$ is linked to a $Q$-interval $[b, e)$ with exactly $n$ extensions with the symbol $\$$. 
-The list $\mathcal{T}$ must be sorted by ascending value of the starting value $b'$ (\ie lexicographical order of $rev(Q)$). Then, each \emph{P-interval} $[b’, e’)$ of dimension $n$ and each interval $[b’, b’+n)$ in the list $\mathcal{T}$ (the latter representing the set of the reads having Q as a prefix) are backward extended in order to compute the extension pairs $(q'', q')$ with dimension $(j+\tau+1)$ and extension $1$, to put into the list $\mathcal{E}_{j+1}$ to use during the next iteration $(j+1)$. More in detail, given a \emph{P-interval} $[b',e')$ and its sub-interval $[b',b+n)$, a pair $(q'',q')$ of extension $e=1$ is added for each $q'' \in X(b',b'+n)$, where $q'$ is the $\$$-interval obtained by extending $[b',e')$. Notice that the interval $[b’, b’+n)$ (under our assumption) cannot have extensions with symbol $\$$: in fact, no read in $R$ can have $Q$ both as a prefix and a suffix.
+The list $\mathcal{Q}_{j+1}$ will be used during the next iteration $(j+1)$, and represents common strings of length increased by $1$. The list $\mathcal{T}$ is computed by taking into account that a \emph{P-interval} $[b', e')$ with dimension $n$ is linked to a $Q$-interval $[b, e)$ with exactly $n$ extensions with the symbol $\$$.
+The list $\mathcal{T}$ must be sorted by ascending value of the starting value $b'$ (\ie lexicographical order of $rev(Q)$). Then, each \emph{P-interval} $[b', e')$ of dimension $n$ and each interval $[b', b'+n)$ in the list $\mathcal{T}$ (the latter representing the set of the reads having Q as a prefix) are backward extended in order to compute the extension pairs $(q'', q')$ with dimension $(j+\tau+1)$ and extension $1$, to put into the list $\mathcal{E}_{j+1}$ to use during the next iteration $(j+1)$. More in detail, given a \emph{P-interval} $[b',e')$ and its sub-interval $[b',b+n)$, a pair $(q'',q')$ of extension $e=1$ is added for each $q'' \in X(b',b'+n)$, where $q'$ is the $\$$-interval obtained by extending $[b',e')$. Notice that the interval $[b', b'+n)$ (under our assumption) cannot have extensions with symbol $\$$: in fact, no read in $R$ can have $Q$ both as a prefix and a suffix.
 
-At each iteration $j$, the interval $q''$ of a pair $(q'', q')$ with extension $e$ in $\mathcal{E}_j$ is backward extended. If $q''$ has a (unique under our assumption) extension with symbol $\$$ into the interval $[b’_r, b’_r+1)$, then the read represented by that interval is added to the arc-set of each read represented by the interval $q'$ (and no extension pair is added to $\mathcal{E}_{j+1}$). Such arc-sets are checked, in order to guarantee their \emph{irreducibility}. Notice that just $(j+\tau)$-long reads are added to arc-sets at the $j$-th iteration.\\
+At each iteration $j$, the interval $q''$ of a pair $(q'', q')$ with extension $e$ in $\mathcal{E}_j$ is backward extended. If $q''$ has a (unique under our assumption) extension with symbol $\$$ into the interval $[b'_r, b'_r+1)$, then the read represented by that interval is added to the arc-set of each read represented by the interval $q'$ (and no extension pair is added to $\mathcal{E}_{j+1}$). Such arc-sets are checked, in order to guarantee their \emph{irreducibility}. Notice that just $(j+\tau)$-long reads are added to arc-sets at the $j$-th iteration.\\
 Otherwise (if $q''$ has no extension with symbol $\$$), an extension pair $(q_e, q')$ (of dimension $(j+\tau+1)$ and extension $e+1$) is added to the list $\mathcal{E}_{j+1}$, for each $q_e \in X(q'')$, where $X(q'')$ is the set of the intervals obtained by backward extending $q''$ with each $\sigma \in \Sigma$.
 
-At each iteration $j$, the list $\mathcal{E}_{j+1}$ receives extension pairs both from $\mathcal{T}$ and $\mathcal{E}_{j}$. Since, the length of the intervals $[b’, b’+n)$ in $\mathcal{T}$ is equal to the length of intervals $q''$ in $\mathcal{E}_{j}$, the algorithm can extend the union of the two lists, and therefore keep sorted also the list $\mathcal{E}_{j+1}$, by ascending value of the start of the interval $q''$ on the BWT $B'$.
+At each iteration $j$, the list $\mathcal{E}_{j+1}$ receives extension pairs both from $\mathcal{T}$ and $\mathcal{E}_{j}$. Since, the length of the intervals $[b', b'+n)$ in $\mathcal{T}$ is equal to the length of intervals $q''$ in $\mathcal{E}_{j}$, the algorithm can extend the union of the two lists, and therefore keep sorted also the list $\mathcal{E}_{j+1}$, by ascending value of the start of the interval $q''$ on the BWT $B'$.
 
 \section*{Pseudocode}
 
@@ -288,7 +232,7 @@ At each iteration $j$, the list $\mathcal{E}_{j+1}$ receives extension pairs bot
 \Input{$R$, a collection of reads,\\$\tau$, a parameter}
 \Output{the String Graph of $R$}
 
-\tcp{Get the collection of the reverse of the reads} 
+\tcp{Get the collection of the reverse of the reads}
 $R' \gets rev(R)$\;
 $B \gets BWT(R)$\;
 $B' \gets	BWT(R')$\;
@@ -351,12 +295,12 @@ $A \gets \emptyset$\;
 %  $I_k \gets$ empty list\;
 %  Inizialize vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma|$ integers\;
 %  \For{$i \gets 1$ \KwTo  $|\Sigma|$}{
-%     \ForEach{$\langle [b,e),[b’,e’), \sigma^* \rangle \in I_{k-1}(\sigma_i)$}{
-%        $L \gets processJoinedInterval([b,e),[b’,e’),B,\Pi)$\;
+%     \ForEach{$\langle [b,e),[b',e'), \sigma^* \rangle \in I_{k-1}(\sigma_i)$}{
+%        $L \gets processJoinedInterval([b,e),[b',e'),B,\Pi)$\;
 %        \For{$p \gets 1$ \KwTo  $|\Sigma|$}{
-%	  $\langle [b_p,e_p),[b’_p,e’_p)\rangle \gets L[p]$\;
+%	  $\langle [b_p,e_p),[b'_p,e'_p)\rangle \gets L[p]$\;
 %	  \If{($e_p-b_p)>1$}{
-%	     Append $\langle [b_p,e_p),[b’_p,e’_p), \sigma^* \rangle$ to $I_k(\sigma_p)$\;
+%	     Append $\langle [b_p,e_p),[b'_p,e'_p), \sigma^* \rangle$ to $I_k(\sigma_p)$\;
 %	   }
 %         }
 %    }
@@ -384,19 +328,19 @@ $\mathcal{T} \gets \emptyset$\;
 Inizialize vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma|$ integers\;
 
  \For{$i \gets 1$ \KwTo  $|\Sigma|$}{
-      \ForEach{$\langle [b,e),[b’,e’)\rangle \in \mathcal{Q}(\sigma_i)$}{
-	$L \gets processJoinedInterval([b, e),[b’, e’),B,\Pi)$\;
+      \ForEach{$\langle [b,e),[b',e')\rangle \in \mathcal{Q}(\sigma_i)$}{
+	$L \gets processJoinedInterval([b, e),[b', e'),B,\Pi)$\;
          \tcp{Check the $\$$-extension}
-	$\langle ([b_1,e_1),[b’_1,e’_1)\rangle \gets L[1]$\;	
+	$\langle ([b_1,e_1),[b'_1,e'_1)\rangle \gets L[1]$\;
 	\If{$(e_1 - b_1) > 0$}{
 	   $n \gets (e_1 - b_1)$\;
             Append $\langle [b', e'), n\rangle$ to $\mathcal{T}$\;
 	}
 
         \For{$p \gets 1$ \KwTo  $|\Sigma|$}{
-	  $\langle [b_p,e_p),[b’_p,e’_p)\rangle \gets L[p]$\;
+	  $\langle [b_p,e_p),[b'_p,e'_p)\rangle \gets L[p]$\;
 	  \If{($e_p-b_p)>1$}{
-	     Append $\langle [b_p,e_p),[b’_p,e’_p)\rangle$ to $\mathcal{Q}_{e}(\sigma_p)$\;
+	     Append $\langle [b_p,e_p),[b'_p,e'_p)\rangle$ to $\mathcal{Q}_{e}(\sigma_p)$\;
           }
         }
      }
@@ -428,7 +372,7 @@ Inizialize vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma|$ integers\;
                            $[b'_{s}, e'_{s}) \gets L[1]$\;
 			\If{$(e'_{s} - b'_{s}) > 0$} {
                                    $L \gets processInterval([b', b'+n), B', \Pi)$\;
-                                   
+
 				\For{$i \gets 2$ \KwTo $|\Sigma|$} {
                                              append $\langle L[i], [b'_{s}, e'_{s})\rangle$ to $\mathcal{E}_e(\sigma_i)$ if $L[i]$ is not null\;
 				}
@@ -460,7 +404,7 @@ Inizialize vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma|$ integers\;
 
 \caption{extendOneStepRight($\mathcal{T}$, $\mathcal{E}$, $B'$)}
 \label{alg:extend-right}
-\end{algorithm} 
+\end{algorithm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -479,9 +423,9 @@ $\pi sum \gets 0$\;
 \For{$i \gets 1$ \KwTo  $|\Sigma|$}{
    $b_i \gets C_T(\sigma_i)+ \Pi[i]$\;
    $e_i \gets b_i + \pi[i]$\;
-   $b’_i \gets b’+ \pi sum$\;
-   $e’_i  \gets b’_i + \pi[i]$\;
-   Append $\langle [b_i, e_i), [b’_i, e’_i)\rangle$ to L\;
+   $b'_i \gets b'+ \pi sum$\;
+   $e'_i  \gets b'_i + \pi[i]$\;
+   Append $\langle [b_i, e_i), [b'_i, e'_i)\rangle$ to L\;
    $\pi sum \gets \pi sum + \pi[i]$\;
 }
 
@@ -489,7 +433,7 @@ $\pi sum \gets 0$\;
 $\Pi \gets \Pi+\pi$\;
 
 \Return{$L$}\;
-	
+
 \caption{processJoinedInterval($[b,e)$,$[b',e')$, $B$, $\Pi$)}
 \label{alg:process-joined-interval}
 \end{algorithm}
@@ -509,7 +453,7 @@ $L \gets \emptyset$\;
 \For{$i \gets 1$ \KwTo  $|\Sigma|$}{
    $b_i \gets C_T(\sigma_i)+ \Pi[i]$\;
    $e_i \gets b_i + \pi[i]$\;
- 
+
    Add $[b_i, e_i)$ to L\;
 }
 
@@ -555,8 +499,8 @@ The time complexity for building the BWT of the collection $R$ of reads is the o
 More precisely, using BCR we can build the data structure in $\mathcal{O}(l\times sort(n))$ whereas using BCRext the time complexity is $\mathcal{O}(ln)$.
 
 Observe that the buildgraph procedure  consists of iterating at most $l$ times the procedures
-ExtendQonLeft and ExtendQonRight. In fact, those two procedures 
-%the procedures ExtendQonLeft and ExtendQonRight 
+ExtendQonLeft and ExtendQonRight. In fact, those two procedures
+%the procedures ExtendQonLeft and ExtendQonRight
 apply the backward extension to every $Q$-interval in $\mathcal{Q}_j$ at most $l$ times, since there can't be any interval related to a pattern $Q$ such that $|Q| > l$. % $Q$-interval has length at least $\tau$.
 
 On the other hand the procedures ExtendQonLeft and ExtendQonRight aim to build all the possible $Q$-intervals linked to the maximal overlaps between the reads (the irreducible edges of the SGR graph) by means of an incremental approach that rely on the computation of the $Q$-intervals during the previous steps.
@@ -570,8 +514,9 @@ An estimate of $N_Q$ can be given as $O(l \times n)$ (let us recall that the num
 
 Note that during the iteration step the buildgraph procedure has also to sort $\mathcal{T}$. Recall that, at a given iteration $i$, $\mathcal{T}$ is the set of $Q$-intervals such that $Q$ is prefix for at least one read and $|Q| = i + \tau$; it's fairly clear that $|\mathcal{T}| \leq n$. This procedure has a total time complexity $\mathcal{O}(l \times sort(n))$.
 
-Hence the time complexity for building the string graph is $\mathcal{O}(l \times (n + sort(n)))$. % of BWT in external memory and thus an estimate of the time over real data can be ….
+Hence the time complexity for building the string graph is $\mathcal{O}(l \times (n + sort(n)))$. % of BWT in external memory and thus an estimate of the time over real data can be ....
 
+\bibliographystyle{splncs03}
 \bibliography{biblioBWTpaper}
 
 
