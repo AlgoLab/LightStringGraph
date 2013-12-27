@@ -85,17 +85,17 @@
 
 \section{Introduction}
 De novo sequence  assembly is a difficult problem  and is a necessary step  in analyzing data from next generation sequencing technologies (NGS).
-NGS  produce from a  (genomic  or transcriptomic)  sequence a    huge amounts of short sequences, called reads. Usually reads are  compared to produce a  graph representation from which derive a path  representing the original sequenced sequence. Such a graph representation may be derived by overlap-based methods or building  De Brujin graphs \cite{}.
+NGS  produce from a  (genomic  or transcriptomic)  sequence a    huge amounts of short sequences, called reads. Usually reads are  compared to produce a  graph representation from which derive a path  representing the original sequenced sequence. Such a graph representation may be derived by overlap-based methods or building  De Brujin graphs \cite{Zerbino2008, Simpson2009, Peng2010}.
 Overlap-based methods are based on computing pairwise overlaps among reads  and then representing reads as vertices and edges connect overlapping reads, where each edge $(r,r')$ may be labeled by the  suffix of $r'$ that  excedes the overlap between the two reads.  However, they require a comparison among reads that is quadratic in the total size of the input data.  These method are of particular interest in genome assembly since it applies to mixed length reads of  coming from different  next generation sequencing technologies.
 
-Recently \cite{Simpson2010, Simpson2013}  have proposed string graphs as an alternative approach to de novo  genome assembly based on De Brujin graphs. The main  formulation was proposed by Gene Myers \cite{Myers05}.  The method builds a graph from reads that  is obtained by   building an overlap graphs and  then implementing transitive reduction to produce a string graph where only maximal  overlaps are considered. More precisely, given a path $r \rightarrow r_1 \rightarrow r_2$ in a overlap graph,  and given the \emph{transitive} edge  $r \rightarrow r_2$, Simpson and Durbin \cite{Simpson10}  observe that  (under the assumption of forbidding the substring property)  the string associated to edge   $(r, r_1) $  is a prefix of  the string associated to the transitive edge $(r, r_2)$.
-Based on this property,  Simpson and Durbin \cite{Simpson10}  define a notion of \emph{irreducible} edge  and    show  how to construct a string graph by outputting  directly  irreducible edges (instead of building an overlap-graph)  significantly shrinking memory
-requirements and reducing compute time to be linear in the total size of the input data.  The   reduction in time and space in the string graph assembly problem  \cite{Simpson10}  is achieved by    making use of  an implementation  of the problem by BWT and the FM-index apparatus.
+Recently \cite{Simpson2010, Simpson2012}  have proposed string graphs as an alternative approach to de novo  genome assembly based on De Brujin graphs. The main  formulation was proposed by Gene Myers \cite{Myers2005}.  The method builds a graph from reads that  is obtained by   building an overlap graphs and  then implementing transitive reduction to produce a string graph where only maximal  overlaps are considered. More precisely, given a path $r \rightarrow r_1 \rightarrow r_2$ in a overlap graph,  and given the \emph{transitive} edge  $r \rightarrow r_2$, Simpson and Durbin \cite{Simpson2010}  observe that  (under the assumption of forbidding the substring property)  the string associated to edge   $(r, r_1) $  is a prefix of  the string associated to the transitive edge $(r, r_2)$.
+Based on this property,  Simpson and Durbin \cite{Simpson2010}  define a notion of \emph{irreducible} edge  and    show  how to construct a string graph by outputting  directly  irreducible edges (instead of building an overlap-graph)  significantly shrinking memory
+requirements and reducing compute time to be linear in the total size of the input data.  The   reduction in time and space in the string graph assembly problem  \cite{Simpson2010}  is achieved by    making use of  an implementation  of the problem by BWT and the FM-index apparatus.
 In their works, Simpson and Durbin pose the question of further reducing the space requirements in solving the string graph assembly by an external memory construction of the FM-index.
-In the meantime, an investigation of external memory construction of the  BWT  has been started in \cite{Rosone...} showing that it is possible to  arbitrarily reduce the use of RAM for building a BWT and for solving  typical applications of the BWT  \cite{}.
-In this paper, based upon the work in \cite{Rosone}, we show how to construct the string graph from a BWT for a collection of reads  that is completely in external memory.
+In the meantime, an investigation of external memory construction of the  BWT  has been started in \cite{Bauer2011} showing that it is possible to  arbitrarily reduce the use of RAM for building a BWT and for solving  typical applications of the BWT  \notaestesa{Aggiungere rif biblio}. \notaestesa{altri rif a BWT in memoria esterna sono Ferragina2012, Bauer2013}.
+In this paper, based upon the work in \cite{Bauer2011}, we show how to construct the string graph from a BWT for a collection of reads  that is completely in external memory.
 
-The construction of the String graph in \cite{Simpson10} works in two steps. In the first one,  for each read $r$ in the collection $R$,  the position in the BWT  ($Q$-interval)  of reads  that share with $r$ an overlap  given by a string $Q$  are computed
+The construction of the String graph in \cite{Simpson2010} works in two steps. In the first one,  for each read $r$ in the collection $R$,  the position in the BWT  ($Q$-interval)  of reads  that share with $r$ an overlap  given by a string $Q$  are computed
 in time linear in the size of  $r$.  In the second step,  $Q$-intervals are extended to discover  irreducible edges.
 Both   steps strictly require to keep the  whole FM-index and BWT sequence for $R$ and  for the collection of reversed reads  in main memory since the $Q$-intervals and the relative extensions cover different positions of  the whole BWT. Moreover, the algorithm requires to recompute   $Q$-intervals  a number of times that is equal to the number of  different reads in $R$ share the string  $Q$
 as a suffix.
@@ -121,11 +121,11 @@ A key observation in our work is the fact that due to the fact that a BWT consis
 descrizione The FM-index .... [inserire citazione FM-index]
 
  With the advent of NGS data, the investigation of the BWT has moved towards its use in indexing huge collections of texts, represented by the reads of variable length.
- The notion  of Extended Borrows Wheeler has been proposed to deal with a collection of texts \cite{Bauer11} and iits potentiality in  Bioinformatics  to index read data has been investigated in ....
+ The notion  of Extended Borrows Wheeler has been proposed to deal with a collection of texts \cite{Bauer2011} and iits potentiality in  Bioinformatics  to index read data has been investigated in ....
 
 While the BWT has been deeply used for the alignment of reads to a reference genome, for the first time the BWT has been explored as a tool for de novo assembly.
 
-In \cite{Simpson10} Durbin addresses the problem of having a more efficient space FM-index implementation of the string graph problem.
+In \cite{Simpson2010} Durbin addresses the problem of having a more efficient space FM-index implementation of the string graph problem.
 
 ---results----
 
@@ -142,17 +142,17 @@ $r[l-k +1, l]$ and $r[1, k]$ respectively of string $r$.
 
 Let $R = \{r_1, \cdots, r_n\}$ be a collection of $n$ strings over $\Sigma$, where each sequence $r_i$ is ended by  a sentinel  symbol \$ that is not in the alphabet $\Sigma$ and is lexographically lower than any other symbol in $\Sigma$.
 Let $SA(R)$ be the {\em generalized suffix-array} for the set $R$ consisting of  the array of  pairs $(i_j, p_i)$ for each index $i \in \{1, \cdots, n \}$, where
-$SA(R)[i]=  (i_j, p_i)$ if and only if  the $i_j$-suffix of string $r_{p_i}$ is the $i$-th lowest in the lexicographic ordering of all suffices of strings in $R$. The generalized suffix-array is an indexing data structure for a collection of strings (\cite{...}).
+$SA(R)[i]=  (i_j, p_i)$ if and only if  the $i_j$-suffix of string $r_{p_i}$ is the $i$-th lowest in the lexicographic ordering of all suffices of strings in $R$. The generalized suffix-array is an indexing data structure for a collection of strings (\cite{Shi1996}).
 
 Then the BWT of the collection $R$ is defined as the sequence $B_R$ such that $B_R[i]=r_{j}[k -1]$ if  $k > 1$ and   $SA[i] = (k,j)$, otherwise $B_R[i]= $ \$.
 Informally, $B_R[i]$ is the symbol that precedes the  $k$-suffix  of  string $r_j$ where such suffix is the $i$-th lowest in  the ordering  of the generalized suffix array $SA$.
 Clearly, the size of the suffix array is the sum of the length of all suffices of  strings in the collection $R$, and thus $SA$ is of size $N = \sum_{i \leq n}|r_i|$.
-The string $B_R$ is a permutation of all symbols in the collection $R$ of strings and auxiliary arrays  that provide the FM-index (\cite{}) for a BWT  of a text can be extended to a BWT of the collection and are defined as usual: $C(\sigma, R)$ denotes the number of symbols in $R$ that are lexographically lower than symbol $\sigma$, while $Occ(\sigma, i, R)$ is the array that reports the number of occurrences in $B_R[1, i]$ of symbol $\sigma$, including counting the number of sentinel symbols \$.
+The string $B_R$ is a permutation of all symbols in the collection $R$ of strings and auxiliary arrays  that provide the FM-index (\cite{Ferragina2000}) for a BWT  of a text can be extended to a BWT of the collection and are defined as usual: $C(\sigma, R)$ denotes the number of symbols in $R$ that are lexographically lower than symbol $\sigma$, while $Occ(\sigma, i, R)$ is the array that reports the number of occurrences in $B_R[1, i]$ of symbol $\sigma$, including counting the number of sentinel symbols \$.
 
 %Now, the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$ reports the sequence of symbols that precedes the ordered suffices in the generalized  suffix array $SA[i,k]$.
 
 The two arrays $C(\sigma, R)$ and $Occ(\sigma, i, R)$ are crucial in computing  the positions of all occurrences of a string $Q$  in a collection $R$ of
-strings and have been used in the search algorithm given by Ferragina and Manzini \cite{}.
+strings and have been used in the search algorithm given by Ferragina and Manzini \cite{Ferragina2000}.
 
 Observe  that the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$ reports the sequence of symbols that precedes the ordered suffices in the generalized  suffix array $SA[i,k]$.
 
@@ -166,8 +166,8 @@ Observe  that the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$ reports t
 A string $s$ is \emph{prefix-free} in a collection $S$ of strings,  if  for any  other string $s'$  in $S$, $s'$ is not a prefix of $s$.
  Given two reads $r_1$ and $r_2$, we say that $r_1$ and $r_2$ {\em overlaps}    if the suffix of $r_1$ is equal to a prefix of $r_2$ or vice versa.  If $r_1$ has a suffix $\alpha$ that is also a prefix of $r_1$, then we say that $r_2$  \emph{extends} $r_1$  by $|r_2|- |\alpha|$- symbols and the suffix $\beta$ such that $r_2 = \alpha \beta$ is called \emph{extension} of  $r_2$ with $r$.
 
-The formulation of a  String Graph  used in \cite{Simpson2010} is the one originally proposed in \cite{Myers05} that is the graph built by first constructing a graph of
-the pairwise overlaps between   reads and  by removing transitive edges. More precisely, in \cite{Simpson2010} they propose to build a string-graph from \emph{irreducible} edges that should correspond  to non transitive edges  of the overlap graph.  Under the assumption that  a read is not a substring of another read $R$, an edge $(r, r_e)$  is irreducible whenever the extension of $r_e$ with $R$ is not a prefix of any other extension of a read $r'$ with $r$.  Considering genomic reads, a further property of irreducible edges is proposed in \cite{Simpson10} and implemented with the FM-index approach:  the read $r_e$ having shortest extension with $r$ and  which  is the first generated in lexicographic order produces the edge $(r,r_e)$ of the string graph.
+The formulation of a  String Graph  used in \cite{Simpson2010} is the one originally proposed in \cite{Myers2005} that is the graph built by first constructing a graph of
+the pairwise overlaps between   reads and  by removing transitive edges. More precisely, in \cite{Simpson2010} they propose to build a string-graph from \emph{irreducible} edges that should correspond  to non transitive edges  of the overlap graph.  Under the assumption that  a read is not a substring of another read $R$, an edge $(r, r_e)$  is irreducible whenever the extension of $r_e$ with $R$ is not a prefix of any other extension of a read $r'$ with $r$.  Considering genomic reads, a further property of irreducible edges is proposed in \cite{Simpson2010} and implemented with the FM-index approach:  the read $r_e$ having shortest extension with $r$ and  which  is the first generated in lexicographic order produces the edge $(r,r_e)$ of the string graph.
 
 
 
@@ -217,12 +217,12 @@ Our  procedure to find the arc-set $A_r$ for each read $r$   is based on the ide
 forward the $Q$-interval in those reads that have $Q$ as a prefix until the sentinel symbol \$ is found, i.e. the reads are terminated. The extension of such reads with $r$ are compared with the one
 that has been computed till the iteration step in order to compute  the String graph over the set of  reads whose $Q$-intervals and forward extensions have been examined so far.
 
-The following notion of \emph{extension pair} is crucial for implementing the above idea using FM-index in two directions (\cite{lam}).
+The following notion of \emph{extension pair} is crucial for implementing the above idea using FM-index in two directions (\cite{Lam2009}).
 
 
 \begin{definition}
 \label{extension-pair}
-An \emph{extension pair} of dimension $L$ is a couple $(q'', q')$ of intervals on $B’$, such that $q''$ is a $rev(\beta)rev(S)\$$-interval, $q'$ is a $\$rev(S)$-interval,
+An \emph{extension pair} of dimension $L$ is a couple $(q'', q')$ of intervals on $B'$, such that $q''$ is a $rev(\beta)rev(S)\$$-interval, $q'$ is a $\$rev(S)$-interval,
 and $|rev(\beta)rev(S)| = L$.
 \end{definition}
 
@@ -234,7 +234,7 @@ An extension pair $(q'', q')$ is \emph{terminal} if and only if $q''$ is the \$-
 
 The main step of the algorithm is the computation in external memory of extension pairs and it requires   searching the FM-index in two directions, first backwards to determine the intervals of overlapping prefixes and then forwards to extend those prefixes and build the terminal extensions.
 
-The construction of the String graph in \cite{Simpson10} works in two steps. In the first one,  for each read $r$ in the collection $R$, all $Q$-intervals of reads overlapping  $r$ are computed
+The construction of the String graph in \cite{Simpson2010} works in two steps. In the first one,  for each read $r$ in the collection $R$, all $Q$-intervals of reads overlapping  $r$ are computed
 in time linear in the size of  $r$.  In the second step, each of this interval are forward extended in order to discover the first \$ extension of the $Q$-interval representing an irreducible edge.
 Observe that the two steps strictly require to keep the  whole FM-index and BWT sequence for $R$ and $R'$  in main memory since the $Q$-intervals and the relative extensions cover different positions of  the whole BWT. Moreover, the algorithm requires to recompute   $Q$-intervals  a number of times that is equal to the number of  different reads in $R$ share the string  $Q$
 as a suffix.
@@ -271,10 +271,10 @@ the iteration allows to infer $A_r$. The novel idea, is that of mantaining the i
 
 
 
-Our algorithm is based on the two methods presented in \cite{Bauer11, Cox12}. The first one builds the BWT of a collection of strings using  $|\Sigma|$ external files, each one containing the BWT segment related to suffixes starting with the symbol $\sigma$. The second method allows to construct (in external files) BWT intervals of increasing length.
+Our algorithm is based on the two methods presented in \cite{Bauer2011, Cox2012}. The first one builds the BWT of a collection of strings using  $|\Sigma|$ external files, each one containing the BWT segment related to suffixes starting with the symbol $\sigma$. The second method allows to construct (in external files) BWT intervals of increasing length.
 
 \notaestesa{Paola}{va detto qualcosa di più almeno nell'introduzione sull'uso della memoria interna}.
-In particular, the procedure \emph{processInterval} given in \cite{??} is used in our algorithm to produce the sorted list (lexicographical order) of the intervals of a given length $l$, from the sorted list of the intervals of length $l-1$ (intervals of length $1$ can be easily obtained by means of the FM-index function $C$).
+In particular, the procedure \emph{processInterval} given in \cite{Cox2012} is used in our algorithm to produce the sorted list (lexicographical order) of the intervals of a given length $l$, from the sorted list of the intervals of length $l-1$ (intervals of length $1$ can be easily obtained by means of the FM-index function $C$).
 
 In the paper we extend the above approach in the  procedure  \emph{processJoinedInterval} in order to produce during the same iteration the sorted list of $Q$-intervals linked to $rev(Q)$-intervals of length $l$, given the ones of length $l-1$ on the two BWT's $B$ and $B'$.
 
@@ -328,7 +328,9 @@ At each iteration $j$, the interval $q''$ of a pair $(q'', q')$ with extension $
 If $q''$ has a (unique under our assumption) extension with symbol $\$$ into the interval $[b'_r, b'_r+1)$, then the read represented by that interval is added to the arc-set of each read represented by the interval $q'$ (and no extension pair is added to $\mathcal{E}_{j+1}$).
 \notaestesa{Paola}{qua occorre dire il perchè} In fact, it means that ....
 
-Such arc-sets are checked, in order to guarantee their \emph{irreducibility}. Notice that just $(j+\tau)$-long reads are added to arc-sets at the $j$-th iteration.\\
+Such arc-sets are checked, in order to guarantee their \emph{irreducibility}.
+\notaestesa{Paola}{questa parte è da rivedere ... cosa si intende per irriducibilità?}
+Notice that just $(j+\tau)$-long reads are added to arc-sets at the $j$-th iteration.\\
 Otherwise (if $q''$ has no extension with symbol $\$$), an extension pair $(q_e, q')$ (of dimension $(j+\tau+1)$ and extension $e+1$) is added to the list $\mathcal{E}_{j+1}$, for each $q_e \in X(q'')$, where $X(q'')$ is the set of the intervals obtained by backward extending $q''$ with each $\sigma \in \Sigma$.
 
 At each iteration $j$, the list $\mathcal{E}_{j+1}$ receives extension pairs both from $\mathcal{T}$ and $\mathcal{E}_{j}$. Since, the length of the intervals $[b', b'+n)$ in $\mathcal{T}$ is equal to the length of intervals $q''$ in $\mathcal{E}_{j}$, the algorithm can extend the union of the two lists, and therefore keep sorted also the list $\mathcal{E}_{j+1}$, by ascending value of the start of the interval $q''$ on the BWT $B'$.
@@ -633,9 +635,9 @@ Hence the time complexity for building the string graph is $\mathcal{O}(l \times
 
 
 
-\section{Conlusionad and future work}
+\section{Conclusion and future work}
 ------
-The above  notion of String Graph applies to   assembling RNA-seq data into splicing graph \cite{lavor nostro JCB}.
+The above  notion of String Graph applies to   assembling RNA-seq data into splicing graph \cite{Beretta2013}.
 When assembling RNA-seq data with an overlap graph, the final output graph is not a line path, since the graph should represent the alternative transcripts derived by the alternative splicing
 on the gene structure. In fact, RNA-seq data are classified into {\em spliced} and  {\em  unspliced} reads. Unspliced reads are reads that cover regions that are either coding or not coding ones, i.e. they are absent or present in a transcript sequence. On the contrary a  spliced read $r$ contains  of  at least two consecutive substrings   $r_i $, $r_{i+1}$ such that  there exists at least two transcripts where  $r_i$ is present in a transcript sequence  together with $r_{i+1}$ while $r_i$ is present and $r_{i+1}$ is absent in the transcript sequence.
 
