@@ -129,8 +129,8 @@ external memory construction of the FM-index.
 In the meantime, an investigation of external memory construction of the
 BWT has been started in~\cite{Bauer2011} showing that it is possible to
 arbitrarily reduce the use of RAM for building a BWT and for solving
-typical applications of the BWT \notaestesa{Aggiungere rif biblio}.
-\notaestesa{altri rif a BWT in memoria esterna sono Ferragina2012,
+typical applications of the BWT \notaestesa{Raffa}{Aggiungere rif biblio}.
+\notaestesa{Raffa}{altri rif a BWT in memoria esterna sono Ferragina2012,
 Bauer2013}.
 In this paper, based upon the work in~\cite{Bauer2011}, we show how to
 construct the string graph from a BWT for a collection of reads that is
@@ -336,22 +336,44 @@ A $Q$-interval on $B$ of width larger than $1$ represents a string $Q$
 having more than one occurrence in $R$ (\ie common substring).
 
 In the following, we denote with $R(q)=R(b,e)$ the reads containing the
-BWT symbols of the interval $q=[b,e)$.
+BWT symbols of the interval $q=[b,e)$, and we call a \emph{$\$$-interval}, a
+$Q$-interval with $Q$ starting with symbol $\$$.
 
+Given a $Q$-interval $(b,e)$ and a symbol $\sigma \in \Sigma$, a backward
+extension of $[b,e)$ with $\sigma$ (also called a \emph{backward
+$\sigma$-extension}) is the $\sigma Q$-interval $[b_{\sigma},e_{\sigma})$
+representing suffixes starting with
+the string $\sigma Q$. The interval $[b_{\sigma},e_{\sigma})$ can be computed
+from $[b,e)$, by means of the FM-index functions $C(\sigma,R)$ and
+$Occ(\sigma, i, R)$. Notice that the width $(e_{\sigma}-b_{\sigma})$ is equal
+the number of symbols $\sigma$ in the BWT interval $B[b,e-1]$. In the following,
+we say also that a  $Q$-interval $[b,e)$, having a backward $\sigma$-extension $[b_{\sigma},e_{\sigma})$, has a number of $(e_{\sigma}-b_{\sigma})$ backward
+extensions with $\sigma$.\\
+In the following, given an interval $q=[b,e)$ we denote with $X(q)$ (or $X(b,e)$)
+the set of all the backward $\sigma$-extensions of $q$ (for each one of the
+symbols in the alphabet $\Sigma$).
+In a similar way, a forward extension of a $Q$-interval $[b,e)$, with the symbol
+$\sigma$ (also called a \emph{forward $\sigma$-extension}), is the
+$Q \sigma$-interval $[b^f_{\sigma},e^f_{\sigma})$ representing suffixes
+starting with the string $Q \sigma$. In the following, we say also that a 
+$Q$-interval $[b,e)$, having a forward $\sigma$-extension
+$[b^f_{\sigma},e^f_{\sigma})$, has a number of $(e^f_{\sigma}-b^f_{\sigma})$
+forward extensions with $\sigma$. Notice that the interval
+$[b^f_{\sigma},e^f_{\sigma})$ is contained in $[b,e)$.
 
 \begin{definition}
+\label{def:linked-intervals}
 A $Q$-interval $[b,e)$ on $B$ and a $Q'$-interval $[b',e')$ on $B'$ are
 \emph{linked} iff $Q=rev(Q')$.
 \end{definition}
 
-Two linked intervals must have the same width, and it holds
+Linked intervals have the same width, thus it holds
 $(e-b)=(e'-b')$.
-When a common string $Q$ occurs $n>0$ times as a prefix in $R$, then the
-$Q$-interval $[b,e)$ contains $n$ symbols $\$$, and the $\$ Q$-interval
-represents the set of the $n$ reads where $Q$ occurs as a prefix.
-The linked $rev(Q)$-interval $[b',e')$ will contain a
-$rev(Q)\$$-interval $[b',b'+n)$.
-The $\$ Q$-interval is clearly linked to the $rev(Q)\$$-interval.
+In particular, when the length of the linked intervals is $1$ (\ie $Q=rev(Q)=\sigma$), then $[b,e)=[b',e')$, since the two FM-index functions $C(\sigma, R)$ and $C(\sigma, R')$ are the same. In fact, the set of symbols of $R$ is equal to the set of symbols of $R'$.
+It is possible to show that, given two linked intervals $[b,e)$ and $[b',e')$, even the backward $\sigma$-extension $[b_{\sigma},e_{\sigma})$ of $[b,e)$ and the forward $\sigma$-extension $[b^{'f}_{\sigma},e^{'f}_{\sigma})$ of $[b',e')$ are linked intervals. In fact, since the interval $[b_{\sigma},e_{\sigma})$ is a $\sigma Q$-interval and the interval $[b^{'f}_{\sigma},e^{'f}_{\sigma})$ is a $rev(Q) \sigma$-interval, then they are linked by Definition~\ref{def:linked-intervals}. 
+Notice that the number of backward extensions with $\sigma$ of $[b,e)$, is equal to the number of forward extensions with $\sigma$ of $[b',e')$. Moreover,  it is possible to show \cite{Simpson10} that the start $b^{'f}_{\sigma}$ is given by adding to $b'$ the number of symbols $< \sigma$, which are in $B[b,e-1]$, and the end $e^{'f}_{\sigma}$ is given by adding to $b^{'f}_{\sigma}$ the number of symbols $\sigma$, which are in $B[b,e-1]$. In other words, both intervals $[b_{\sigma},e_{\sigma})$ and $[b^{'f}_{\sigma},e^{'f}_{\sigma})$ can be computed by backward extending $[b,e)$ on $B$, by using only of the FM-index functions $C(\sigma, R)$ and $Occ(\sigma, i, R)$.
+
+When a common string $Q$ occurs $n > 0$ times as a prefix in $R$, then the $Q$-interval $[b,e)$ has $n$ backward extensions with $\$$, and the BWT interval $B[b,e-1]$ contains $n$ symbols $\$$. The $\$ Q$-interval (\ie the backward $\$$-extension of $[b,e)$) represents the set of the $n$ reads where $Q$ occurs as a prefix. Thus, the $rev(Q)$-interval $[b',e')$ (linked to $[b,e)$) has (see above) $n$ forward extensions with $\$$, and, since $\$$ is the first symbol of $\Sigma$, it is possible to show that the $rev(Q) \$$-interval (\ie the forward $\$$-extension of $[b',e')$, which is linked to the $\$ Q$-interval) is $[b',b'+n)$.
 
 \begin{definition}
 A \emph{P-interval} is a $rev(Q)$-interval $[b',e')$ on $B'$ containing
@@ -373,12 +395,6 @@ prefix.
 %$m>0$ backward extensions with symbol $\$$  ($m$ is called the
 %\emph{dimension} of the \emph{S-interval}).
 %\end{definition}
-
-In the following, we call \emph{\$-interval} a BWT interval related to
-suffixes starting with $\$$, and denote with $X(q)$ the set of all the
-backward extensions of the interval $q$ with each one of the symbols
-$\sigma \in \Sigma$.
-
 
 Our procedure to find the arc-set $A_r$ for each read $r$ is based on
 the idea of building all the possible $Q$-intervals that are overlaps of
@@ -515,6 +531,7 @@ in~\cite{Cox2012} is used in our algorithm to produce the sorted list
 (lexicographical order) of the intervals of a given length $l$, from the
 sorted list of the intervals of length $l-1$ (intervals of length $1$
 can be easily obtained by means of the FM-index function $C$).
+\notaestesa{Raffa}{Togliere lo pseudocodice della procedura processInterval: \'e della Rosone e non nostro.}.
 
 In the paper we extend the above approach in the procedure
 \emph{processJoinedInterval} in order to produce during the same
