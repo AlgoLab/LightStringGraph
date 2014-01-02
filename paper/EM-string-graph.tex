@@ -268,54 +268,6 @@ collection $R$ of strings, using the backward extension algorithm~\cite{Ferragin
 
 
 
-\subsection{The String Graph}
-
-
-A string $s$ is \emph{prefix-free} in a collection $S$ of strings, if
-for any other string $s_{1}$ in $S$, $s_{1}$ is not a prefix of $s$.
-Given two reads $r_1$ and $r_2$, we say that $r_1$ and $r_2$
-\emph{overlaps} if a suffix $\alpha$ of $r_1$ is also a prefix of $r_2$.
-In this case we
-say that $r_2$ \emph{extends} $r_1$ by $|r_2|- |\alpha|$ symbols and that $\alpha$ is the overlap of $r_{1}$ and $r_{2}$.
-Moreover,
-the suffix $\beta$ such that $r_2 = \alpha \beta$ is called the
-\emph{extension} of $r_1$ with $r_{2}$.
-
-The formulation of a String Graph used in~\cite{Simpson2010} is the same as
-originally proposed in~\cite{Myers2005}, that is the graph is built by (1)
-constructing a graph whose vertices are the reads and each arc connects two overlapping reads, and (2)
-removing transitive edges.
-Since the bottleneck of the construction of the String Graph is to compute and store all overlapping reads,
-in~\cite{Simpson2010} the authors propose a single step procedure to build a
-String Graph, computing only \emph{irreducible} edges, \ie non
-transitive edges of the overlap graph.
-Under the assumption that $R$ does not contain two reads where one is a substring of the other,
-an edge $(r_{1}, r_e)$ is irreducible if there does not exists a read $r_{2}$
-such that
-the extension of $r_{1}$ with $r_2$ is a prefix of
-the extension of $r_{1}$ with $r_e$.
-Moreover, if all reads in $R$ are extracted from a single genome and do not contain errors,
-the procedure proposed in~\cite{Simpson2010}, is guaranteed to compute exactly the irreducible arcs.
-This procedure computes, for any given read $r$, the shortest nonempty extension of $r$ with any read $r_{e}$
-where ties are broken by taking the smallest read $r_{e}$ \wrt the lexicographic order.
-All such pairs $(r, r_{e})$ are the arcs of the String Graph.
-
-
-
-%Given a collection $R$ of reads and a read $r \in R$,  let  $E(r)$ be
-%the set of all strings that are extensions of read $r$ in $R$.
-%Observe that given set $E(R_r)$,  pair of strings   in  $E(R_r)$  are
-%either  one prefix of the other or they
-% The  \emph{arc-set}  $A_r$ of  read $r$ in the collection $R$ consists
-% of  all  reads  in $R$ having an  extension   with $r$ that is
-% prefix-free in $E(r)$.
-
-%\begin{definition}
-%Given a set $R$ of reads, the \emph{String Graph SG}  over $R$ is the
-%graph $(R, A)$, where the edge set $A$ is given by all pairs $(r, u) $,
-%for $u \in A_r$, for each $r \in R$.
-%\end{definition}
-
 
 \subsection{Forward and backward extension of $Q$-intervals}
 
@@ -395,17 +347,6 @@ At the same time, the $\$ Q$-interval (\ie the backward $\$$-extension of $[b,e)
 Hence the $rev(Q)$-interval $[b',e')$ (linked to $[b,e)$) has $\alpha$ forward $\$$-extensions.
 Finally, since $\$$ is the smallest symbol of $\Sigma$, the $rev(Q) \$$-interval is $[b',b'+\alpha)$.
 
-\begin{definition}
-A \emph{P-interval} is a $rev(Q)$-interval $[b',e')$ on $B'$ containing
-a $rev(Q)\$$-interval of width $\alpha>0$.
-Moreover, $\alpha$ is called the \emph{dimension}\notaestesa{GDV}{ perchè dimension invece di width?}
-of the P-interval.
-\end{definition}
-
-A \emph{P-interval} $[b',e')$ of dimension $n$ represents the $(e'-b')$
-reads sharing $rev(Q)$, and $n$ among these reads share $rev(Q)$ as a
-prefix.\notaestesa{GDV}{ se un read ha 2 occorrenze di $rev(Q)$, $(e'-b')$
-non è il numero di read che contengono $Q$, ma il numero di occorrenze di $Q$}
 
 %When a substring $Q$ occurs $m>0$ times as a suffix in $R$, then the
 %$rev(Q)$-interval on $B'$ contains $m>0$ symbols $\$$, and the $\$
@@ -425,40 +366,36 @@ are prefixes of some read $r_{e}$ until the sentinel symbol \$ is
 found (\ie the read $r_{e}$ has been completely read).
 In any instant, for each read $r$ only one extension $r_{e}$ is stored; in fact after examining a $Q$-interval, the read $r_{e}$ is update, if necessary.
 
-The following notion of extension pair is crucial for
-implementing the above idea using FM-index in two directions
-(\cite{Lam2009}).
 
 
-\begin{definition}\label{extension-pair}
-Let $S$ and $E$ be two strings and let $L$ be equal to $|S|+|E|$.
-Then let $q_{1}'$ be the $rev(E)rev(S)\$$-interval of $B'$ and let  $q_{2}'$ be the $\$rev(S)$-interval \notaestesa{GDV}{ Ho aggiunto un \$} of $B'$.
-If both $q_{1}'$ and  $q_{2}'$ are nonempty, then the pair  $(q_{1}', q_{2}')$ is called
-an \emph{extension pair} of dimension $L$.
-\notaestesa{GDV}{ qui invece dimension è analogo alla length di un $Q$-interval}
-% is a pair $(q_{1}', q_{2}')$ of
-% intervals on $B'$, such that $q''$ is a $rev(E)rev(S)\$$-interval,
-% $q'$ is a $\$rev(S)$-interval, and $|rev(E)rev(S)| = L$.
-\end{definition}
-
-The interval $q_{1}'$ corresponds to the reads with prefix $SE$, while $q_{2}'$
-corresponds to the reads with suffix $S$.
-The length of the string $E$ is called the \emph{extension} of the
-pair, while the string $S$ is called the \emph{seed}.
-In other words, the extension pair corresponds to the fact that the reads related to $q_{2}'$ are extended by the reads
-of $q_{1}'$.
-
-An extension pair  $(q_{1}', q_{2}')$ is \emph{terminal} if and only if $q_{1}'$ is
-the \$-backward extension on $B'$ of an interval on $B'$.
-\notaestesa{Paola}{rivedere anche in termini informali}
-
-
-Our main contribution is an external memory algorithm to compute the
-extension pairs.
 Two parts of the algorithm exploit the FM-index to perform
 backward extensions to determine the intervals of overlapping
 prefixes and forward extensions to extend those prefixes and build the
 terminal extensions.
+
+
+\section*{Building the String Graph}
+
+The notion of String Graph~\cite{Simpson2010} leads to new approaches to design assembly algorithms.
+More precisely, given a collection $R$ of strings, the string graph of $R$ is a directed graph whose vertices are the strings in $R$ and two reads $(r_{1}, r_{2})$ form an arc if $r_{1}$ and $r_{2}$ overlap.
+We say that $r_1$ and $r_2$
+\emph{overlap} if a suffix $\alpha$ of $r_1$ is also a prefix of $r_2$.
+In this case,
+$r_2$ \emph{extends} $r_1$ by $|r_2|- |\alpha|$ symbols, and $\alpha$ is the overlap of $r_{1}$ and $r_{2}$.
+Moreover,
+the suffix $\beta$ such that $r_2 = \alpha \beta$ is called the
+\emph{extension} of $r_1$ with $r_{2}$.
+
+Since the main purpose of the String Graph is to assemble the reads into a genomic sequence, transitive arcs (that is arcs $(r_{1}, r_{2})$ such that there exists a second path from $r_{1}$ to $r_{2}$) are not useful and are therefore discarded.
+In other words, the String Graph contains only \emph{irreducible} arcs.
+
+
+Since the actual genomic sequence from which the reads are extracted is unknown, we need some simplifying assumptions.
+The first assumption is that $R$ is made of \emph{prefix-free} strings, that is there are not two strings $r_{1}, r_{2}\in R$ such that
+$r_{1}$  is a prefix of  $r_{2}$.
+The second assumption is that an arc $(r_{1}, r_{2})$ of the string graph exists only if the overlap of $r_{1}$ and $r_{2}$ is at least a certain constant $\tau$.
+
+
 
 The construction of the String graph in~\cite{Simpson2010} works in two
 steps.
@@ -501,17 +438,46 @@ the property ... as detailed in the procedure
 \emph{Checkifirreducible}....
 
 
+Our approach is based on the idea that each edge $(r, r_e)$ in a String graph is
+associated to a \emph{terminal extension pair} whose definition follows.
+We will also detail how we can compute efficiently all terminal extension pairs
+using the idea of bidirectional FM-index~\cite{Lam2009}.
+
+\begin{definition}\label{def:extension-pair}
+Let $S$ and $E$ be two strings and let $L$ be equal to $|S|+|E|$.
+Then let $q_{1}'$ be the $rev(E)rev(S)\$$-interval of $B'$ and let  $q_{2}'$ be the $\$rev(S)$-interval \notaestesa{GDV}{ Ho aggiunto un \$} of $B'$.
+If both $q_{1}'$ and  $q_{2}'$ are nonempty, then the pair  $(q_{1}', q_{2}')$ is called
+an \emph{extension pair} of dimension $L$.
+\notaestesa{GDV}{ qui invece dimension è analogo alla length di un $Q$-interval}
+% is a pair $(q_{1}', q_{2}')$ of
+% intervals on $B'$, such that $q''$ is a $rev(E)rev(S)\$$-interval,
+% $q'$ is a $\$rev(S)$-interval, and $|rev(E)rev(S)| = L$.
+Moreover $(q_{1}', q_{2}')$ is a \emph{terminal} extension pair
+if and only if $q_{1}'$ is
+the \$-backward extension on $B'$.\notaestesa{GDV}{ Non capisco se il \$ è incluso o meno nell'intervallo.
+  Io sarei per la frase che segue}
+Moreover $(q_{1}', q_{2}')$ is a \emph{terminal} extension pair
+if and only if $q_{1}'$ has a nonempty \$-backward extension on $B'$.
+\end{definition}
+
+The interval $q_{1}'$ corresponds to the reads with prefix $SE$, while $q_{2}'$
+corresponds to the reads with suffix $S$.
+The length of the string $E$ is called the \emph{extension} of the
+pair, while the string $S$ is called the \emph{seed}.
+In other words, the extension pair corresponds to the fact that the reads related to $q_{2}'$ are extended by the reads
+of $q_{1}'$.
+In a terminal extension pair, the concatenation of the seed and the extension is the entire read $r_{e}$.
 
 
 
-Observe that each edge $(r, r_e)$ in a String graph over $R$ is
-associated to a terminal extension pair as follows:
-
-- \notaestesa{Paola}{spiegare}
 
 The correctness of our approach relays on the fact that all possible
 terminal extension pairs will be examined during the iterations and thus
 the arc-set of the final String graph over $R$ will be computed.
+More precisely, we will construct all extension pairs with seed at least $\tau$ long, since only such extension pairs can result in arcs.
+Morever, the extension pairs are computed for increasing dimension.
+
+
 
 
 The String-graph is memorized in RAM as a list of arcs....
@@ -519,7 +485,60 @@ The String-graph is memorized in RAM as a list of arcs....
 agli archi}
 
 
-\section*{The algorithm}
+The formulation of a String Graph used in~\cite{Simpson2010} is the same as
+originally proposed in~\cite{Myers2005}, that is the graph is built by (1)
+constructing a graph whose vertices are the reads and each arc connects two overlapping reads, and (2)
+removing transitive edges.
+Since the bottleneck of the construction of the String Graph is to compute and store all overlapping reads,
+in~\cite{Simpson2010} the authors propose a single step procedure to build a
+String Graph, computing only \emph{irreducible} edges, \ie non
+transitive edges of the overlap graph.
+Under the assumption that $R$ does not contain two reads where one is a substring of the other,
+an edge $(r_{1}, r_e)$ is irreducible if there does not exists a read $r_{2}$
+such that
+the extension of $r_{1}$ with $r_2$ is a prefix of
+the extension of $r_{1}$ with $r_e$.
+Moreover, if all reads in $R$ are extracted from a single genome and do not contain errors,
+the procedure proposed in~\cite{Simpson2010}, is guaranteed to compute exactly the irreducible arcs.
+This procedure computes, for any given read $r$, the shortest nonempty extension of $r$ with any read $r_{e}$
+where ties are broken by taking the smallest read $r_{e}$ \wrt the lexicographic order.
+All such pairs $(r, r_{e})$ are the arcs of the String Graph.\notaestesa{GDV}{ Rivedere questo paragrafo e amalgamarlo con la parte precedente}
+
+
+
+
+
+%Given a collection $R$ of reads and a read $r \in R$,  let  $E(r)$ be
+%the set of all strings that are extensions of read $r$ in $R$.
+%Observe that given set $E(R_r)$,  pair of strings   in  $E(R_r)$  are
+%either  one prefix of the other or they
+% The  \emph{arc-set}  $A_r$ of  read $r$ in the collection $R$ consists
+% of  all  reads  in $R$ having an  extension   with $r$ that is
+% prefix-free in $E(r)$.
+
+%\begin{definition}
+%Given a set $R$ of reads, the \emph{String Graph SG}  over $R$ is the
+%graph $(R, A)$, where the edge set $A$ is given by all pairs $(r, u) $,
+%for $u \in A_r$, for each $r \in R$.
+%\end{definition}
+
+
+To compute the extension pairs we need to find, among all Q-intervals, those corresponding to prefixes of a read.
+This fact is formalized with the notion of P-interval.
+
+
+\begin{definition}
+A \emph{P-interval} is a $rev(Q)$-interval $[b',e')$ on $B'$ containing
+a $rev(Q)\$$-interval of width $\alpha>0$.
+Moreover, $\alpha$ is called the \emph{dimension}\notaestesa{GDV}{ perchè dimension invece di width?}
+of the P-interval.
+\end{definition}
+
+A \emph{P-interval} $[b',e')$ of dimension $n$ represents the $(e'-b')$
+reads sharing $rev(Q)$, and $n$ among these reads share $rev(Q)$\notaestesa{GDV}{ $Q$?} as a
+prefix.\notaestesa{GDV}{ se un read ha 2 occorrenze di $rev(Q)$, $(e'-b')$
+non è il numero di read che contengono $Q$, ma il numero di occorrenze di $Q$}
+
 
 
 The main step of our external memory algorithm consists of building efficiently
@@ -557,7 +576,9 @@ starting with the symbol $\sigma$.
 The second method allows to construct (in external files) BWT intervals
 of increasing length.
 \notaestesa{Paola}{va detto qualcosa di più almeno nell'introduzione
-sull'uso della memoria interna}.
+  sull'uso della memoria interna}.
+
+\begin{comment}
 In particular, the procedure \emph{processInterval} given
 in~\cite{Cox2012} is used in our algorithm to produce the sorted list
 (lexicographical order) of the intervals of a given length $l$, from the
@@ -570,6 +591,7 @@ Bisogna dire però cosa calcola la procedura}
 We extend the procedure \emph{processInterval} to
 \emph{processJoinedInterval}, \notaestesa{GDV}{ joined $\rightarrow$ linked?} where we produce not only the $Q$-intervals on $B$, but also the linked
 $rev(Q)$-intervals on $B'$.
+\end{comment}
 
 Our new procedure receives $|\Sigma|$ files, where each file $F(\sigma)$ contains
 the sorted list of linked $Q$- and
@@ -594,6 +616,38 @@ $Q$ in the lexicographic ordering of the $\sigma Q$-interval).
 \end{comment}
 Notice that the files $F(\sigma)$ must be read according to the lexicographic order.
 
+
+Let us now detail the main procedure \emph{buildGraph$(R, \tau)$} that
+builds the String Graph.
+Based upon the procedure \emph{processJoinedInterval}, we give two main
+procedures that give the iteration step of \emph{buildGraph$(R, \tau)$}
+we detail below.
+Observe that we describe the algorithm as building three main lists,
+that are actually implemented by files that are read sequentially.
+
+
+At the beginning, an empty set $R_r$ is initialized for each $r \in R$.
+At each iteration $j$ (starting from $j=0$), the following lists are used,
+\begin{itemize}
+\item $\mathcal{Q}_j$, containing the $Q$-intervals $[b, e)$ on $B$ with
+  width $>1$ \notaestesa{GDV}{non credo che questo requisito sia essenziale, direi di toglierlo}
+    and length $(j+\tau)$, each one with its linked
+  $rev(Q)$-interval $[b', e')$ on $B'$.
+\item $\mathcal{T}$, containing the $rev(Q)$-intervals $[b', e')$ of
+  length $(j+\tau)$ which are $P$-intervals, each one with its dimension
+  $n$.
+\item $\mathcal{E}_j$, containing the extension pairs $(q_{1}', q')$ of
+  dimension $(j+\tau)$, each one with its extension $e$ $> 0$
+\end{itemize}
+
+At each iteration, we analyze those list to find new possible arcs of the string graph and to determine whether they are reducible.
+Clearly,  the lists obtained with the  $j$-th iteration will be used in the subsequent  $(j+1)$-th iteration.
+
+
+
+
+
+
 More precisely, the steps .... in algorithm \emph{processJoinedInterval}
 directly provides the values of the new $\sigma Q$-interval and such
 value is appended at the end of the new updated list (or file), in order
@@ -608,37 +662,12 @@ ai linked intervals, che però vanno definiti prima, in termini
 costruttivi}.
 
 
-Let us now detail the main procedure \emph{buildGraph$(R, \tau)$} that
-builds the String Graph.
-Based upon the procedure \emph{processJoinedInterval}, we give two main
-procedures that give the iteration step of \emph{buildGraph$(R, \tau)$}
-we detail below.
-Observe that we describe the algorithm as building three main lists,
-that are actually implemented by files that are read sequentially.
-
-
-At the beginning, an empty set $R_r$ is initialized for each $r \in R$.
-At each iteration $j$ (starting from $j=0$), the following lists are used,
-\begin{itemize}
-\item $\mathcal{Q}_j$, containing the $Q$-intervals $[b, e)$ on $B$ of
-  width $>1$ and length $(j+\tau)$, each one with its linked
-  $rev(Q)$-interval $[b', e')$ on $B'$.
-\item $\mathcal{T}$, containing the $rev(Q)$-intervals $[b', e')$ of
-  length $(j+\tau)$ which are $P$-intervals, each one with its dimension
-  $n$.
-\item $\mathcal{E}_j$, containing the extension pairs $(q_{1}', q')$ of
-  dimension $(j+\tau)$, each one with its extension $e$ $> 0$
-\end{itemize}
-
-Observe that the $j$-iteration will produce  $\mathcal{Q}_{j+1}$,
-$\mathcal{E}_{j+1}$ that will be used in the next $j+1$-iteration.
 
 Intervals $[b,e)$ in $\mathcal{Q}_j$ represent common strings $Q$ of
 length $(j+\tau)$.
 Their link to the $rev(Q)$-interval $[b',e')$ on $B'$ is easily
 maintained (during the backward extension of the intervals of length
-$(j+\tau-1)$ to produce the intervals in $Q_j$) by using the formula in
-(??).
+$(j+\tau-1)$ to produce the intervals in $Q_j$) by Prop.~\ref{proposition:linked-intervals}.
 This list is partioned into $|\Sigma|$ files according to the starting
 symbol of $Q$, and maintained sorted by ascending value of the start
 $b$.
@@ -659,7 +688,7 @@ the previous iterations $< j$.
 \paragraph{Iteration $j = 0$.}
 
 At the first iteration $j=0$, the list $\mathcal{Q}_0$ contains the
-common substrings of length $\tau$, and $\mathcal{E}_0$ is empty.
+common substrings of length $\tau$, and $\mathcal{E}_0$ is empty.\notaestesa{GDV}{Perchè $\mathcal{E}_0$ is empty?}
 The iteration steps end when both $\mathcal{Q}_j$ and $\mathcal{E}_j$
 are empty.
 
