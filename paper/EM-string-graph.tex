@@ -402,7 +402,7 @@ steps.
 In the first one, for each read $r$ in the collection $R$ all
 $Q$-intervals, where $Q$ is the overlap of $r$ and some read extending $r$,
 are computed in time linear in
-the size \notaestesa{GDV}{ length?} of $r$.
+the  length of $r$.
 In the second step, each of these intervals are forward extended until
 we find the first \$; such a $Q\alpha\$$-interval becomes an
 irreducible edge.
@@ -445,7 +445,7 @@ using the idea of bidirectional FM-index~\cite{Lam2009}.
 
 \begin{definition}\label{def:extension-pair}
 Let $S$ and $E$ be two strings and let $L$ be equal to $|S|+|E|$.
-Then let $q_{1}'$ be the $rev(E)rev(S)\$$-interval of $B'$ and let  $q_{2}'$ be the $\$rev(S)$-interval \notaestesa{GDV}{ Ho aggiunto un \$} of $B'$.
+Then let $q_{1}'$ be the $rev(E)rev(S)\$$-interval of $B'$ and let  $q_{2}'$ be the $\$rev(S)$-interval of $B'$.
 If both $q_{1}'$ and  $q_{2}'$ are nonempty, then the pair  $(q_{1}', q_{2}')$ is called
 an \emph{extension pair} of dimension $L$.
 \notaestesa{GDV}{ qui invece dimension è analogo alla length di un $Q$-interval}
@@ -500,9 +500,9 @@ the extension of $r_{1}$ with $r_2$ is a prefix of
 the extension of $r_{1}$ with $r_e$.
 Moreover, if all reads in $R$ are extracted from a single genome and do not contain errors,
 the procedure proposed in~\cite{Simpson2010}, is guaranteed to compute exactly the irreducible arcs.
-This procedure computes, for any given read $r$, the shortest nonempty extension of $r$ with any read $r_{e}$
-where ties are broken by taking the smallest read $r_{e}$ \wrt the lexicographic order.
-All such pairs $(r, r_{e})$ are the arcs of the String Graph.\notaestesa{GDV}{ Rivedere questo paragrafo e amalgamarlo con la parte precedente}
+% This procedure computes, for any given read $r$, the shortest nonempty extension of $r$ with any read $r_{e}$
+% where ties are broken by taking the smallest read $r_{e}$ \wrt the lexicographic order.
+% All such pairs $(r, r_{e})$ are the arcs of the String Graph.\notaestesa{GDV}{ Rivedere questo paragrafo e amalgamarlo con la parte precedente}
 
 
 
@@ -535,10 +535,8 @@ of the P-interval.
 \end{definition}
 
 A \emph{P-interval} $[b',e')$ of dimension $n$ represents the $(e'-b')$
-reads sharing $rev(Q)$, and $n$ among these reads share $rev(Q)$\notaestesa{GDV}{ $Q$?} as a
-prefix.\notaestesa{GDV}{ se un read ha 2 occorrenze di $rev(Q)$, $(e'-b')$
-non è il numero di read che contengono $Q$, ma il numero di occorrenze di $Q$}
-
+reads sharing $rev(Q)$, and $n$ among these reads share $Q$? as a
+prefix.
 
 
 The main step of our external memory algorithm consists of building efficiently
@@ -589,7 +587,7 @@ can be easily obtained by means of the FM-index function $C$).
 Bisogna dire però cosa calcola la procedura}
 
 We extend the procedure \emph{processInterval} to
-\emph{processLinkedInterval}, \notaestesa{GDV}{ joined $\rightarrow$ linked?} where we produce not only the $Q$-intervals on $B$, but also the linked
+\emph{processLinkedInterval}, where we produce not only the $Q$-intervals on $B$, but also the linked
 $rev(Q)$-intervals on $B'$.
 \end{comment}
 
@@ -622,11 +620,10 @@ that are actually implemented by files that are read sequentially.
 At the beginning, an empty set $R_r$ is initialized for each $r \in R$.
 At each iteration $j$ (starting from $j=0$), the following lists are used,
 \begin{itemize}
-\item $\mathcal{Q}_j$, containing the $Q$-intervals $[b, e)$ on $B$ with
-  width $>1$ \notaestesa{GDV}{non credo che questo requisito sia essenziale, direi di toglierlo}
-    and length $(j+\tau)$, each one with its linked
+\item $\mathcal{Q}_j$, containing the nonempty $Q$-intervals $[b, e)$ on $B$ with length $(j+\tau)$,
+each one with its linked
   $rev(Q)$-interval $[b', e')$ on $B'$.
-\item $\mathcal{T}$, containing the $rev(Q)$-intervals $[b', e')$ of
+\item $\mathcal{T}$, containing the nonempty $rev(Q)$-intervals $[b', e')$ of
   length $(j+\tau)$ which are $P$-intervals, each one with its dimension
   $n$.
 \item $\mathcal{E}_j$, containing the extension pairs $(q_{1}', q')$ of
@@ -681,7 +678,7 @@ the previous iterations $< j$.
 \paragraph{Iteration $j = 0$.}
 
 At the first iteration $j=0$, the list $\mathcal{Q}_0$ contains the
-common substrings of length $\tau$, and $\mathcal{E}_0$ is empty.\notaestesa{GDV}{Perchè $\mathcal{E}_0$ is empty?}
+common substrings of length $\tau$, and $\mathcal{E}_0$ is empty.
 The iteration steps end when both $\mathcal{Q}_j$ and $\mathcal{E}_j$
 are empty.
 
@@ -694,6 +691,15 @@ intervals of length $(j+\tau+1)$, and (ii) the list $\mathcal{T}$ of the
 \emph{P-intervals} of length $(j+\tau)$.
 The list $\mathcal{Q}_{j+1}$ will be used during the next iteration
 $(j+1)$, and represents common strings of length increased by $1$.
+
+\notaestesa{GDV}{ 1.
+ Dettagliare come formulare $\mathcal{T}_{j+1}$}
+\notaestesa{GDV}{ 2.
+Dettagliare come formulare $\mathcal{E}_{j+1}$}
+\notaestesa{GDV}{ 3.
+Dettagliare le operazioni}
+
+
 The list $\mathcal{T}$ is computed by taking into account that a
 \emph{P-interval} $[b', e')$ with dimension $n$ is linked to a
 $Q$-interval $[b, e)$ with exactly $n$ extensions with the symbol $\$$.
