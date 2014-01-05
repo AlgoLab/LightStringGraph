@@ -646,15 +646,32 @@ The procedure \emph{processInterval} takes in input a $Q$-interval $[b,e)$ of
 length $l$, the BWT $B$, a vector $\Pi$ of $|\Sigma|$ counters, an array $F$ of
 $|\Sigma|$ external files, and writes all the backward $\sigma_i$-extensions of
 $[b,e)$ into the files $F$.\notaestesa{GDV}{ perchè non ho il file $F(\$)$?}
-More precisely, the $\sigma_i Q$-interval is appended to the file $F[i]$. This procedure computes the FM-index function $Occ(\sigma_i, i, R)$ by means of two vectors: the (global) input vector $\Pi$ and the local vector $\pi$. The first one stores in $\Pi[i]$ the number of occurrences of  the symbol $\sigma_i$ in the BWT prefix $B[1,b-1]$, while $\pi[i]$ stores the number of occurrences of $\sigma_i$ in the interval $[b,e)$. At the beginning, the vector $\Pi$ contains $|\Sigma|$ counters, each one set to $0$, and the $|\Sigma|$ files $F$ are empty.
+More precisely, the $\sigma_i Q$-interval is appended to the file $F[i]$.
+This procedure computes the FM-index function $Occ(\sigma_i, i, R)$ using two
+vectors: the (global) input vector $\Pi$ and the local vector $\pi$.
+The first one stores in $\Pi[i]$ the number of occurrences of  the symbol
+$\sigma_i$ in the BWT prefix $B[1,b-1]$, \notaestesa{GDV}{ ovvero
+  $Occ(\sigma_{i}, b)$} while $\pi[i]$ stores the number of occurrences of $\sigma_i$ in the interval $[b,e)$. At the beginning, the vector $\Pi$ contains $|\Sigma|$ counters, each one set to $0$, and the $|\Sigma|$ files $F$ are empty.
 After calling this procedure on each one of the $Q$-intervals of length $l$, supposed to be available in lexicographic order (thus, two consecutive intervals are disjoint), then  at the end each file $F[i]$ will contain the sorted list of the intervals of length $(l+1)$, starting with symbol $\sigma_i$. Considering files $F$ in the order $F[1], F[2], \ldots ,F[|\Sigma|]$, we obtain the sorted list of the intervals of length $(l+1)$. After each procedure call, the vector $\Pi$ is updated, to be passed to the next procedure call.\\
 By assuming that input $Q$-intervals of length $l$ are available in lexicographical order, this procedure is able to update $\Pi$ and $\pi$ by reading the symbols of $B$ consecutively.
 
-We have extended \emph{processInterval} in order to produce also the linked intervals on $B'$ (see procedure \emph{processLinkedInterval}). Our procedure takes in input also the linked $rev(Q)$-interval $[b',e')$ together with the $Q$-interval $[b,e)$, and produces in output (into the external files $F$) the extended $\sigma_i Q$-intervals, each one with the linked $rev(Q) \sigma_i$-interval on $B'$ \notaestesa{Raffa}{Rimanderei a dopo aver dato la definizione di lista $Q_j$ (partizionata in $|\Sigma|$ files)  la spiegazione di come \emph{processLinkedInterval} permette di passare da $Q_j$ a $Q_{j+1}$}. Our procedure straightaway writes to $F$ the start and the end of the output intervals on the complete BWT (see line 5), differently from~\cite{Cox2012}, where \emph{processInterval} writes, for each output $Q$-interval, its start \wrt to the BWT segment related to the starting symbol of $Q$, and its width.
-At each iteration $i$ over the alphabet symbols (see line 4 \notaestesa{Raffa}{Mettere come riferimento?}) the forward $\sigma_i$-extension of the $rev(Q)$-interval $[b',e')$ is performed by counting (see variable $\pi sum$ \notaestesa{Raffa}{ Il nome pu\'o anche essere cambiato se non vi piace.}) the number of symbols in $B[b,e)$ which are lexicographically smaller than $\sigma_i$, as described after Definition~\ref{def:linked-intervals} in Section~\ref{sec:?}, and similarly to~\cite{Simpson2010}.
+We have extended \emph{processInterval} to manage also the linked intervals on
+$B'$; see procedure \emph{processLinkedInterval}.
+Our procedure takes in input $Q$-interval $[b,e)$ and its linked
+$rev(Q)$-interval $[b',e')$, and outputs (appending to the external files $F$)
+the extended $\sigma_i Q$-intervals, each  with the linked $rev(Q)
+\sigma_i$-interval on $B'$
+Our procedure writes to $F$ the start and the end of the output intervals on the
+complete BWT (see line 5), differently from~\cite{Cox2012} where they write, for each output $Q$-interval, its start \wrt to the BWT segment related to the starting symbol of $Q$, and its width.
+At each iteration $i$ over the alphabet symbols the forward $\sigma_i$-extension
+of the $rev(Q)$-interval $[b',e')$ is performed by counting
+the number of symbols in $B[b,e)$ which are lexicographically smaller than
+$\sigma_i$ just as in~\cite{Simpson2010}.
+We recall that the correctness of \emph{processLinkedInterval} is based on the
+fact that all $Q$-intervals are processed (and extended) in lexicographic order.
 
-\notaestesa{Raffa}{Qui invece va la descrizione della nuova procedura \emph{processSingleInterval}, sempre se la teniamo... che determina la lista di tutti gli intervalli estesi di un $Q'$-interval su $B'$ - vedi modifica 6}.
-Notice that the files $F(\sigma)$ must be read according to the lexicographic order.
+% \notaestesa{Raffa}{Qui invece va la descrizione della nuova procedura \emph{processSingleInterval}, sempre se la teniamo... che determina la lista di tutti gli intervalli estesi di un $Q'$-interval su $B'$ - vedi modifica 6}.
+% Notice that the files $F(\sigma)$ must be read according to the lexicographic order.
 
 
 
@@ -662,7 +679,7 @@ Notice that the files $F(\sigma)$ must be read according to the lexicographic or
 
 
 
-
+\begin{comment}
 More precisely, the steps .... in algorithm \emph{processLinkedInterval}
 directly provides the values of the new $\sigma Q$-interval and such
 value is appended at the end of the new updated list (or file), in order
@@ -677,7 +694,6 @@ ai linked intervals, che però vanno definiti prima, in termini
 costruttivi}.
 
 
-
 Intervals $[b,e)$ in $\mathcal{Q}_j$ represent common strings $Q$ of
 length $(j+\tau)$.
 Their link to the $rev(Q)$-interval $[b',e')$ on $B'$ is easily
@@ -686,6 +702,7 @@ $(j+\tau-1)$ to produce the intervals in $Q_j$) by Prop.~\ref{proposition:linked
 This list is partioned into $|\Sigma|$ files according to the starting
 symbol of $Q$, and maintained sorted by ascending value of the start
 $b$.
+\end{comment}
 
 
 The list $\mathcal{T}$ is computed by taking into account that a
@@ -924,16 +941,15 @@ Initialize vector $\Pi \gets [0, 0, \ldots , 0]$ of $|\Sigma|$ integers\;
 %\Input{$[b,e)$, a $Q$-interval on $B$,\\$[b',e')$, the linked $rev(Q)$-interval on $B'$,\\$B$, the BWT of the collection $R$,\\$\Pi$, the vector of $|\Sigma|$ counters,\\
 %$F$, an array of $|\Sigma|$ empty files}
 
-Update $\Pi$ \st $\Pi[i]$ is the number of $\sigma_i$ in $B[0,b-1]$\;
+%Update $\Pi$ \st $\Pi[i]$ is the number of $\sigma_i$ in $B[0,b-1]$\;
+\tcp{$\Pi[i]$ is the number of $\sigma_i$ in $B[0,b-1]$}
 Create a vector $\pi$ of $|\Sigma|$ counters \st $\pi[i]$ is the number of $\sigma_i$ in $B[b,e)$\;
-
-$\pi sum \gets 0$\;
+$\pi sum \gets 0$ \tcp{$\pi sum$ is always the number of symbols $< \sigma_i$ in $B[b,e)$}
 \ForEach{$i \gets 1$ \KwTo  $|\Sigma|$}{
 \tcp{compute the start of the $\sigma_i Q$-interval}
    $b_e \gets |R|+C(\sigma_i, R)+ \Pi[i]$\;
 \tcp{compute the end of the $\sigma_i Q$-interval}
    $e_e \gets b_e + \pi[i]$\;
-\tcp{$\pi sum$ is the number of symbols $< \sigma_i$ in $B[b,e)$}
    $b'_e \gets b'+ \pi sum$\;
    $e'_e  \gets b'_e + \pi[i]$\;
    write $\langle [b_e, e_e), [b'_e, e'_e)\rangle$ to file $F(i)$\;
@@ -941,7 +957,7 @@ $\pi sum \gets 0$\;
    $\pi sum \gets \pi sum + \pi[i]$\;
 }
 
-\tcp{update $\Pi$ \st $\Pi[i]$ is the number of $\sigma_i$ in $B[0,e-1]$}
+%\tcp{update $\Pi$ \st $\Pi[i]$ is the number of $\sigma_i$ in $B[0,e-1]$}
 $\Pi \gets \Pi+\pi$\;
 
 \caption{processLinkedInterval($[b,e)$,$[b',e')$, $B$, $\Pi$, $F$)}
