@@ -450,8 +450,8 @@ If both $q_{1}'$ and  $q_{2}'$ are nonempty, then the pair  $(q_{1}', q_{2}')$ i
 an \emph{extension pair} of dimension $L$.
 \notaestesa{GDV}{ qui invece dimension è analogo alla length di un $Q$-interval}
 % is a pair $(q_{1}', q_{2}')$ of
-% intervals on $B'$, such that $q''$ is a $rev(E)rev(S)\$$-interval,
-% $q'$ is a $\$rev(S)$-interval, and $|rev(E)rev(S)| = L$.
+% intervals on $B'$, such that $q_{2}''$ is a $rev(E)rev(S)\$$-interval,
+% $q_{2}'$ is a $\$rev(S)$-interval, and $|rev(E)rev(S)| = L$.
 Moreover $(q_{1}', q_{2}')$ is a \emph{terminal} extension pair
 if and only if $q_{1}'$ has a nonempty \$-backward extension on $B'$.
 \end{definition}
@@ -601,7 +601,7 @@ each one with its linked
 \item $\mathcal{T}$, containing the nonempty $rev(Q)$-intervals $[b', e')$ of
   length $(j+\tau)$ which are $P$-intervals, each one with its dimension
   $n$.
-\item $\mathcal{E}_j$, containing the extension pairs $(q_{1}', q')$ of
+\item $\mathcal{E}_j$, containing the extension pairs $(q_{1}', q_{2}')$ of
   dimension $(j+\tau)$, each one with its extension $e$ $> 0$
 \end{itemize}
 
@@ -621,13 +621,19 @@ intervals of length $(j+\tau)$  -- by backward extending each $Q$-interval $[b, 
 linked $rev(Q)$-interval on $B'$) in $\mathcal{Q}_j$  --
 (ii) the list $\mathcal{T}_{j}$ of the
 \emph{P-intervals} of length $(j+\tau-1)$ -- by backward extending each interval
-in $\mathcal{T}_{j-1}$   --, and
+in $\mathcal{T}_{j-1}$   -- , and
 (iii) the list $\mathcal{E}_j$ of
-extension pairs of dimension $j$ -- by noticing that any extension pair
-$(q_{1}',q_{2}')\in \mathcal{E}_j$
-can be obtained as the backward extension of a pair
-$(q,q_{2}')\in \mathcal{E}_{j-1}$ or as the forward extension of a pair
-$(q_{1}',q)\in \mathcal{E}_{j-1}$.
+extension pairs of dimension $j$ -- by noticing that for each extension pair
+$(q_{1}',q_{2}')\in \mathcal{E}_j$ (iii a) $q_{1}'$ is a $\sigma$ backward extension
+of $q_{2}'$ -- the extension consists of a single character -- or  (iii b)
+$q_{1}'$ is a $\sigma$ backward extension
+of $q'$ where $(q',q_{2}')\in \mathcal{E}_{j-1}$ -- the extension is one
+character longer than in iteration $j-1$.
+% --
+% or (iii c)
+% $q_{2}'$ is a $\sigma$ backward extension
+% of $q'$ where $(q_{1}',q')\in \mathcal{E}_{j}$ -- we move the first character of
+% the extension to the end of the seed.
 
 
 % The list $\mathcal{Q}_{j}$ will be used during the next iteration
@@ -705,39 +711,51 @@ $b$.
 \end{comment}
 
 
-The list $\mathcal{T}$ is computed by taking into account that a
-\emph{P-interval} $[b', e')$ with dimension $n$ is linked to a
-$Q$-interval $[b, e)$ with exactly $n$ extensions with the symbol $\$$.
-The list $\mathcal{T}$ must be sorted by ascending value of the starting
+The list $\mathcal{T}$ is actually stored as a file, and it is computed by
+taking into account that a
+\emph{P-interval} $[b', e')$ with dimension $k$ is linked to a
+$Q$-interval $[b, e)$ with exactly $k$ backward $\$$-extensions.
+Notice that the only operations allowed on that file are appending an item to
+the end and popping (\ie reading from the head and deleting) an item.
+Moreover we need to maintain the list $\mathcal{T}$ sorted by ascending value of the starting
 value $b'$ (\ie lexicographical order of $rev(Q)$).
 In fact, let us recall that a \emph{P-interval} $[b', e')$ correspond to
 the ordered list of reads having substring $rev(Q)$ on $B'$.
-Then, each \emph{P-interval} $[b', e')$ of dimension $n$ and each
-interval $[b', b'+n)$ in the list $\mathcal{T}$ (the latter representing
-the set of the reads having string $Q$ as a prefix) are backward
-extended in order to compute the extension pairs $(q_{1}', q')$ with
-dimension $(j+\tau+1)$ and extension $1$, to put into the list
-$\mathcal{E}_{j+1}$ to use during the next iteration $(j+1)$.
-More in detail, given a \emph{P-interval} $[b',e')$ and its sub-interval
-$[b',b+n)$, a pair $(q_{1}',q')$ of extension $e=1$ is added for each $q_{1}'
-\in X(b',b'+n)$, where $q'$ is the $\$$-interval obtained by extending
-$[b',e')$.
+
+Each element of the list $\mathcal{T}$ is made of a  \emph{P-interval} $[b',e')$
+and the width $n$ of the \$ forward extension of $[b',e')$ in $B'$.
+Each P-interval is backward
+extended to compute the extension pairs $(q_{1}', q_{2}')$ with
+dimension $(j+\tau+1)$ and $E$ consisting of one character.
+More precisely, given an element  $<[b',e'), n>$ of $\mathcal{T}$,
+we pose $q_{2}'$ equal to the $\$$ forward extension of  $[b',e')$ and
+for each $q_{1}'\in X(b',b'+n)$ we add the extension pair  $(q_{1}',q_{2}')$ to
+the list $\mathcal{E}_{j+1}$.\notaestesa{GDV}{ quando viene creata la lista
+  $\mathcal{E}_{1}$? Nell'iterazione 0?}
 Notice that the interval $[b', b'+n)$ (under our assumption) cannot have
 extensions with symbol $\$$: in fact, no read in $R$ can have $Q$ both
-as a prefix and a suffix.
+as a prefix and a suffix.\notaestesa{GDV}{ non mi convince la frase sull'assunzione}
+Notice that, just as for the lists $\mathcal{Q}_j$ and $\mathcal{T}$, also the
+lists  $\mathcal{E}_j$ are stored as a file.
 
-At each iteration $j$, the interval $q_{1}'$ of a pair $(q_{1}', q')$ with
-extension $e$ in $\mathcal{E}_j$ is backward extended on $B'$, where
-$q_{1}'$ is given.
-Observe that each $\sigma$  backward extension corresponds to forward
-extend by $\sigma$ on $B$ the  \$ $Q$-intervals, \ie computing the
-interval of reads having $Q \sigma$ has prefix (see figure \ref{}).
+
+Moreover we try to extend each extension pair of dimension $j+\tau$ into some
+extension pairs of dimension $j+\tau+1$.
+More precisely, for each extension pair $(q_{1}', q_{2}')$ in  $\mathcal{E}_j$ and
+for each $q_{1}'\in X(b',b'+n)$ we add the extension pair  $(q_{1}',q_{2}')$ to
+the list $\mathcal{E}_{j+1}$.\notaestesa{GDV}{ dove viene memorizzato $n$?}
+% At each iteration $j$, the interval $q_{1}'$ of a pair $(q_{1}', q_{2}')$ with
+% extension $e$ in $\mathcal{E}_j$ is backward extended on $B'$, where
+% $q_{1}'$ is given.
+% Observe that each $\sigma$  backward extension corresponds to a  forward
+% extend by $\sigma$ on $B$ the  \$ $Q$-intervals, \ie computing the
+% interval of reads having $Q \sigma$ has prefix (see figure \ref{}).
 
 
 If $q_{1}'$ has a (unique under our assumption) extension with symbol $\$$
 into the interval $[b'_r, b'_r+1)$, then the read represented by that
 interval is added to the arc-set of each read represented by the
-interval $q'$ (and no extension pair is added to $\mathcal{E}_{j+1}$).
+interval $q_{2}'$ (and no extension pair is added to $\mathcal{E}_{j+1}$).
 \notaestesa{Paola}{qua occorre dire il perchè} In fact, it means that ....
 
 Such arc-sets are checked, in order to guarantee their
@@ -747,7 +765,7 @@ Such arc-sets are checked, in order to guarantee their
 Notice that just $(j+\tau)$-long reads are added to arc-sets at the
 $j$-th iteration.
 Otherwise (if $q_{1}'$ has no extension with symbol $\$$), an extension
-pair $(q_e, q')$ (of dimension $(j+\tau+1)$ and extension $e+1$) is
+pair $(q_e, q_{2}')$ (of dimension $(j+\tau+1)$ and extension $e+1$) is
 added to the list $\mathcal{E}_{j+1}$, for each $q_e \in X(q_{1}')$, where
 $X(q_{1}')$ is the set of the intervals obtained by backward extending
 $q_{1}'$ with each $\sigma \in \Sigma$.
