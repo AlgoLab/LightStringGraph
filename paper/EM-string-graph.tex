@@ -84,92 +84,100 @@
 \end{abstract}
 
 \section{Introduction}
-De novo sequence assembly is a difficult problem and is a necessary step
+De novo sequence assembly is a fundamental step
 in analyzing data from next generation sequencing technologies (NGS).
-NGS produce from a (genomic or transcriptomic) sequence a huge amounts
-of short sequences, called reads.
-Usually reads are compared to produce a graph representation from which
-derive a path representing the original sequenced sequence.
-Such a graph representation may be derived by overlap-based methods or
-building De Bruijn graphs~\cite{Zerbino2008, Simpson2009, Peng2010}.
-Overlap-based methods are based on computing pairwise overlaps among
-reads and then representing reads as vertices and edges connect
-overlapping reads, where each edge $(r,r')$ may be labeled by the suffix
-of $r'$ that exceeds the overlap between the two reads.
-However, they require a comparison among reads that is quadratic in the
-total size of the input data.
-These method are of particular interest in genome assembly since it
-applies to mixed length reads of coming from different next generation
-sequencing technologies.
+NGS technologies produce, from a given (genomic or transcriptomic) sequence, a huge amounts
+of short sequences, called reads -- the most widely used current technology
+produces $10^{9}$ reads with mean length $150$.
+The large majority of the available
+assemblers~\cite{Zerbino2008,Simpson2009,Peng2010,bankevich2012spades} are built
+upon the notion of de Bruijn graphs where each $k$-mer is a vertex and an arc
+connect two $k$-mers that have a $k-1$ overlap in some input read.
+The main drawback of this approach is the amount of RAM needed, since storing
+the vertices alone requires $\approx 15$ Gb when we want to assemble the human genome
+and $k=27$.
 
-Recently~\cite{Simpson2010, Simpson2012} have proposed string graphs as
-an alternative approach to de novo genome assembly based on De Bruijn
-graphs.
-The main formulation was proposed by Gene Myers~\cite{Myers2005}.
-The method builds a graph from reads that is obtained by building an
-overlap graphs and then implementing transitive reduction to produce a
-string graph where only maximal overlaps are considered.
-More precisely, given a path $r \rightarrow r_1 \rightarrow r_2$ in a
-overlap graph, and given the \emph{transitive} edge $r \rightarrow r_2$,
-Simpson and Durbin~\cite{Simpson2010} observe that (under the assumption
-of forbidding the substring property) the string associated to edge $(r,
-r_1) $ is a prefix of the string associated to the transitive edge $(r,
-r_2)$.
-Based on this property, Simpson and Durbin~\cite{Simpson2010} define a
-notion of \emph{irreducible} edge and show how to construct a string
-graph by outputting directly irreducible edges (instead of building an
-overlap-graph) significantly shrinking memory requirements and reducing
-compute time to be linear in the total size of the input data.
-The reduction in time and space in the string graph assembly
-problem~\cite{Simpson2010} is achieved by making use of an
-implementation of the problem by BWT and the FM-index apparatus.
-In their works, Simpson and Durbin pose the question of further reducing
-the space requirements in solving the string graph assembly by an
-external memory construction of the FM-index.
+For this reason alternative approaches have been developed recently, among those
+the idea of string graph, initially proposed by Gene Myers~\cite{Myers2005}
+before the advent of NGS technologies and further
+developed~\cite{Simpson2010,Simpson2012} to incorporate some advances in text
+indexing, such as the FM-index~\cite{Ferragina2000}.
+
+The method builds an overlap graph whose vertices are the reads and where an arc
+connects two reads that have a sufficiently large overlap.
+For the purpose of assembling a genome some arcs might be uninformative.
+In fact an arc $(r_{1}, r_{2})$ is called \emph{transitive} (or reducible) if there exists a
+second path from $r_{1}$ to $r_{2}$.
+It is immediate to notice that the final assembly is not influenced by the
+presence of transitive arcs, which are therefore discarded to improve memory usage.
+The final graph where all transitive arcs are removed is called the \emph{string} graph.
+A main contribution of
+Simpson and Durbin~\cite{Simpson2010} is (under the assumption
+that there are not two reads that are one a substring of the other) a
+characterization of transitive arcs, leading to an algorithm to construct a string
+graph by outputting directly irreducible (\ie not transitive) arcs, skipping the
+construction of an intermediate overlap graph, therefore significantly shrinking
+memory requirements with linear time complexity.
+An open problem of ~\cite{Simpson2010} is to further reduce
+the space requirements by developing an external memory algorithm to compute the
+string graph, since their approach requires to keep in main memory the entire
+BWT and the FM-index of all input data (\ie on the concatenation of all reads).
+
 In the meantime, an investigation of external memory construction of the
-BWT has been started in~\cite{Bauer2011} showing that it is possible to
-arbitrarily reduce the use of RAM for building a BWT and for solving
-typical applications of the BWT \notaestesa{Raffa}{Aggiungere rif biblio}.
-\notaestesa{Raffa}{altri rif a BWT in memoria esterna sono Ferragina2012,
-Bauer2013}.
-In this paper, based upon the work in~\cite{Bauer2011}, we show how to
-construct the string graph from a BWT for a collection of reads that is
-completely in external memory.
+Burrow-Wheeler Transform (BWT) and of related text indices (such as the
+FM-index) has sprung~\cite{Bauer2011,Bauer2013,Ferragina2012} showing that it is possible to
+arbitrarily reduce the use of RAM for building the BWT and indexing texts.
 
-The construction of the String graph in~\cite{Simpson2010} works in two
-steps.
-In the first one, for each read $r$ in the collection $R$, the position
-in the BWT ($Q$-interval) of reads that share with $r$ an overlap given
-by a string $Q$ are computed in time linear in the size of $r$.
-In the second step, $Q$-intervals are extended to discover irreducible
-edges.
-Both steps strictly require to keep the whole FM-index and BWT sequence
-for $R$ and for the collection of reversed reads in main memory since
-the $Q$-intervals and the relative extensions cover different positions
-of the whole BWT.
-Moreover, the algorithm requires to recompute $Q$-intervals a number of
-times that is equal to the number of different reads in $R$ share the
-string $Q$ as a suffix.
+In this paper, based upon the work in~\cite{Bauer2011}, we show an external
+memory algorithm to compute the overlap graph and an efficient, albeit not
+entirely external memory) approach to remove all transitive arcs of the overlap
+graph, hence resulting in a string graph.
+% The construction of the String graph in~\cite{Simpson2010} works in two
+% steps.
+% In the first one, for each read $r$ in the collection $R$, the position
+% in the BWT ($Q$-interval) of reads that share with $r$ an overlap given
+% by a string $Q$ are computed in time linear in the size of $r$.
+% In the second step, $Q$-intervals are extended to discover irreducible
+% edges.
+% Both steps strictly require to keep the whole FM-index and BWT sequence
+% for $R$ and for the collection of reversed reads in main memory since
+% the $Q$-intervals and the relative extensions cover different positions
+% of the whole BWT.
+% Moreover, the algorithm requires to recompute $Q$-intervals a number of
+% times that is equal to the number of different reads in $R$ share the
+% string $Q$ as a suffix.
+%
+%
+In our approach, we keep in main memory the graph, a portion (arbitrarily small)
+of the BWT of the reads, the input reads \notaestesa{GDV}{ Marco, mi confermi
+  che non si riesce a tenere in ram solo una porzione?} and some auxiliary arrays.
+The memory usage is dominated by the space necessary to store the string graph.
+The BWT of the reads is stored on disk.
+
+\notaestesa{GDV}{ Descrivere cosa facciamo per gli archi riducibili}
+
+More precisely, we combine the recent work on bidirectional BWT that allows to
+construct and query at the same time the BWT of a text and the BWT of the
+reverse of a text~\cite{Lam2009} with that on external memory algorithm for BWT
+construction~\cite{Bauer2011} to design an external memory BWT-based algorithm
+that finds all occurrences of a pattern in a collection of texts by extending
+the pattern incrementally by adding a character to the beginning or the end of
+the pattern (while the standard pattern matching algorithm based on the FM-index
+only extends the pattern by adding a character to the beginning).
+This algorithm is the main component of our procedure to construct the string graph.
+
+Notice that all large-size intermediate data are stored as external files that
+can be read or written sequentially only.
+Moreover, we strive to minimize the number of passes over those files, as a
+simpler adaptation of the algorithm of~\cite{Bauer2011} would require a number
+of passes equal to the number of input reads in the worst case.
+
+\notaestesa{GDV}{ Accenno su sperimentazione oppure su complessità}
 
 
-In our approach, we keep the BWT for the collection $R$ of reads and its
-reverse version, $R'$ in secondary memory and we read them sequentially,
-and during this process we iteratively forward and backward extend each
-$Q$-interval computed at a previous iteration.
-Each iteration may produce irreducible edges that we keep in RAM.
-%terminal extension pairs and we keep in RAM the String Graph for the
-%subset of reads in  $R$ for which at least a $q'$-interval is in a
-%terminal extension pair computed so far. More precisely, at a
-%given iteration $i$, given $\mathcal{E}_i$  the terminal extension
-%pairs at step $i$, if $R_i$ is the subset of reads which at least a
-%$q'$-interval is in  extension pair of
-%$\mathcal{E}_i$, then the algorithm produces the String graph over
-%$R_i$ since only extensions that are prefix-free for sets $E(r)$, with
-%$r \in R_i$ have been examined.
 
 
-
-
+\begin{comment}
 --------- non so dove vada-----------------
 
 
@@ -181,7 +189,7 @@ version of the reads and then building a forward and backward extension
 of a $Q$-substring by symbols of the alphabet lexicographically ordered.
 All this can be done entirely using files for each symbol of the
 alphabet and files for the BWT and its reversed version.
-
+\end{comment}
 % and by using the RAM only to keep an indexed representation of the
 % string graph
 
@@ -374,7 +382,7 @@ prefixes and forward extensions to extend those prefixes and build the
 terminal extensions.
 
 
-\section*{Building the String Graph}
+\section{Building the String Graph}
 
 The notion of String Graph~\cite{Simpson2010} leads to new approaches to design assembly algorithms.
 More precisely, given a collection $R$ of strings, the string graph of $R$ is a directed graph whose vertices are the strings in $R$ and two reads $(r_{1}, r_{2})$ form an arc if $r_{1}$ and $r_{2}$ overlap.
@@ -751,7 +759,6 @@ the list $\mathcal{E}_{j+1}$.\notaestesa{GDV}{ dove viene memorizzato $n$?}
 % extend by $\sigma$ on $B$ the  \$ $Q$-intervals, \ie computing the
 % interval of reads having $Q \sigma$ has prefix (see figure \ref{}).
 
-
 If $q_{1}'$ has a (unique under our assumption) extension with symbol $\$$
 into the interval $[b'_r, b'_r+1)$, then the read represented by that
 interval is added to the arc-set of each read represented by the
@@ -776,7 +783,8 @@ Since, the length of the intervals $[b', b'+n)$ in $\mathcal{T}$ is
 equal to the length of intervals $q_{1}'$ in $\mathcal{E}_{j}$, the
 algorithm can extend the union of the two lists, and therefore keep
 sorted also the list $\mathcal{E}_{j+1}$, by ascending value of the
-start of the interval $q_{1}'$ on the BWT $B'$.
+start of the interval $q_{1}'$ on the BWT $B'$.\notaestesa{GDV}{ dove ho la
+  garanzia che non ci sono salti di inizio di $q_{1}'$?}
 
 
 
@@ -791,8 +799,6 @@ The seeds of the extension pairs in $\mathcal{E}_j$
 %(partitioned in $|\Sigma|$ files according to the first symbol of ??)
 have a length $< (j+\tau)$ and are the common substrings considered at
 the previous iterations $< j$.
-\notaestesa{Paola}{a me sembra che al passo $j$ la lunghezza sia $< =<
-  (j+\tau)$- ricontrollare bene}
 
 
 \section*{Pseudocode}
