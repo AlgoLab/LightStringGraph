@@ -813,6 +813,7 @@ the previous iterations $< j$.
 $R' \gets \{rev(r): r \in R\}$\;
 $B \gets BWT(R)$\;
 $B' \gets	BWT(R')$\;
+$C \gets Count(B)$ \hfill \% Count (C) function\;
 
 $\mathcal{Q}_{0} \gets$ create the $|\Sigma|$ files of the $Q$-intervals of length $\tau$, each one with its linked $rev(Q)$-interval\;
 $\mathcal{E}_0 \gets \emptyset$\;
@@ -825,9 +826,9 @@ $j \gets 0$\;
 \While{$(\mathcal{Q}_j \cup \mathcal{E}_j) \ne \emptyset$}{
  $\mathcal{Q}_{j+1}\gets$ create $|\Sigma|$ empty files\;
 $\mathcal{T}\gets$ create an empty file\;
-  $extendQOnLeft(\mathcal{Q}_j, B, \mathcal{Q}_{j+1}, \mathcal{T})$\;
+  $extendQOnLeft(\mathcal{Q}_j, B, C, \mathcal{Q}_{j+1}, \mathcal{T})$\;
   sort $\mathcal{T}$\;
-  $\mathcal{E}_{j+1} \gets extendQOnRight(\mathcal{T}, \mathcal{E}_j, B')$\;
+  $\mathcal{E}_{j+1} \gets extendQOnRight(\mathcal{T}, \mathcal{E}_j, B', C)$\;
   $j \gets j+1$\;
 }
 \Return{$R_r$ for each $r \in R$}\;
@@ -888,19 +889,19 @@ $\mathcal{T}\gets$ create an empty file\;
 %\Input{$F$, the $|\Sigma|$ external files containing the $Q$-intervals of length $l$ each one with its linked interval on $B'$\\$B$, the BWT of the collection $R$,\\
 %$F_e$, an array of $|\Sigma|$ empty files,\\$\mathcal{T}$,  an empty file}
 
-Initialize a vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma|$ counters\;
+Initialize a vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma^\$|$ counters\;
 
- \For{$i \gets 1$ \KwTo  $|\Sigma|$}{
-      \ForEach{$\langle [b,e),[b',e')\rangle \in F(i)$}{
-	$processLinkedInterval([b, e),[b', e'),B,\Pi, F_e)$\;
-\tcp{check if $[b',e')$ is a $P$-interval}
-	\If{$[b,e)$ has width $>1$ and $n >0$ $\$$-extensions}{
-            write $\langle [b', e'), n\rangle$ to file $\mathcal{T}$\;
-	}
+ \For{$i \gets 0$ \KwTo  $|\Sigma|$}{
+      \ForEach{$\langle [b,e),[b',e')\rangle \in F(\sigma_i)$}{
+	$processLinkedInterval([b, e), [b', e'), B, C, \Pi, F_e, \mathcal{T})$\;
+% \tcp{check if $[b',e')$ is a $P$-interval}
+% 	\If{$[b,e)$ has width $>1$ and $n >0$ $\$$-extensions}{
+%           Append $\langle [b', e'), n\rangle$ to file $\mathcal{T}$\;
+% 	}
      }
 }
 
-\caption{extendQOnLeft($F$, $B$, $F_e$, $\mathcal{T}$)}
+\caption{extendQOnLeft($F$, $B$, $C$, $F_e$, $\mathcal{T}$)}
 \label{alg:extend-left}
 \end{algorithm}
 
@@ -908,53 +909,51 @@ Initialize a vector $\Pi \gets [0, 0, . . . , 0]$ of $|\Sigma|$ counters\;
 
 \begin{algorithm}
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
-\Input{$\mathcal{T}$, the sorted list of the $P$-intervals of a given length $l$,\\$\mathcal{E}$, the sorted list of the extension pairs of dimension $l$,\\$B'$, the BWT of the reversed set $R'$}
+\Input{$\mathcal{T}$, the sorted list of the $P$-intervals of a given length $l$,\\$\mathcal{E}$, the sorted list of the extension pairs of dimension $l$,\\$B'$, the BWT of the reversed set $R'$, \\$C$, count vector for $B'$}
 \Output{$\mathcal{E}_{e}$, the sorted list of the extension pairs of dimension $(l+1)$}
 
 $\mathcal{E}_{e} \gets \emptyset$\;
 
-Initialize vector $\Pi \gets [0, 0, \ldots , 0]$ of $|\Sigma|$ integers\;
+Initialize vector $\Pi \gets [0, 0, \ldots , 0]$ of $|\Sigma^\$|$ integers\;
 
-    \While{$(\mathcal{T} \cup \mathcal{E}) \neq \emptyset$} {
-             $\langle [b', e'), n \rangle \gets pop((\mathcal{T})$\;
-             $\langle [b'_p, e'_p), [b'_s,e'_s), e \rangle \gets pop(\mathcal{E})$\;
+    $newterminal \gets \emptyset$
+
+    $\langle [b', e'), n \rangle \gets$ getFirst$(\mathcal{T})$\;
+    $\langle [b'_p, e'_p), [b'_s, e'_s), e \rangle \gets$ getFirst$(\mathcal{E})$\;
+
+    \While{$((\mathcal{T} \cup \mathcal{E}) \neq \emptyset) \cup (b'_p = NULL)$} {
+             % $\langle [b', e'), n \rangle \gets pop((\mathcal{T})$\;
+             % $\langle [b'_p, e'_p), [b'_s,e'_s), e \rangle \gets pop(\mathcal{E})$\;
 		\If{$(b' < b'_p)$} {
-			$push(\mathcal{E}, \langle  [b'_p, e'_p), [b'_s,e'_s), e \rangle)$\;
-			$L \gets processInterval([b', e'), B', \Pi)$\;
-                           $[b'_{s}, e'_{s}) \gets L[1]$\;
-			\If{$(e'_{s} - b'_{s}) > 0$} {
-                                   $L \gets processInterval([b', b'+n), B', \Pi)$\;
-
-				\For{$i \gets 2$ \KwTo $|\Sigma|$} {
-                                             append $\langle L[i], [b'_{s}, e'_{s})\rangle$ to $\mathcal{E}_e(\sigma_i)$ if $L[i]$ is not null\;
-				}
-			}
-		}
+			$processPInterval([b', e'), n, B', C, \mathcal{E}_e, \Pi)$\;
+                        $\langle [b', e'), n \rangle \gets$ getFirst$(\mathcal{T})$\;
+                      }
 		\Else {
-			$push(\mathcal{T}, \langle  [b', e'), n \rangle)$\;
-                           $L \gets processInterval([b'_p, e'_p), B', \Pi)$\;
-                           $[b'_{p\$}, e'_{p\$}) \gets L[1]$\;
-			\If{$(e'_{p\$} - b'_{p\$}) > 0$} {
+                  $newterminal \gets newterminal \cup processExtPair([b'_p, e'_p), [b'_s, e'_s), e, B', C, \mathcal{E}_e, \Pi)$\;
+    $\langle [b'_p, e'_p), [b'_s, e'_s), e \rangle \gets$ getFirst$(\mathcal{E})$\;
+                        %    $[b'_{p\$}, e'_{p\$}) \gets L[1]$\;
+			% \If{$(e'_{p\$} - b'_{p\$}) > 0$} {
 
-			   \ForEach{$r \in R(b'_s,e'_s)$}{
-          			$r_e \gets R(b'_{p\$}, e'_{p\$})$\;
-				$checkIfIrreducible(r, r_e, e)$\;
-                             }
-			}
-			\Else {
-				\For{$i \gets 1$ \KwTo $|\Sigma|$} {
-					$[b_a, e_a) \gets updateBwd([b, e), \sigma_k, \Pi, \pi, B')$\;
-					\If{$(b_a < e_a)$} {
-						Append($\langle L[i], [b'_s, e'_s), e+1 \rangle$) to $\mathcal{E}_e(\sigma_i)$ if $L[i]$ is not null\;
-					}
-				}
-			}
+			%    \ForEach{$r \in R(b'_s,e'_s)$}{
+          		% 	$r_e \gets R(b'_{p\$}, e'_{p\$})$\;
+			% 	$checkIfIrreducible(r, r_e, e)$\;
+                        %      }
+			% }
+			% \Else {
+			% 	\For{$i \gets 1$ \KwTo $|\Sigma|$} {
+			% 		$[b_a, e_a) \gets updateBwd([b, e), \sigma_k, \Pi, \pi, B')$\;
+			% 		\If{$(b_a < e_a)$} {
+			% 			Append($\langle L[i], [b'_s, e'_s), e+1 \rangle$) to $\mathcal{E}_e(\sigma_i)$ if $L[i]$ is not null\;
+			% 		}
+			% 	}
+                        %}
 		}
 	}
+                checkIfIrreducible($newterminal$)\;
 
 \Return{$\mathcal{E}_{e}$}\;
 
-\caption{extendOneStepRight($\mathcal{T}$, $\mathcal{E}$, $B'$)}
+\caption{extendQOnRight($\mathcal{T}$, $\mathcal{E}$, $B'$, $C$)}
 \label{alg:extend-right}
 \end{algorithm}
 
@@ -966,29 +965,101 @@ Initialize vector $\Pi \gets [0, 0, \ldots , 0]$ of $|\Sigma|$ integers\;
 %$F$, an array of $|\Sigma|$ empty files}
 
 %Update $\Pi$ \st $\Pi[i]$ is the number of $\sigma_i$ in $B[0,b-1]$\;
-\tcp{$\Pi[i]$ is the number of $\sigma_i$ in $B[0,b-1]$}
-Create a vector $\pi$ of $|\Sigma|$ counters \st $\pi[i]$ is the number of $\sigma_i$ in $B[b,e)$\;
+\tcp{$\Pi[i]$ is the number of $\sigma_i$ in $B[0,b-1]$, $\sigma_i \in \Sigma^\$$}
+Create a vector $\pi$ of $|\Sigma^\$|$ counters \st $\pi[i]$ is the number of $\sigma_i$ in $B[b,e)$\;
 $\pi sum \gets 0$ \tcp{$\pi sum$ is always the number of symbols $< \sigma_i$ in $B[b,e)$}
-\ForEach{$i \gets 1$ \KwTo  $|\Sigma|$}{
+\ForEach{$i \gets 0$ \KwTo  $|\Sigma^\$|$}{
 \tcp{compute the start of the $\sigma_i Q$-interval}
-   $b_e \gets |R|+C(\sigma_i, R)+ \Pi[i]$\;
-\tcp{compute the end of the $\sigma_i Q$-interval}
-   $e_e \gets b_e + \pi[i]$\;
-   $b'_e \gets b'+ \pi sum$\;
-   $e'_e  \gets b'_e + \pi[i]$\;
-   write $\langle [b_e, e_e), [b'_e, e'_e)\rangle$ to file $F(i)$\;
-\tcp{update $\pi sum$ to the number of symbols $< \sigma_{i+1}$ in $B[b,e)$}
-   $\pi sum \gets \pi sum + \pi[i]$\;
+%   $b_e \gets |R|+C(\sigma_i, R)+ \Pi[i]$\;
+   \If{ $\pi[i] > 0$ } {
+     \If{ $i = 0$ } {
+       \tcp{P-Interval}
+       Append $\langle [b'_e, e'_e), \pi[i] \rangle$ to $\mathcal{T}$\;
+     }
+     \Else {
+       $b_e \gets C[ i ] + \Pi[i]$\;
+       $e_e \gets b_e + \pi[i]$\;
+       $b'_e \gets b' + \pi sum$\;
+       $e'_e \gets b'_e + \pi[i]$\;
+       Append $\langle [b_e, e_e), [b'_e, e'_e)\rangle$ to $F_e(\sigma_i)$\;
+     }
+     $\pi sum \gets \pi sum + \pi[i]$\;
+   }
+%    $b_e \gets \Pi[i]
+% \tcp{compute the end of the $\sigma_i Q$-interval}
+%    $e_e \gets b_e + \pi[i]$\;
+%    $b'_e \gets b'+ \pi sum$\;
+%    $e'_e  \gets b'_e + \pi[i]$\;
+%    write $\langle [b_e, e_e), [b'_e, e'_e)\rangle$ to file $F(i)$\;
+% \tcp{update $\pi sum$ to the number of symbols $< \sigma_{i+1}$ in $B[b,e)$}
+%    $\pi sum \gets \pi sum + \pi[i]$\;
 }
 
 %\tcp{update $\Pi$ \st $\Pi[i]$ is the number of $\sigma_i$ in $B[0,e-1]$}
 $\Pi \gets \Pi+\pi$\;
 
-\caption{processLinkedInterval($[b,e)$,$[b',e')$, $B$, $\Pi$, $F$)}
+\caption{processLinkedInterval($[b,e)$,$[b',e')$, $B$, $C$ $\Pi$, $F_e$, $\mathcal{T}$)}
 \label{alg:process-linked-interval}
 \end{algorithm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{algorithm}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+
+\Input{$[b,e)$, a $P$-interval on a BWT $B$,\\$n$, the $P$-interval dimension,\\$\mathcal{E}_e$, the extension pair files for the next iteration \\$B$, the BWT of a collection of strings\\$C$, the count vector\\$\Pi$, a vector of $|\Sigma|$ integers}
+
+Update $\Pi$ such that $\Pi[i]$ is the number of $\sigma_i$ in $B[0, b')$\;
+Create a vector $\pi$ of $|\Sigma^\$|$ integers \st $\pi[i]$ is the number of $\sigma_i$ in $B[b', e')$\;
+\tcp{Check if $P$ is an overlap}
+\If{ $\pi[ 0 ] > 0$ } {
+  $b'_p \gets \Pi[ 0 ]$\;
+  $e'_p \gets \Pi[ 0 ] + \pi[ 0 ]$\;
+  \ForEach{$i \gets 1$ to $|\Sigma^\$|$}{
+    \If{ $\pi[ i ] > 0$} {
+      $b'_e \gets C[ i ] + \Pi[ i ]$\;
+      $e'_e \gets b'_e + \pi[ i ]$\;
+      Append $\langle [b'_e, e'_e ), [b'_p, e'_p), 1 \rangle$ to $\mathcal{E}_e(\sigma_i)$
+    }
+  }
+}
+$\Pi \gets \Pi + \pi$
+
+\caption{processPInterval($[b', e')$, $n$ $B$, $C$, $\mathcal{E}_e$ $\Pi$)}
+\label{alg:processPInterval}
+\end{algorithm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{algorithm}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+
+\Input{$[b'_p,e'_p)$, $[b'_s, e'_s)$, $l$ an extension pair on a BWT $B$,\\$\mathcal{E}_e$, the extension pair files for the next iteration \\$B$, the BWT of a collection of strings\\$C$, the count vector for $B$\\$\Pi$, a vector of $|\Sigma|$ integers}
+
+Update $\Pi$ such that $\Pi[i]$ is the number of $\sigma_i$ in $B[0, b')$\;
+Create a vector $\pi$ of $|\Sigma^\$|$ integers \st $\pi[i]$ is the number of $\sigma_i$ in $B[b'_p, e'_p)$\;
+\tcp{Check if the extension pair is terminal}
+\If{ $\pi[ 0 ] > 0$ } {
+      $b'_p \gets \Pi[ 0 ]$\;
+      $e'_p \gets b'_e + \pi[ i ]$\;
+      \Return $\langle [b'_p, e'_p), [b'_e, e'_e), l \rangle$\;
+  }
+\Else {
+  \ForEach{ $i \gets 1 $ to $|\mathcal{E}^\$|$ } {
+    $b'_p \gets C[ i ] + \Pi[ i ]$\;
+    $e'_p \gets b'_p + \pi[ i ]$\;
+    Append $\langle [b'_p, e'_p), [b'_e, e'_e), l+1 \rangle$ to $\mathcal{E}_e(\sigma_i)$\;
+  }
+}
+
+$\Pi \gets \Pi + \pi$
+
+\caption{processExtPair($[b'_p, e'_p)$, $[b'_s, e'_s)$, $l$, $B$, $C$, $\mathcal{E}_e$ $\Pi$)}
+\label{alg:processExtPair}
+\end{algorithm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \begin{comment}
 \begin{algorithm}
@@ -1018,7 +1089,7 @@ $\Pi \gets \Pi+\pi$\;
 \end{algorithm}
 \end{comment}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+\begin{comment}
 \begin{algorithm}
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 \Input{$r_1$, a read,\\$r_2$, a read extending $r_1$,\\$e$, the extension length of $r_2$ \wrt $r_1$}
@@ -1038,8 +1109,9 @@ $adjList \gets getAdjList(r_1)$\;
 
 \caption{checkIfIrreducible($r_1, r_2, e$)}
 \end{algorithm}
+\end{comment}
 
-
+\begin{comment}
 \begin{algorithm}
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 
@@ -1068,7 +1140,7 @@ $\Pi \gets \Pi+\pi$\;
 \caption{processSingleInterval($[b',e')$, $B'$, $\Pi$)}
 \label{alg:process-linked-interval}
 \end{algorithm}
-
+\end{comment}
 \section{On the complexity}
 
 
