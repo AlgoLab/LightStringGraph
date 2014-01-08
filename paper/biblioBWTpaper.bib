@@ -1,33 +1,36 @@
 @article{Beretta2013,
-  title={Modeling Alternative Splicing Variants from RNA-Seq Data with Isoform Graphs},
-  author={Beretta, Stefano and Bonizzoni, Paola and Vedova, Gianluca Della and Pirola, Yuri and Rizzi, Raffaella},
-  journal={Journal of Computational Biology},
-  year={2013},
-  publisher={Mary Ann Liebert, Inc. 140 Huguenot Street, 3rd Floor New Rochelle, NY 10801 USA}
+  author =       {Beretta, Stefano and Bonizzoni, Paola and Della Vedova,
+                  Gianluca and Pirola, Yuri and Rizzi, Raffaella},
+  title =        {Modeling Alternative Splicing Variants from {RNA-Seq}
+                  Data with Isoform Graphs},
+  journal =      {J. Comput. Biol.},
+  number =       1,
+  pages =        {16--40},
+  volume =       16,
+  year =         2014
 }
 
 @article{Simpson2010,
-	author = {Simpson, Jared T. and Durbin, Richard},
-	title = {Efficient construction of an assembly string graph using the FM-index},
-	volume = {26},
-	number = {12},
-	pages = {i367-i373},
-	year = {2010},
-	doi = {10.1093/bioinformatics/btq217},
-	abstract ={Motivation: Sequence assembly is a difficult problem whose importance has grown again recently as the cost of sequencing has dramatically dropped. Most new sequence assembly software has started by building a de Bruijn graph, avoiding the overlap-based methods used previously because of the computational cost and complexity of these with very large numbers of short reads. Here, we show how to use suffix array-based methods that have formed the basis of recent very fast sequence mapping algorithms to find overlaps and generate assembly string graphs asymptotically faster than previously described algorithms.Results: Standard overlap assembly methods have time complexity O(N2), where N is the sum of the lengths of the reads. We use the Ferragina–Manzini index (FM-index) derived from the Burrows–Wheeler transform to find overlaps of length at least τ among a set of reads. As well as an approach that finds all overlaps then implements transitive reduction to produce a string graph, we show how to output directly only the irreducible overlaps, significantly shrinking memory requirements and reducing compute time to O(N), independent of depth. Overlap-based assembly methods naturally handle mixed length read sets, including capillary reads or long reads promised by the third generation sequencing technologies. The algorithms we present here pave the way for overlap-based assembly approaches to be developed that scale to whole vertebrate genome de novo assembly.Contact: js18@sanger.ac.uk},
-	URL = {http://bioinformatics.oxfordjournals.org/content/26/12/i367.abstract},
-	eprint = {http://bioinformatics.oxfordjournals.org/content/26/12/i367.full.pdf+html},
-	journal = {Bioinformatics}
+  author =       {Simpson, Jared and Durbin, Richard},
+  title =        {Efficient construction of an assembly string graph
+                  using the {FM}-index},
+  volume =       26,
+  number =       12,
+  pages =        {i367-i373},
+  year =         2010,
+  doi =          {10.1093/bioinformatics/btq217},
+  journal =      {Bioinformatics}
 }
 
 @article{Simpson2012,
-	author = {Simpson, Jared T. and Durbin, Richard},
-	title = {Efficient de novo assembly of large genomes using compressed data structures},
-	volume = {22},
-	pages = {549-556},
-	year = {2012},
-	doi = {10.1101/gr.126953.111},
-	journal = {Genome Research}
+  author =       {Simpson, Jared and Durbin, Richard},
+  title =        {Efficient de novo assembly of large genomes using
+                  compressed data structures},
+  volume =       22,
+  pages =        {549--556},
+  year =         2012,
+  doi =          {10.1101/gr.126953.111},
+  journal =      {Genome Res.}
 }
 
 @inproceedings{Lacroix2008,
@@ -45,45 +48,40 @@
 	pages={50-63}
 }
 
-@inproceedings{Myers2005,
-  author =       {Eugene W. Myers},
-  title =        {The fragment assembly string graph.},
-  booktitle =    {ECCB/JBI},
+@article{Myers2005,
+  title =        {The fragment assembly string graph},
+  author =       {Myers, Eugene W},
+  journal =      {Bioinformatics},
+  volume =       21,
+  number =       {suppl 2},
+  pages =        {ii79--ii85},
   year =         2005,
-  pages =        85,
-  ee =           {http://dx.doi.org/10.1093/bioinformatics/bti1114},
-  bibsource =    {DBLP, http://dblp.uni-trier.de}
+  publisher =    {Oxford Univ Press}
 }
 
 @inproceedings{Bauer2011,
-	year={2011},
-	isbn={978-3-642-21457-8},
-	booktitle={Combinatorial Pattern Matching},
-	volume={6661},
-	series={Lecture Notes in Computer Science},
-	editor={Giancarlo, Raffaele and Manzini, Giovanni},
-	doi={10.1007/978-3-642-21458-5_20},
-	title={Lightweight BWT Construction for Very Large String Collections},
-	url={http://dx.doi.org/10.1007/978-3-642-21458-5_20},
-	publisher={Springer Berlin Heidelberg},
-	keywords={BWT; text indexes; next-generation sequencing},
-	author={Bauer, Markus J. and Cox, Anthony J. and Rosone, Giovanna},
-	pages={219-231}
+  year =         2011,
+  booktitle =    {Combinatorial Pattern Matching},
+  volume =       6661,
+  series =       {LNCS},
+  title =        {Lightweight {BWT} Construction for Very Large String
+                  Collections},
+  author =       {Bauer, Markus and Cox, Anthony and Rosone, Giovanna},
+  pages =        {219--231},
+  publisher =    {Springer},
 }
 
 @incollection{Cox2012,
-	year={2012},
-	isbn={978-3-642-33121-3},
-	booktitle={Algorithms in Bioinformatics},
-	volume={7534},
-	series={Lecture Notes in Computer Science},
-	editor={Raphael, Ben and Tang, Jijun},
-	doi={10.1007/978-3-642-33122-0_17},
-	title={Comparing DNA Sequence Collections by Direct Comparison of Compressed Text Indexes},
-	url={http://dx.doi.org/10.1007/978-3-642-33122-0_17},
-	publisher={Springer Berlin Heidelberg},
-	author={Cox, Anthony J. and Jakobi, Tobias and Rosone, Giovanna and Schulz-Trieglaff, Ole B.},
-	pages={214-224}
+  year =         2012,
+  booktitle =    {Algorithms in Bioinformatics},
+  volume =       7534,
+  series =       {LNCS},
+  title =        {Comparing {DNA} Sequence Collections by Direct
+                  Comparison of Compressed Text Indexes},
+  publisher =    {Springer},
+  author =       {Cox, Anthony and Jakobi, Tobias and Rosone, Giovanna
+                  and Schulz-Trieglaff, Ole},
+  pages =        {214--224}
 }
 
 @article{Dementiev2008,
@@ -188,18 +186,18 @@
 }
 
 @inproceedings{Shi1996,
- year={1996},
- isbn={978-3-540-62031-0},
- booktitle={Concurrency and Parallelism, Programming, Networking, and Security},
- volume={1179},
- series={Lecture Notes in Computer Science},
- editor={Jaffar, Joxan and Yap, RolandH.C.},
- doi={10.1007/BFb0027775},
- title={Suffix arrays for multiple strings: A method for on-line multiple string searches},
- url={http://dx.doi.org/10.1007/BFb0027775},
- publisher={Springer Berlin Heidelberg},
- author={Shi, Fei},
- pages={11-22}
+  year =         1996,
+  isbn =         {978-3-540-62031-0},
+  booktitle =    {Concurrency and Parallelism, Programming, Networking,
+                  and Security},
+  volume =       1179,
+  series =       {LNCS},
+  doi =          {10.1007/BFb0027775},
+  title =        {Suffix arrays for multiple strings: A method for
+                  on-line multiple string searches},
+  publisher =    {Springer},
+  author =       {Shi, Fei},
+  pages =        {11--22}
 }
 
 @TECHREPORT{Burrows1994,
@@ -234,7 +232,7 @@
 @article{Ferragina2005,
   title={Indexing compressed text},
   author={Ferragina, Paolo and Manzini, Giovanni},
-  journal={Journal of the ACM (JACM)},
+  journal={J. ACM},
   volume={52},
   number={4},
   pages={552--581},
@@ -243,86 +241,78 @@
 }
 
 @inproceedings{Lam2009,
- author={Lam, T.W. and Ruiqiang Li and Tam, A. and Wong, S. and Wu, E. and Yiu, S.M.},
- booktitle={Bioinformatics and Biomedicine, 2009. BIBM '09. IEEE International Conference on},
- title={High Throughput Short Read Alignment via Bi-directional BWT},
- year={2009},
- pages={31-36},
- keywords={bioinformatics;data structures;genomics;pattern matching;Burrows-Wheeler transform;bidirectional BWT;data structure;genome;high throughput short read alignment;pattern matching;sequencing technologies;Application software;Bidirectional control;Bioinformatics;Data structures;Genomics;Humans;Indexing;Pattern matching;Sequences;Throughput;BWT;indexing data structure;short read alignment},
- doi={10.1109/BIBM.2009.42}
+  author =       {Lam, T.W. and Ruiqiang Li and Tam, A. and Wong, S. and
+                  Wu, E. and Yiu, S.M.},
+  booktitle =    {Bioinformatics and Biomedicine, 2009. BIBM '09. IEEE
+                  Int.~Conf.~on},
+  title =        {High Throughput Short Read Alignment via
+                  Bi-directional {BWT}},
+  year =         2009,
+  pages =        {31--36},
+  doi =          {10.1109/BIBM.2009.42}
 }
 
 @article{Ferragina2012,
- year={2012},
- issn={0178-4617},
- journal={Algorithmica},
- volume={63},
- number={3},
- doi={10.1007/s00453-011-9535-0},
- title={Lightweight Data Indexing and Compression in External Memory},
- url={http://dx.doi.org/10.1007/s00453-011-9535-0},
- publisher={Springer-Verlag},
- keywords={Burrows-Wheeler transform; Compressed indexes; Data compression; Space-efficient algorithms; External memory scan-based algorithms},
- author={Ferragina, Paolo and Gagie, Travis and Manzini, Giovanni},
- pages={707-730},
- language={English}
+  year =         2012,
+  issn =         {0178-4617},
+  journal =      {Algorithmica},
+  volume =       63,
+  number =       3,
+  doi =          {10.1007/s00453-011-9535-0},
+  title =        {Lightweight Data Indexing and Compression in External
+                  Memory},
+  publisher =    {Springer},
+  author =       {Ferragina, Paolo and Gagie, Travis and Manzini,
+                  Giovanni},
+  pages =        {707--730},
 }
 
 @article{Bauer2013,
- author = {Bauer, Markus J. and Cox, Anthony J. and Rosone, Giovanna},
- title = {Lightweight Algorithms for Constructing and Inverting the BWT of String Collections},
+ author = {Bauer, Markus and Cox, Anthony and Rosone, Giovanna},
+ title = {Lightweight Algorithms for Constructing and Inverting the {BWT} of String Collections},
  journal = {Theor. Comput. Sci.},
- issue_date = {April, 2013},
  volume = {483},
- month = apr,
  year = {2013},
- issn = {0304-3975},
- pages = {134--148},
- numpages = {15},
- url = {http://dx.doi.org/10.1016/j.tcs.2012.02.002},
- doi = {10.1016/j.tcs.2012.02.002},
- acmid = {2467366},
- publisher = {Elsevier Science Publishers Ltd.},
- address = {Essex, UK},
- keywords = {BWT, Next-generation sequencing, Text indexes},
+ pages = {134--148}
 }
 
 @inproceedings{Peng2010,
- year={2010},
- isbn={978-3-642-12682-6},
- booktitle={Research in Computational Molecular Biology},
- volume={6044},
- series={Lecture Notes in Computer Science},
- editor={Berger, Bonnie},
- doi={10.1007/978-3-642-12683-3_28},
- title={IDBA – A Practical Iterative de Bruijn Graph De Novo Assembler},
- url={http://dx.doi.org/10.1007/978-3-642-12683-3_28},
- publisher={Springer Berlin Heidelberg},
- keywords={De novo assembly; de Bruijn graph; string graph; mate-pair; high throughput short reads},
- author={Peng, Yu and Leung, HenryC.M. and Yiu, S.M. and Chin, FrancisY.L.},
- pages={426-440}
+  year =         2010,
+  isbn =         {978-3-642-12682-6},
+  booktitle =    {Research in Computational Molecular Biology},
+  volume =       6044,
+  series =       {LNCS},
+  doi =          {10.1007/978-3-642-12683-3_28},
+  title =        {{IDBA} --  A Practical Iterative {de Bruijn} Graph De Novo
+                  Assembler},
+  publisher =    {Springer},
+  author =       {Peng, Yu and Leung, Henry and Yiu, S. and Chin,
+                  Francis},
+  pages =        {426--440}
 }
 
 @article{Zerbino2008,
-  title={Velvet: algorithms for de novo short read assembly using de Bruijn graphs},
-  author={Zerbino, Daniel R and Birney, Ewan},
-  journal={Genome research},
-  volume={18},
-  number={5},
-  pages={821--829},
-  year={2008},
-  publisher={Cold Spring Harbor Lab}
+  title =        {Velvet: algorithms for de novo short read assembly
+                  using {de Bruijn} graphs},
+  author =       {Zerbino, Daniel and Birney, Ewan},
+  journal =      {Genome Res.},
+  volume =       18,
+  number =       5,
+  pages =        {821--829},
+  year =         2008,
 }
 
 @article{Simpson2009,
-  title={ABySS: a parallel assembler for short read sequence data},
-  author={Simpson, Jared T and Wong, Kim and Jackman, Shaun D and Schein, Jacqueline E and Jones, Steven JM and Birol, {\.I}nan{\c{c}}},
-  journal={Genome research},
-  volume={19},
-  number={6},
-  pages={1117--1123},
-  year={2009},
-  publisher={Cold Spring Harbor Lab}
+  title =        {{ABySS}: a parallel assembler for short read sequence
+                  data},
+  author =       {Simpson, Jared and Wong, Kim and Jackman, Shaun
+                  and Schein, Jacqueline and Jones, Steven and
+                  Birol, {\.I}nan{\c{c}}},
+  journal =      {Genome Res.},
+  volume =       19,
+  number =       6,
+  pages =        {1117--1123},
+  year =         2009,
 }
 
 @article{Boisvert2010,
@@ -411,8 +401,18 @@
   publisher={Oxford Univ Press}
   }
 
-  @article{bankevich2012spades,
-  title={SPAdes: A new genome assembly algorithm and its applications to single-cell sequencing},
+@article{bankevich2012spades,
+  title={{SPAdes}: A new genome assembly algorithm and its applications to single-cell sequencing},
+  author={Bankevich, Anton and Nurk, Sergey and Antipov, Dmitry and others},
+  journal={J. Comput. Biol.},
+  volume={19},
+  number={5},
+  pages={455--477},
+  year={2012}
+}
+
+@article{bankevich2012spades/long,
+  title={{SPAdes}: A new genome assembly algorithm and its applications to single-cell sequencing},
   author={Bankevich, Anton and Nurk, Sergey and Antipov, Dmitry and Gurevich, Alexey A and Dvorkin, Mikhail and Kulikov, Alexander S and Lesin, Valery M and Nikolenko, Sergey I and Pham, Son and Prjibelski, Andrey D and others},
   journal={Journal of Computational Biology},
   volume={19},
