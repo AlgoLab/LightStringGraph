@@ -19,15 +19,14 @@
 
 % REMOVE BEFORE SUBMISSION - begin part
 \usepackage{verbatim}
-\newcommand{\nota}[1]{%
-  {\sffamily\bfseries #1}%
-  \marginpar{\framebox{\Large *}}%
-}
+\usepackage{textcomp}\usepackage{xcolor}
 \newcommand{\notaestesa}[2]{%
-  {\sffamily {\bfseries #1}{\footnotesize #2}}%
-  \marginpar{\framebox{\Large *}}%
+ \marginpar{\color{red!75!black}\textbf{\texttimes}}%
+ {\color{red!75!black}%
+ [\,\textbullet\,\textsf{\textbf{#1:}} %
+ \textsf{\footnotesize#2}\,\textbullet\,]}%
 }
-
+\newcommand{\YP}[1]{\notaestesa{YP}{#1}}
 % \usepackage{tikz}
 % \usetikzlibrary{shapes,arrows}
 % \usetikzlibrary{snakes}
@@ -54,6 +53,9 @@
 \newcommand{\wrt}{w.r.t.\xspace}
 \renewcommand{\l}{\ensuremath{\ell}}
 \renewcommand{\emptyset}{\ensuremath{\varnothing}}
+\newcommand{\rev}{\ensuremath{\textrm{rev}}}
+\newcommand{\SA}{\ensuremath{\textit{SA}}}
+\newcommand{\Occ}{\ensuremath{\textit{Occ}}}
 
 
 \begin{document}
@@ -101,7 +103,7 @@ For this reason alternative approaches have been developed recently, among those
 the idea of string graph, initially proposed by Gene Myers~\cite{Myers2005}
 before the advent of NGS technologies and further
 developed~\cite{Simpson2010,Simpson2012} to incorporate some advances in text
-indexing, such as the FM-index~\cite{Ferragina2000}.
+indexing, such as the FM-index~\cite{Ferragina2005}.
 
 The method builds an overlap graph whose vertices are the reads and where an arc
 connects two reads that have a sufficiently large overlap.
@@ -118,13 +120,13 @@ characterization of transitive arcs, leading to an algorithm to construct a stri
 graph by outputting directly irreducible (\ie not transitive) arcs, skipping the
 construction of an intermediate overlap graph, therefore significantly shrinking
 memory requirements with linear time complexity.
-An open problem of ~\cite{Simpson2010} is to further reduce
+An open problem of~\cite{Simpson2010} is to further reduce
 the space requirements by developing an external memory algorithm to compute the
 string graph, since their approach requires to keep in main memory the entire
 BWT and the FM-index of all input data (\ie on the concatenation of all reads).
 
 In the meantime, an investigation of external memory construction of the
-Burrow-Wheeler Transform (BWT) and of related text indices (such as the
+Burrows-Wheeler Transform (BWT) and of related text indices (such as the
 FM-index) has sprung~\cite{Bauer2011,Bauer2013,Ferragina2012} showing that it is possible to
 arbitrarily reduce the use of RAM for building the BWT and indexing texts.
 
@@ -217,56 +219,58 @@ efficient space FM-index implementation of the string graph problem.
 
 
 \section{Preliminaries}
-Let $\Sigma = \{\sigma_1, \cdots, \sigma_m\}$ be an ordered finite
-alphabet.
-Given a string $r = a_1 \cdots a_l$, by $r[i]$ we denote the $i$-symbol
-$a_i$ of $r$ and by $r[i,k]$, with $i \leq k$ we denote the substring
-$a_i \cdots a_k$ of string $r$.
-Then $|r|$ is the length of string $r$.
-The \emph{reverse} of a string $r = a_1 \cdots a_l$, denoted as $rev(r)$,
-consists of the string $r' = a_l \cdots a_1$ obtained by reading $r$
-from right to left.
-
-The \emph{suffix} starting in position $i$ of $r$, in short $i$-suffix of $r$, is
-the substring $r[i, l]$.
-The suffix and \emph{prefix} of length $k$ of string $r$ are the
-substrings $r[l-k +1, l]$ and $r[1, k]$ respectively of string $r$.
+Let $\Sigma = \{\sigma_1, \dots, \sigma_m\}$ be an ordered finite
+alphabet and let $r = a_1 \dots a_l$ be a string over $\Sigma$.
+We denote by $r[i]$ the $i$-th symbol $a_i$ of $r$ and by $r[i,j]$ (with
+$i \leq j$) the substring $a_i \dots a_j$ of $r$.
+The length $l$ of $r$ is denoted by $|r|$.
+The \emph{reverse} of $r$, denoted by $r'$ or $\rev(r)$, is the string
+$a_l \cdots a_1$ obtained by reading $r$ from right to left.
+The \emph{suffix} and \emph{prefix} of length $k$ of string $r$ are the
+substrings $r[l-k +1, l]$ and $r[1, k]$ of $r$, respectively.
+The $i$-suffix of $r$ is the suffix starting in position $i$ of $r$,
+that is the substring $r[i, l]$.
 
 Let $R = \{r_1, \cdots, r_n\}$ be a collection of $n$ strings over
 $\Sigma$, where each sequence $r_i$ ends with a sentinel symbol \$
-that is not in the alphabet $\Sigma$ and is lexicographically lower than
+that is not in the alphabet $\Sigma$ and is considered lower than
 any other symbol in $\Sigma$.
-Let $SA(R)$ be the \emph{generalized suffix-array} for the set $R$
-where each element $SA(R)[i]= (k, j)$ if and only if the
-$k$-suffix of string $r_{j}$ is the $i$-th lowest suffix of some string in $R$, according to the
-lexicographic.
-The generalized suffix-array is an indexing data structure for a
-collection of strings~\cite{Shi1996}.
-
-Then the BWT of the collection $R$ is defined as the sequence $B_R$ such
-that $B_R[i]=r_{j}[k -1]$ if $k > 1$ and $SA[i] = (k,j)$, otherwise
-$B_R[i]= $ \$.
-Informally, $B_R[i]$ is the symbol that precedes the $k$-suffix of
-string $r_j$ where such suffix is the $i$-th lowest in the ordering of
-the generalized suffix array $SA$.
+\YP{C'è inconsistenza sull'alfabeto. \$ appartiene o meno a $\Sigma$?}
+The \emph{generalized suffix array (GSA)} of the collection $R$ is a data
+structure that allows to index the collection~\cite{Shi1996}.
+It is defined as the array $\SA(R)$ where each element $\SA(R)[i]$ is
+equal to $(k, j)$ if and only if the $k$-suffix of string $r_{j}$ is the
+$i$-th lowest element in the lexicographic order of the set of all the
+suffixes of the strings in $R$.
 Clearly, the size of the suffix array is the sum of the length of all
-strings in the collection $R$, that is $N =
-\sum_{i \leq n}|r_i|$.
-Since $B_R$ is a permutation of the concatenation of the strings in $R$,
-the notion of FM-index~\cite{Ferragina2000} can be extended to a BWT of
-the collection $R$.
-The arrays that constitute the FM-index are defined as usual: $C(\sigma, R)$ denotes the
-number of symbols in $R$ that are lexicographically smaller than the symbol
-$\sigma$, while $Occ(\sigma, i, R)$ is the array that reports the number
-of occurrences in $B_R[1, i]$ of the symbol $\sigma$ -- notice that $\sigma$ may be the sentinel \$.
+strings in the collection $R$, that is $\sum_{r \in R}|r|$.
+
+The \emph{Burrows-Wheeler transform (BWT)} of the collection $R$ is
+defined as the sequence $B$ such that $B[i]=r_{j}[k -1]$ if $k > 1$
+and $\SA(R)[i] = (k,j)$, otherwise $B[i]= \$$.
+Informally, $B[i]$ is the symbol that precedes the $k$-suffix of
+string $r_j$ where such suffix is the $i$-th lowest in the ordering
+given by the generalized suffix array $\SA$.
+Since $B$ is a string (actually, a permutation of the concatenation of
+the strings in $R$), we are also able to define the
+FM-index~\cite{Ferragina2005} of the BWT of the collection $R$.
+The arrays that constitute the FM-index are defined as usual: $C(\sigma,
+R)$ denotes the number of symbols in $R$ smaller than the symbol
+$\sigma$, while $\Occ(\sigma, i, R)$ is the array that reports the number
+of occurrences in $B[1, i]$ of the symbol $\sigma$.
+Notice that $\sigma$ may be the sentinel $\$$.
 
 %Now, the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$ reports
 %the sequence of symbols that precedes the ordered suffices in the
 %generalized  suffix array $SA[i,k]$.
 
-The two arrays $C(\sigma, R)$ and $Occ(\sigma, i, R)$, together with the string $B_{R}$ allow to
-compute all occurrences of a string $Q$ in a
-collection $R$ of strings, using the backward extension algorithm~\cite{Ferragina2000}.
+The two arrays $C(\sigma, R)$ and $Occ(\sigma, i, R)$, together with the
+string $B$,
+\YP{$B$ è richiesta?}
+allow to compute in linear time
+\YP{Giusto?}
+all occurrences of a string $Q$ in the collection $R$
+using the backward extension algorithm~\cite{Ferragina2005}.
 
 % Observe that the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$
 % reports the sequence of symbols that precedes the ordered suffices in
@@ -297,7 +301,7 @@ Whenever $Q$ begins with a $\$$, the $Q$-interval is also called a \emph{$\$$-in
 In the following, given an interval $q=[b,e)$, we denote with $R(q)=R(b,e)$ the reads containing the
 BWT symbols of $B[b, e-1]$.
 
-The pattern matching algorithm using the FM-index is based on the idea of backward extension~\cite{Ferragina2000},
+The pattern matching algorithm using the FM-index is based on the idea of backward extension~\cite{Ferragina2005},
 and it can be stated as a progressive refinement of a $Q$-interval by adding a new symbol to the beginning of $Q$.
 More formally, given a $Q$-interval $[b,e)$ and a symbol $\sigma \in \Sigma$, the backward
 extension of $[b,e)$ with $\sigma$ (or \emph{backward
