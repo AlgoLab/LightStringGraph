@@ -148,12 +148,12 @@ In the meantime, an investigation of external memory construction of the
 Burrows-Wheeler Transform (BWT) and of related text indices (such as the
 FM-index) has sprung~\cite{Bauer2011,Bauer2013,Ferragina2012} showing that it is possible to
 arbitrarily reduce the use of RAM for building the BWT and indexing texts.
-\notaestesa{PB}{In this paper we address the problem of 
+\notaestesa{PB}{In this paper we address the problem of
 building a string graph using a BWT and a FM-index for the collection of reads that is completely in  external  memory.
 More precisely, we show an algorithm that  build  the overlap graph from the collection of reads using external memory for comparing reads.
-Edges of the overlap graph will be stored in RAM, thus the application of a  linear time algorithm for transitive  reduction, leads  
+Edges of the overlap graph will be stored in RAM, thus the application of a  linear time algorithm for transitive  reduction, leads
 to directly have the string graph in RAM.
-Under the assumption that the transitive reduction of the overlap graph produces a string graph that is a line graph,  our algorithm 
+Under the assumption that the transitive reduction of the overlap graph produces a string graph that is a line graph,  our algorithm
 leads to directly build the string graph in RAM.}
 
 \notaestesa{RR}{Paragrafo "alternativo" alla precedente nota PB: sistemare} In this paper, based upon the work in~\cite{Bauer2011}, we show an external
@@ -176,11 +176,9 @@ graph, hence resulting in a string graph.
 % string $Q$ as a suffix.
 %
 %
-In our approach, we keep in main memory the graph, a portion (arbitrarily small)
-of the BWT of the reads and some auxiliary arrays.
-\YP{Se costruiamo l'overlap graph il grafo potremmo non tenerlo in memoria e salvare direttamente gli archi, no?}
-The memory usage is dominated by the space necessary to store the string graph.
-The BWT of the reads is stored on disk.
+In our approach, we keep in main memory only a portion (arbitrarily small)
+of the BWT of the reads and some auxiliary arrays, while the BWT of the reads is
+stored on disk.
 
 \notaestesa{GDV}{ Descrivere cosa facciamo per gli archi riducibili}
 
@@ -204,7 +202,7 @@ of passes equal to the number of input reads in the worst case.
 \notaestesa{PB}{
 Note sulla complessità dell'algoritmo-
 While the space complexity construction of the string graph may only be given by the space taken
-in RAM by the overlap graph,  the time complexity increases only of a logarithmic factor w.r.t to the one for building 
+in RAM by the overlap graph,  the time complexity increases only of a logarithmic factor w.r.t to the one for building
 in secondary memory the BWT for the collection of reads.
 More precisely, we obtain a time complexity of the algorithm that is $O(l \times (n + sort(n)))$, where $n$ is the total number  of the reads and $l$ their maximal length, and $O(l \times  sort(n))$
 is the time for secondary memory construction of the BWT.
@@ -474,11 +472,11 @@ $Q$-interval computed at a previous iteration.
 % More precisely, at a given iteration $i$, let $\mathcal{E}_i$ denote the
 % terminal extension pairs at step $i$, and let $R_i\subseteq R$ be the reads
 % appearing as $q_{2}'$-interval  in an extension pair of $\mathcal{E}_i$.
-\notaestesa{GDV}{ Non capisco le prossime due frasi} \notaestesa{PB}{noi calcoliamo l'overlap graph, poi semmai sotto certe assunzioni 
+\notaestesa{GDV}{ Non capisco le prossime due frasi} \notaestesa{PB}{noi calcoliamo l'overlap graph, poi semmai sotto certe assunzioni
 con la proprietà delle lunghezze delle estensioni arriviamo a produrre lo string-graph, per cui direi---The algorithm produces the overlap graph over $R$. Observe that under the assumption in the genomic case that
-a read may not have two distinct extensions in a string graph  w.r.t. another  read, only  edges $(r,r')$  where $r$  has  minimum length   extension with 
+a read may not have two distinct extensions in a string graph  w.r.t. another  read, only  edges $(r,r')$  where $r$  has  minimum length   extension with
 $r'$  in  $R$    will be part of the string graph.
-In fact, the set $E(r)$ of extensions of read $r$ in $R$ must be prefix-free.  
+In fact, the set $E(r)$ of extensions of read $r$ in $R$ must be prefix-free.
 This step  is tested in the procedure
 \emph{Checkifirreducible}....}
 
@@ -781,7 +779,7 @@ the list $\mathcal{E}_{j+1}$.
 Notice that the interval $[b', b'+w_\$)$ (under our assumption) cannot have
 extensions with symbol \$: in fact, no read in $R$ can be equal to the string $Q$.
 
-Moreover we try to extend each extension pair with length $(j+\tau)$ (and extension $>1$) into some 
+Moreover we try to extend each extension pair with length $(j+\tau)$ (and extension $>1$) into some
 extension pairs of length $(j+\tau+1)$.
 More precisely, for each extension pair $(q', q_{2}')$ in  $\mathcal{E}_j$ and
 for each $q_{1}'\in X(q')$ we add the extension pair  $(q_{1}',q_{2}')$ to
@@ -1307,7 +1305,7 @@ $O(l \times (n + sort(n)))$.
 %extends a read $r$ is irreducible.
 %This definition includes also the case of Splicing Graphs...
 
-In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining 
+In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
 a time complexity that  is similar to the one for building the BWT.
 Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
 we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
