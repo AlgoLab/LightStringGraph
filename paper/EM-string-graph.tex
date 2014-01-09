@@ -88,6 +88,7 @@
 
 \end{abstract}
 
+\begin{comment}
 \section*{Legenda di supporto per la correzione}
 \begin{itemize}
 \item $n$: cardinality of the collection $R$
@@ -102,7 +103,7 @@
 \item $Occ(\sigma, i)$: FM-index function (the old $Occ(\sigma, i, R)$)
 \item prefix-interval: $rev(Q)$-interval (on $B'$) representing a string $Q$ occurring as a prefix (the old $P$-interval denotes in this framework an interval representing a string $P$)
 \end{itemize}
-
+\end{comment}
 
 \section{Introduction}
 De novo sequence assembly is a fundamental step
@@ -127,8 +128,8 @@ indexing, such as the FM-index~\cite{Ferragina2005}.
 The method builds an overlap graph whose vertices are the reads and where an arc
 connects two reads that have a sufficiently large overlap.
 For the purpose of assembling a genome some arcs might be uninformative.
-\notaestesa{GDV}{Rivedere definizione di arco transitivo} In fact an arc $(r_{1}, r_{2})$ is called \emph{transitive} (or reducible) if there exists a
-second path from $r_{1}$ to $r_{2}$.
+In fact an arc $(r_{1}, r_{2})$ is called \emph{transitive} (or reducible) if
+there its removal does not change the strings that we can infer from the graph.
 It is immediate to notice that the final assembly is not influenced by the
 presence of transitive arcs, which are therefore discarded to improve memory usage.
 The final graph where all transitive arcs are removed is called the \emph{string} graph.
@@ -148,15 +149,7 @@ In the meantime, an investigation of external memory construction of the
 Burrows-Wheeler Transform (BWT) and of related text indices (such as the
 FM-index) has sprung~\cite{Bauer2011,Bauer2013,Ferragina2012} showing that it is possible to
 arbitrarily reduce the use of RAM for building the BWT and indexing texts.
-\notaestesa{PB}{In this paper we address the problem of
-building a string graph using a BWT and a FM-index for the collection of reads that is completely in  external  memory.
-More precisely, we show an algorithm that  build  the overlap graph from the collection of reads using external memory for comparing reads.
-Edges of the overlap graph will be stored in RAM, thus the application of a  linear time algorithm for transitive  reduction, leads
-to directly have the string graph in RAM.
-Under the assumption that the transitive reduction of the overlap graph produces a string graph that is a line graph,  our algorithm
-leads to directly build the string graph in RAM.}
-
-\notaestesa{RR}{Paragrafo "alternativo" alla precedente nota PB: sistemare} In this paper, based upon the work in~\cite{Bauer2011}, we show an external
+In this paper, based upon the work in~\cite{Bauer2011}, we show an external
 memory algorithm to compute the overlap graph and an efficient, albeit not
 entirely external memory) approach to remove all transitive arcs of the overlap
 graph, hence resulting in a string graph.
@@ -176,11 +169,11 @@ graph, hence resulting in a string graph.
 % string $Q$ as a suffix.
 %
 %
-In our approach, we keep in main memory only a portion (arbitrarily small)
-of the BWT of the reads and some auxiliary arrays, while the BWT of the reads is
-stored on disk.
+In our approach, we keep in main memory the overlap graph, a portion (arbitrarily small)
+of the BWT of the reads and some auxiliary arrays, while the entire BWT of the reads is stored on disk.
+Since the overlap graph will be stored in RAM, the approaches presented in the
+literature to remove the transitive arcs can be applied.
 
-\notaestesa{GDV}{ Descrivere cosa facciamo per gli archi riducibili}
 
 More precisely, we combine the recent work on bidirectional BWT that allows to
 construct and query at the same time the BWT of a text and the BWT of the
@@ -1305,11 +1298,26 @@ $O(l \times (n + sort(n)))$.
 %extends a read $r$ is irreducible.
 %This definition includes also the case of Splicing Graphs...
 
+<<<<<<< HEAD
 In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
 a time complexity that  is similar to the one for building the BWT.
 Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
 we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
 An interesting open problem would be to use properties of $Q$-intervals to find irreducible edges while extending $Q$-intervals in the general case of input reads producing a string graph that is not necessarily a line graph, as in the transcriptomic application of the string graph to build a splicing-graph (\cite{Berettaet al}.
+=======
+We have  proposed an external memory algorithm for building an overlap  graph from a set $R$ of reads.
+Moreover we have shown that our approach is efficient, as the time complexity of
+the whole algorithm is not significantly larger that that of a necessary
+procedure, that is the lightweight BWT construction.
+
+There are at least two important directions for further research; the first is
+to devise an external memory algorithm to directly compute the string graph,
+sidestepping the need for computing the overlap graph, the second is to
+better understand the differences between string graphs associated to genomic
+reads and to RNA-seqs, since in the latter context graph models of gene structure
+have been recently proposed, such as the splicing graph~\cite{Beretta2013}.
+
+>>>>>>> ed65da8... rivista introduzione e conclusioni
 \bibliographystyle{splncs03}
 \bibliography{biblioBWTpaper}
 
