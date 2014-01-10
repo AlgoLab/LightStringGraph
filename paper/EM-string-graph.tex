@@ -80,9 +80,9 @@
 
 \maketitle
 
-\YP{Rivedere titolo}
+% \YP{Rivedere titolo}
 
-\YP{Page limit: 10 pages + a cleary marked appendix}
+% \YP{Page limit: 10 pages + a cleary marked appendix}
 
 \begin{abstract}
 In this paper we tackle the problem of reducing memory usage in sequence
@@ -92,7 +92,7 @@ a set of sequence, which is the bottleneck in some sequencing approaches.
 Our algorithm builds upon some recent results on lightweight Burrows-Wheeler
 transform (BWT) construction and on bidirectional BWT to compute efficiently the
 pairwise overlap of a set of sequences and to represent those overlaps with a
-directed graph, with an overall time complexity that is the same as the known
+directed graph, with an overall time complexity that is the same as the
 algorithm to compute the BWT.
 \end{abstract}
 
@@ -253,9 +253,9 @@ efficient space FM-index implementation of the string graph problem.
 
 \section{Preliminaries}
 
-\YP{Ho fatto una suddivisione in paragraphs per dare una struttura più
-  fine alla sezione (che è abbastanza lunga). Toglietela/modificatela
-  pure se non piace.}
+% \YP{Ho fatto una suddivisione in paragraphs per dare una struttura più
+%   fine alla sezione (che è abbastanza lunga). Toglietela/modificatela
+%   pure se non piace.}
 \paragraph{The overlap graph.}
 Let $\Sigma = \{\sigma_1, \dots, \sigma_m\}$ be an ordered finite
 alphabet and let $r = a_1 \dots a_l$ be a string over $\Sigma$.
@@ -435,18 +435,18 @@ is the smallest symbol of $\Sigma^\$$.
 
 \section{Building the Overlap Graph}
 
-\MP{Volendo calcolare unicamente l'overlap graph e non lo string graph,
-una volta che ho trovato un prefix-interval dove il prefisso è $Q$,
-basterebbe un solo passo per determinare le coppie di read il cui
-overlap è $Q$ senza dover estendere sulla destra finché non trovo i
-terminal extension pair. Questo, però, richiederebbe di tenere in
-memoria \textbf{primaria} un'array che indica per ciascuna posizione
-della BWT l'indice del read che contiene quel carattere (spazio
-$O(\sum_{r \in R} |r|)$) (questo corrisponde, di fatto, a quasi tutto il
-suffix array generalizzato di $R$). Forse vale la pena di far notare che
-effettuando le estensioni sulla destra risparmiamo memoria primaria
-perché dobbiamo tenere in memoria solo $|R|$ indici (a scapito di più
-tempo computazionale e di operazioni di I/O).}
+% \MP{Volendo calcolare unicamente l'overlap graph e non lo string graph,
+% una volta che ho trovato un prefix-interval dove il prefisso è $Q$,
+% basterebbe un solo passo per determinare le coppie di read il cui
+% overlap è $Q$ senza dover estendere sulla destra finché non trovo i
+% terminal extension pair. Questo, però, richiederebbe di tenere in
+% memoria \textbf{primaria} un'array che indica per ciascuna posizione
+% della BWT l'indice del read che contiene quel carattere (spazio
+% $O(\sum_{r \in R} |r|)$) (questo corrisponde, di fatto, a quasi tutto il
+% suffix array generalizzato di $R$). Forse vale la pena di far notare che
+% effettuando le estensioni sulla destra risparmiamo memoria primaria
+% perché dobbiamo tenere in memoria solo $|R|$ indici (a scapito di più
+% tempo computazionale e di operazioni di I/O).}
 
 
 
@@ -557,7 +557,7 @@ The first method computes the BWT of a collection of strings using $|\Sigma|$
 external files $F_b$, where each file $F_b(\sigma)$ contains the portion of BWT related to the suffixes
 starting with the symbol $\sigma$.
 The second method allows to construct (in external files) $Q$-intervals
-of increasing length.% \notaestesa{RR}{Introdurre qui brevemente le procedure processInterval e processLinkedInterval}
+of increasing length.% \notaestesa{RR}{Introdurre qui brevemente le procedure processInterval e extendLinkedInterval}
 
 \begin{comment}
 In particular, the procedure \emph{processInterval} given
@@ -570,7 +570,7 @@ can be easily obtained by means of the FM-index function $C$).
 Bisogna dire però cosa calcola la procedura}
 
 We extend the procedure \emph{processInterval} to
-\emph{processLinkedInterval}, where we produce not only the $Q$-intervals on $B$, but also the linked
+\emph{extendLinkedInterval}, where we produce not only the $Q$-intervals on $B$, but also the linked
 $rev(Q)$-intervals on $B'$.
 \end{comment}
 
@@ -625,7 +625,7 @@ increasing value of the start $b'$ on $B'$.
 Before the first iteration of the algorithm, the list $\mathcal{Q}_0$ contains the
 $Q$-intervals of length $\tau$, while  $\mathcal{E}_0$ and $\mathcal{P}$ are empty.
 The list $\mathcal{Q}_0$ is computed  by building intervals of increasing length
-executing our procedure \emph{processLinkedInterval} (starting from intervals of
+executing our procedure \emph{extendLinkedInterval} (starting from intervals of
 length $1$, which easily computed from $C(\sigma)$).
 
 
@@ -648,7 +648,7 @@ a new  extension pair
 $(q_{1}',q_{2}')$ is added to $\mathcal{E}_{j+1}$, where   $q_{1}'$ is a backward $\sigma$-extension
 of a prefix-interval in $\mathcal{P}$,  \ie the string $E$ of the computed pair
 consists of a single character.
-.
+
 % --
 % or (iii c)
 % $q_{2}'$ is a $\sigma$ backward extension
@@ -658,8 +658,7 @@ consists of a single character.
 
 % The list $\mathcal{Q}_{j}$ will be used during the next iteration
 % $(j+1)$, and represents common strings of length increased by $1$.
-\noindent
-{\bf  Computing  the list $Q_{j+1} $ and $Q$-intervals}
+\paragraph{Computing  the list $Q_{j+1} $ and $Q$-intervals}
 
 Since the core of our approach is the extension of $Q$-intervals, we will
 describe the steps that are necessary to achieve that.
@@ -696,12 +695,11 @@ calls to \emph{processInterval} receive the correct values of $\Pi$.
 % By assuming that input $Q$-intervals of length $l$ are available in lexicographical order, this procedure is able to update $\Pi$ and $\pi$ by reading the symbols of $B$ consecutively.
 % In fact, the $Q$-intervals occurs consecutively along the BWT $B$ and  thus while reading $B$ the number of symbols needed to update $\Pi$ and $\pi$ are counted.
 
-\noindent
-{\bf Computing  linked $Q$-intervals on $B'$.}
+\paragraph{Computing  linked $Q$-intervals on $B'$.}
 
 We have extended \emph{processInterval} to manage at the same time  the linked intervals on
 $B'$.
-In fact the procedure \emph{processLinkedInterval}.
+In fact the procedure \emph{extendLinkedInterval}.
 takes as input a $Q$-interval $[b,e)$ and its linked
 $rev(Q)$-interval $[b',e')$, and outputs (appending to the external file $F(\sigma_{i})$)
 the extended $\sigma_i Q$-intervals, each  with the linked $rev(Q)
@@ -713,7 +711,7 @@ of the $rev(Q)$-interval $[b',e')$ is performed by counting
 the number of symbols in $B[b,e)$ which are lexicographically smaller than
 $\sigma_i$ just as in~\cite{Simpson2010}.
 %\notaestesa{paola}{qua a mio parere va detto come viene fatto}.
-We recall that the correctness of \emph{processLinkedInterval} is based on the
+We recall that the correctness of \emph{extendLinkedInterval} is based on the
 fact that all $Q$-intervals are processed (and extended) in lexicographic order.
 
 % \notaestesa{Raffa}{Qui invece va la descrizione della nuova procedura \emph{processSingleInterval}, sempre se la teniamo... che determina la lista di tutti gli intervalli estesi di un $Q'$-interval su $B'$ - vedi modifica 6}.
@@ -726,7 +724,7 @@ fact that all $Q$-intervals are processed (and extended) in lexicographic order.
 
 
 \begin{comment}
-More precisely, the steps .... in algorithm \emph{processLinkedInterval}
+More precisely, the steps .... in algorithm \emph{extendLinkedInterval}
 directly provides the values of the new $\sigma Q$-interval and such
 value is appended at the end of the new updated list (or file), in order
 to maintain the lexicographic ordering.
@@ -735,7 +733,7 @@ while reading the files themselves, thus minimizing the operations on the
 file.
 \notaestesa{PB}{nota bene il passo dal 3 al 9 non si capisce come sia
 implementato in termini di memoria esterna ed interna - io sarei per
-descrivere la procedura processLinkedInterval- dettagliandola rispetto
+descrivere la procedura extendLinkedInterval- dettagliandola rispetto
 ai linked intervals, che però vanno definiti prima, in termini
 costruttivi}.
 
@@ -753,8 +751,7 @@ $b$.
 \begin{comment}
 \notaestesa{RR}{Aggiungere tutti i riferimenti allo pseudocodice dopo averlo sistemato}
 
-\noindent
-{\bf  Computing the {\em seed-list}.}
+\paragraph{Computing the {\em seed-list}.}
 Each element of the list $\mathcal{P}$ is made of a  \emph{prefix-interval} $[b',e')$
 and its \$-width $w_\$ $ (recall that $w_\$ $ is  the number of     \$ backward \$-extension of  the $Q$-interval $[b,e)$ that is linked to $[b',e')$).
 The list $\mathcal{P}$ is actually stored as a file and is sorted by ascending value of the starting
@@ -771,8 +768,7 @@ the end and popping (\ie reading from the head and deleting) an item.
 %in $B'$.
 \end{comment}
 
-\noindent
-{\bf Computing  extension pairs in $\mathcal{E}_{j+1}$ from the seed list.}
+\paragraph{Computing  extension pairs in $\mathcal{E}_{j+1}$ from the seed list.}
 
 
 From each  prefix-interval in $\mathcal{P}$ we then compute the extension pairs $(q_{1}', q_{2}')$ with
@@ -789,8 +785,7 @@ the list $\mathcal{E}_{j+1}$ (recall that $ X(b',b'+w_\$)$ is the list of backwa
 Notice that the interval $[b', b'+w_\$)$ (under our assumption) cannot have
 extensions with symbol \$: in fact, no read in $R$ can be equal to the string $Q$.
 
-\noindent
-{\bf Computing  extension pairs in $\mathcal{E}_{j+1}$ by extending   extension pairs in $\mathcal{E}_{j}$.}
+\paragraph{Computing  extension pairs in $\mathcal{E}_{j+1}$ by extending   extension pairs in $\mathcal{E}_{j}$.}
 
 Moreover we try to extend each extension pair $(q', q_{2}')$ with length $(j+\tau)$ into some
 extension pairs of length $(j+\tau+1)$.
@@ -842,10 +837,119 @@ start of $q'$ on $B'$.\notaestesa{RR}{Spiegare qui la questione degli extension 
 
 
 
-\section*{Pseudocode}
-Denoto con $A(q_{1}', q_{2}')$ il set delle coppie tra i reads del secondo intervallo e i reads del primo intervallo.
-Ricordarsi di indicizzare nella parte discorsiva i file e gli array FM-index per simbolo e non per indice.
-Inoltre rinominerei processLinkedInterval in extendLinkedIntervals
+\paragraph{On the complexity}
+
+
+
+
+
+We recall that the input data consist of a set of  $R$ of $n$ reads of maximum
+length $l$, and that $N$ is the total length of all input reads.
+% and let us recall that $n$ is the total number of reads ($R$)
+% The time complexity for building the BWT of the collection $R$ of reads
+% is the one reported in the paper ((Lightweight BWT Construction for Very
+% Large String Collections)\cite{}).
+% More precisely, using BCR we can build the data structure in
+% $O(l\times sort(n))$ whereas using BCRext the time complexity
+% is $O(ln)$.
+Observe that the \emph{buildGraph} procedure consists of  at most $l$ iterations.
+In each iteration (i) we extend the intervals in the lists $\mathcal{Q_{j}}$ (with an
+adaptation of the BCR algorithm~\cite{Bauer2013}) and $\mathcal P$, (ii) we sort
+$\mathcal P$, and (iii) we extend the extension pairs in $\mathcal{E_{j}}$.
+
+Each extension of an interval or of an extension pair consists of a linear scan
+of the lists and some $O(1)$-time operations on each element of the list.
+Since, for each list, the input and the output intervals are disjoint, there can
+be at most $N$ intervals in each list, therefore $O(N)$ is also the time spent
+at each iteration.
+
+
+\begin{comment}
+times the procedures ExtendQonLeft and ExtendQonRight.
+In fact, those two procedures
+%the procedures ExtendQonLeft and ExtendQonRight
+apply the backward extension to every $Q$-interval in $\mathcal{Q}_j$ at
+most $l$ times, since there can't be any interval related to a pattern
+$Q$ such that $|Q| > l$. % $Q$-interval has length at least $\tau$.
+
+On the other hand the procedures ExtendQonLeft and ExtendQonRight aim to
+build all the possible $Q$-intervals linked to the maximal overlaps
+between the reads (the irreducible edges of the String Graph) by means of
+an incremental approach that rely on the computation of the
+$Q$-intervals during the previous steps.
+
+Thus, the time complexity of these procedures may be measured by
+considering the total number of possible $Q$-intervals that we have to
+compute for every length of $Q$ (more precisely for $|Q| \in \{1 \dots
+l\}$).
+% the fact that after the total number of iterations they have extended
+% at most all possible $Q$-intervals in the data set $R$ for $|Q| \in
+% \{1 \dots l\}$.
+
+Then the total  complexity of ExtendQonLeft and ExtendQonRight is at
+most $O(N_Q)$, where $N_Q$ is the total number of
+$Q$-intervals (i.e. distinct substrings of $R$).
+
+An estimate of $N_Q$ can be given as $O(l \times n)$ (let us recall that
+the number of distinct strings in a word on length $x$ is  at most $x$
+((Trovare articolo e citare)\cite{})).
+\end{comment}
+
+Note that during the iteration step the \emph{buildGraph} procedure has also to
+sort $\mathcal{P}$. Since each interval must be sorted by its beginning (\ie a
+single number), in order to sort  $\mathcal{P}$ we have to sort $n$ integers,
+which can be done in $sort(n)$ time.
+%
+Since there are at most $l$ iterations, the overall time complexity is
+$O(l (n + sort(n))=O(l \cdot sort(n))$.
+% of BWT in external memory and thus an estimate of the time over real
+% data can be ....
+
+
+
+\section{Conclusion and future work}
+%The above notion of String Graph applies to assembling RNA-seq data into
+%Splicing Graph~\cite{Beretta2013}.
+%When assembling RNA-seq data with an overlap graph, the final output
+%graph is not a line path, since the graph should represent the
+%alternative transcripts derived by the alternative splicing on the gene
+%structure.
+%In fact, RNA-seq data are classified into \emph{spliced} and
+%\emph{unspliced} reads.
+%Unspliced reads are reads that cover regions that are either coding or
+%not coding ones, i.e. they are absent or present in a transcript
+%sequence.
+%On the contrary a spliced read $r$ contains of at least two consecutive
+%substrings $r_i $, $r_{i+1}$ such that there exists at least two
+%transcripts where $r_i$ is present in a transcript sequence together
+%with $r_{i+1}$ while $r_i$ is present and $r_{i+1}$ is absent in the
+%transcript sequence.
+%
+%In order to include this case we give a more general notion of
+%irreducible edges of an overlap graph.
+%Under the assumption that a read is not included in another one, the
+%transitive reduction of an overlap graph, by which we get a String Graph
+%from an overlap graph, corresponds to require that the set of reads that
+%extends a read $r$ is irreducible.
+%This definition includes also the case of Splicing Graphs...
+
+% <<<<<<< HEAD
+% In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
+% a time complexity that  is similar to the one for building the BWT.
+% Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
+% we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
+% An interesting open problem would be to use properties of $Q$-intervals to find irreducible edges while extending $Q$-intervals in the general case of input reads producing a string graph that is not necessarily a line graph, as in the transcriptomic application of the string graph to build a splicing-graph (\cite{Berettaet al}.
+We have  proposed an external memory algorithm for building an overlap  graph from a set $R$ of reads.
+Moreover we have shown that our approach is efficient, as the time complexity of
+the whole algorithm is not significantly larger that that of a necessary
+procedure, that is the lightweight BWT construction.
+
+There are at least two important directions for further research; the first is
+to devise an external memory algorithm to directly compute the string graph,
+sidestepping the need for computing the overlap graph, the second is to
+better understand the differences between string graphs associated to genomic
+reads and to RNA-seqs, since in the latter context graph models of gene structure
+have been recently proposed, such as the splicing graph~\cite{Beretta2013}.
 
 \begin{algorithm}
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
@@ -871,7 +975,7 @@ $\Pi(\sigma) \gets 0$ for each $\sigma \in \Sigma$\;
 
  \ForEach{$\sigma \in \Sigma$}{
       \ForEach{$\langle [b,e),[b',e')\rangle \in \mathcal{Q}_j(\sigma)$}{
-	processLinkedInterval$([b, e), [b', e'), \mathcal{Q}_{j+1})$\;
+	extendLinkedInterval$([b, e), [b', e'), \mathcal{Q}_{j+1})$\;
         \If{$[b',e')$ is a prefix-interval} {
              Let $w_\$$ be the number of \$-extensions of $[b,e)$\;
              Add $\langle [b', e'), w_\$ \rangle$ to $\mathcal{P}$\
@@ -918,6 +1022,19 @@ $\Pi(\sigma) \gets 0$ for each $\sigma \in \Sigma \cup \{\$\}$\;
 
 \end{algorithm}
 
+
+\bibliographystyle{splncs03}
+\bibliography{biblioBWTpaper}
+
+\section*{Appendix}
+\begin{comment}
+\section*{Pseudocode}
+Denoto con $A(q_{1}', q_{2}')$ il set delle coppie tra i reads del secondo intervallo e i reads del primo intervallo.
+Ricordarsi di indicizzare nella parte discorsiva i file e gli array FM-index per simbolo e non per indice.
+Inoltre rinominerei extendLinkedInterval in extendLinkedIntervals
+\end{comment}
+
+
 \begin{algorithm}
 \SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
 \tcp{$\Pi[\sigma]$ must be number of $\sigma$ in $B[0,b)$, for each $\sigma \in \Sigma$}
@@ -940,7 +1057,7 @@ $\pi sum \gets 0$\;
                       }
 $\Pi \gets \Pi+\pi$\;
 
-\caption{processLinkedInterval($[b,e)$,$[b',e')$ $F$)}
+\caption{extendLinkedInterval($[b,e)$,$[b',e')$ $F$)}
 \label{alg:process-linked-interval}
 \end{algorithm}
 
@@ -1006,123 +1123,6 @@ $\Pi \gets \Pi + \pi$
 \caption{extendExtensionPair($q_{1}'$, $q_{2}'$, $F$)}
 \label{alg:processExtPair}
 \end{algorithm}
-
-\section{On the complexity}
-
-
-
-
-
-We recall that the input data consist of a set of  $R$ of $n$ reads of maximum
-length $l$, and that $N$ is the total length of all input reads.
-% and let us recall that $n$ is the total number of reads ($R$)
-% The time complexity for building the BWT of the collection $R$ of reads
-% is the one reported in the paper ((Lightweight BWT Construction for Very
-% Large String Collections)\cite{}).
-% More precisely, using BCR we can build the data structure in
-% $O(l\times sort(n))$ whereas using BCRext the time complexity
-% is $O(ln)$.
-Observe that the \emph{buildGraph} procedure consists of  at most $l$ iterations.
-In each iteration (i) we extend the intervals in the lists $\mathcal{Q_{j}}$ (which is an
-adaptation of the BCR algorithm~\cite{Bauer2013}) and $\mathcal P$, (ii) we sort
-$\mathcal P$, and (iii) we extend the extension pairs in $\mathcal{E_{j}}$.
-
-Each extension of an interval or of an extension pair consists of a linear scan
-of the lists and some $O(1)$-time operations on each element of the list.
-Since, for each list, the input and the output intervals are disjoint, there can
-be at most $N$ intervals in each list, therefore $O(N)$ is also the time spent
-at each iteration.
-
-
-\begin{comment}
-times the procedures ExtendQonLeft and ExtendQonRight.
-In fact, those two procedures
-%the procedures ExtendQonLeft and ExtendQonRight
-apply the backward extension to every $Q$-interval in $\mathcal{Q}_j$ at
-most $l$ times, since there can't be any interval related to a pattern
-$Q$ such that $|Q| > l$. % $Q$-interval has length at least $\tau$.
-
-On the other hand the procedures ExtendQonLeft and ExtendQonRight aim to
-build all the possible $Q$-intervals linked to the maximal overlaps
-between the reads (the irreducible edges of the String Graph) by means of
-an incremental approach that rely on the computation of the
-$Q$-intervals during the previous steps.
-
-Thus, the time complexity of these procedures may be measured by
-considering the total number of possible $Q$-intervals that we have to
-compute for every length of $Q$ (more precisely for $|Q| \in \{1 \dots
-l\}$).
-% the fact that after the total number of iterations they have extended
-% at most all possible $Q$-intervals in the data set $R$ for $|Q| \in
-% \{1 \dots l\}$.
-
-Then the total  complexity of ExtendQonLeft and ExtendQonRight is at
-most $O(N_Q)$, where $N_Q$ is the total number of
-$Q$-intervals (i.e. distinct substrings of $R$).
-
-An estimate of $N_Q$ can be given as $O(l \times n)$ (let us recall that
-the number of distinct strings in a word on length $x$ is  at most $x$
-((Trovare articolo e citare)\cite{})).
-\end{comment}
-
-Note that during the iteration step the \emph{buildGraph} procedure has also to
-sort $\mathcal{P}$. Since each interval must be sorted by its beginning (\ie a
-single number), in order to sort  $\mathcal{P}$ we have to sort $n$ integers,
-which can be done in $sort(n)$ time.
-
-Since there are at most $l$ iterations, the overall time complexity is
-$O(l (n + sort(n))=O(l \cdot sort(n))$.
-% of BWT in external memory and thus an estimate of the time over real
-% data can be ....
-
-
-
-\section{Conclusion and future work}
-%The above notion of String Graph applies to assembling RNA-seq data into
-%Splicing Graph~\cite{Beretta2013}.
-%When assembling RNA-seq data with an overlap graph, the final output
-%graph is not a line path, since the graph should represent the
-%alternative transcripts derived by the alternative splicing on the gene
-%structure.
-%In fact, RNA-seq data are classified into \emph{spliced} and
-%\emph{unspliced} reads.
-%Unspliced reads are reads that cover regions that are either coding or
-%not coding ones, i.e. they are absent or present in a transcript
-%sequence.
-%On the contrary a spliced read $r$ contains of at least two consecutive
-%substrings $r_i $, $r_{i+1}$ such that there exists at least two
-%transcripts where $r_i$ is present in a transcript sequence together
-%with $r_{i+1}$ while $r_i$ is present and $r_{i+1}$ is absent in the
-%transcript sequence.
-%
-%In order to include this case we give a more general notion of
-%irreducible edges of an overlap graph.
-%Under the assumption that a read is not included in another one, the
-%transitive reduction of an overlap graph, by which we get a String Graph
-%from an overlap graph, corresponds to require that the set of reads that
-%extends a read $r$ is irreducible.
-%This definition includes also the case of Splicing Graphs...
-
-% <<<<<<< HEAD
-% In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
-% a time complexity that  is similar to the one for building the BWT.
-% Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
-% we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
-% An interesting open problem would be to use properties of $Q$-intervals to find irreducible edges while extending $Q$-intervals in the general case of input reads producing a string graph that is not necessarily a line graph, as in the transcriptomic application of the string graph to build a splicing-graph (\cite{Berettaet al}.
-We have  proposed an external memory algorithm for building an overlap  graph from a set $R$ of reads.
-Moreover we have shown that our approach is efficient, as the time complexity of
-the whole algorithm is not significantly larger that that of a necessary
-procedure, that is the lightweight BWT construction.
-
-There are at least two important directions for further research; the first is
-to devise an external memory algorithm to directly compute the string graph,
-sidestepping the need for computing the overlap graph, the second is to
-better understand the differences between string graphs associated to genomic
-reads and to RNA-seqs, since in the latter context graph models of gene structure
-have been recently proposed, such as the splicing graph~\cite{Beretta2013}.
-
-\bibliographystyle{splncs03}
-\bibliography{biblioBWTpaper}
 
 
 \end{document}
