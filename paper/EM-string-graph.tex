@@ -1,0 +1,1067 @@
+\documentclass[runningheads,envcountsame,a4paper]{llncs}
+\pdfpagesattr{/CropBox [92 112 523 778]}
+
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage[algoruled,linesnumbered,noend]{algorithm2e}
+\usepackage{enumitem}
+\usepackage{cite}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{xspace}
+\usepackage{graphicx}
+
+\newcommand{\coll}[1]{\url{#1}}
+
+% REMOVE BEFORE SUBMISSION - begin part
+\usepackage{verbatim}
+\usepackage{textcomp}\usepackage{xcolor}
+\newcommand{\notaestesa}[2]{%
+ \marginpar{\color{red!75!black}\textbf{\texttimes}}%
+ {\color{red!75!black}%
+ [\,\textbullet\,\textsf{\textbf{#1:}} %
+ \textsf{\footnotesize#2}\,\textbullet\,]}%
+}
+\newcommand{\YP}[1]{\notaestesa{YP}{#1}}
+% \usepackage{tikz}
+% \usetikzlibrary{shapes,arrows}
+% \usetikzlibrary{snakes}
+% \usetikzlibrary{positioning,patterns}
+
+
+\newcommand{\mathfrc}[1]{\text{\fontfamily{frc}\selectfont#1}}
+
+\usepackage{booktabs}
+\newcommand{\otoprule}{\midrule[\heavyrulewidth]}
+\newcommand{\lmidrule}{\midrule[.4\heavyrulewidth]}
+\usepackage{tabularx}
+\newcolumntype{T}[1]{>{\tsize} #1}
+\newcolumntype{W}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\usepackage{array}
+
+
+\newcommand{\inputdata}[1]{\noindent \emph{Input: }#1\\*}
+\newcommand{\outputdata}[1]{\noindent \emph{Output: }#1\\}
+\newcommand{\etal}{\textit{et al.}\xspace}
+\newcommand{\ie}{\textit{i.e.}\xspace}
+\newcommand{\st}{s.t.\xspace}
+\newcommand{\wrt}{w.r.t.\xspace}
+\renewcommand{\l}{\ensuremath{\ell}}
+\renewcommand{\emptyset}{\ensuremath{\varnothing}}
+\newcommand{\rev}{\ensuremath{\textrm{rev}}}
+\newcommand{\SA}{\ensuremath{\textit{SA}}}
+\newcommand{\Occ}{\ensuremath{\textit{Occ}}}
+
+
+\begin{document}
+
+\title{Assembling Overlap Graphs via Lightweight BWT Construction}
+
+\author{%
+  Paola Bonizzoni \and
+  Gianluca Della Vedova \and
+  Yuri Pirola \and
+  Marco Previtali \and
+  Raffaella Rizzi
+}
+\authorrunning{Bonizzoni \etal}
+
+% \institute{DISCo,
+%   Univ. Milano-Bicocca,
+%   Milan, Italy\\ \email{\{beretta,bonizzoni,rizzi\}@disco.unimib.it}
+% \and Dip. Statistica, Univ. Milano-Bicocca,
+%   Milan, Italy\\ \email{gianluca.dellavedova@unimib.it}
+% }
+
+\maketitle
+
+\YP{Rivedere titolo}
+
+\YP{Page limit: 10 pages + a cleary marked appendix}
+
+\begin{abstract}
+In this paper we tackle the problem of reducing memory usage in sequence
+assembly, providing an external memory algorithm to compute the overlap graph of
+a set of sequence, which is the bottleneck in some sequencing approaches.
+
+Our algorithm builds upon some recent results on lightweight Burrows-Wheeler
+transform (BWT) construction and on bidirectional BWT to compute efficiently the
+pairwise overlap of a set of sequences and to represent those overlaps with a
+directed graph, with an overall time complexity that is the same as the known
+algorithm to compute the BWT.
+\end{abstract}
+
+\begin{comment}
+\section*{Legenda di supporto per la correzione}
+\begin{itemize}
+\item $n$: cardinality of the collection $R$
+\item $\alpha$: extension string between overlapping reads
+\item $w$: number of extensions of a BWT interval with some $\sigma$
+\item \emph{length} of a $Q$-interval: length of $Q$
+\item \emph{width} of a $Q$-interval $[b,e)$: difference $(e-b)$
+\item $\$$-width $w_{\$}$: width of the $Q'\$$-interval inside a $Q'$-interval that is a prefix-interval (old \emph{dimension})
+\item \emph{length} of an extension pair: $|S|$ + $|E|$ + $1$ (the old \emph{dimension})
+\item $\mathcal{P}$: list of the prefix-intervals computed at each iteration (the old $\mathcal{T}$)
+\item $C(\sigma)$: FM-index function (the old $C(\sigma, R)$)
+\item $Occ(\sigma, i)$: FM-index function (the old $Occ(\sigma, i, R)$)
+\item prefix-interval: $rev(Q)$-interval (on $B'$) representing a string $Q$ occurring as a prefix (the old $P$-interval denotes in this framework an interval representing a string $P$)
+\end{itemize}
+\end{comment}
+
+\section{Introduction}
+De novo sequence assembly is a fundamental step
+in analyzing data from next generation sequencing technologies (NGS).
+NGS technologies produce, from a given (genomic or transcriptomic) sequence, a huge amounts
+of short sequences, called reads -- the most widely used current technology
+produces $10^{9}$ reads with mean length $150$.
+The large majority of the available
+assemblers~\cite{Zerbino2008,Simpson2009,Peng2010,bankevich2012spades} are built
+upon the notion of de Bruijn graphs where each $k$-mer is a vertex and an arc
+connect two $k$-mers that have a $k-1$ overlap in some input read.
+The main drawback of this approach is the amount of RAM needed, since storing
+the vertices alone requires $\approx 15$ Gb when we want to assemble the human genome
+and $k=27$.
+
+For this reason alternative approaches have been developed recently, among those
+the idea of string graph, initially proposed by Gene Myers~\cite{Myers2005}
+before the advent of NGS technologies and further
+developed~\cite{Simpson2010,Simpson2012} to incorporate some advances in text
+indexing, such as the FM-index~\cite{Ferragina2005}.
+
+The method builds an overlap graph whose vertices are the reads and where an arc
+connects two reads that have a sufficiently large overlap.
+For the purpose of assembling a genome some arcs might be uninformative.
+In fact an arc $(r_{1}, r_{2})$ is called \emph{transitive} (or reducible) if
+there its removal does not change the strings that we can infer from the graph.
+It is immediate to notice that the final assembly is not influenced by the
+presence of transitive arcs, which are therefore discarded to improve memory usage.
+The final graph where all transitive arcs are removed is called the \emph{string} graph.
+A main contribution of
+Simpson and Durbin~\cite{Simpson2010} is (under the assumption
+that there are not two reads that are one a substring of the other) a
+characterization of transitive arcs, leading to an algorithm to construct a string
+graph by outputting directly irreducible (\ie not transitive) arcs, skipping the
+construction of an intermediate overlap graph, therefore significantly shrinking
+memory requirements with linear time complexity.
+An open problem of~\cite{Simpson2010} is to further reduce
+the space requirements by developing an external memory algorithm to compute the
+string graph, since their approach requires to keep in main memory the entire
+BWT and the FM-index of all input data (\ie on the concatenation of all reads).
+
+In the meantime, an investigation of external memory construction of the
+Burrows-Wheeler Transform (BWT) and of related text indices (such as the
+FM-index) has sprung~\cite{Bauer2011,Bauer2013,Ferragina2012} showing that it is possible to
+arbitrarily reduce the use of RAM for building the BWT and indexing texts.
+In this paper, based upon the work in~\cite{Bauer2011}, we show an external
+memory algorithm to compute the overlap graph and an efficient, albeit not
+entirely external memory) approach to remove all transitive arcs of the overlap
+graph, hence resulting in a string graph.
+% The construction of the String graph in~\cite{Simpson2010} works in two
+% steps.
+% In the first one, for each read $r$ in the collection $R$, the position
+% in the BWT ($Q$-interval) of reads that share with $r$ an overlap given
+% by a string $Q$ are computed in time linear in the size of $r$.
+% In the second step, $Q$-intervals are extended to discover irreducible
+% edges.
+% Both steps strictly require to keep the whole FM-index and BWT sequence
+% for $R$ and for the collection of reversed reads in main memory since
+% the $Q$-intervals and the relative extensions cover different positions
+% of the whole BWT.
+% Moreover, the algorithm requires to recompute $Q$-intervals a number of
+% times that is equal to the number of different reads in $R$ share the
+% string $Q$ as a suffix.
+%
+%
+In our approach, we keep in main memory the overlap graph, a portion (arbitrarily small)
+of the BWT of the reads and some auxiliary arrays, while the entire BWT of the reads is stored on disk.
+Since the overlap graph will be stored in RAM, the approaches presented in the
+literature to remove the transitive arcs can be applied.
+
+
+More precisely, we combine the recent work on bidirectional BWT that allows to
+construct and query at the same time the BWT of a text and the BWT of the
+reverse of a text~\cite{Lam2009} with that on external memory algorithm for BWT
+construction~\cite{Bauer2011} to design an external memory BWT-based algorithm
+that finds all occurrences of a pattern in a collection of texts by extending
+the pattern incrementally by adding a character to the beginning or the end of
+the pattern (while the standard pattern matching algorithm based on the FM-index
+only extends the pattern by adding a character to the beginning).
+This algorithm is the main component of our procedure to construct the string graph.
+
+Notice that all large-size intermediate data are stored as external files that
+can be read or written sequentially only.
+Moreover, we strive to minimize the number of passes over those files, as a
+simpler adaptation of the algorithm of~\cite{Bauer2011} would require a number
+of passes equal to the number of input reads in the worst case.
+The time complexity of our algorithm is $O(l \cdot  sort(n))$, which is also the
+time complexity of the BCR algorithm~\cite{Bauer2013} for the external memory
+construction of the BWT.
+We also point out that in practice all input reads have approximately the same
+length, hence the time to read the input data is $\Omega(ln)$, therefore our
+time complexity differs from a lower bound only by a $\log n$ factor.
+
+
+
+
+
+
+
+
+\begin{comment}
+--------- non so dove vada-----------------
+
+
+A key observation in our work is the fact that due to the fact that a
+BWT consists of the symbols that precedes the lexicographic ordering of
+suffixes of the reads of a collection, it is possible to "walk"
+consecutively on the BWT of the collection of reads and of the reversed
+version of the reads and then building a forward and backward extension
+of a $Q$-substring by symbols of the alphabet lexicographically ordered.
+All this can be done entirely using files for each symbol of the
+alphabet and files for the BWT and its reversed version.
+\end{comment}
+% and by using the RAM only to keep an indexed representation of the
+% string graph
+
+
+\begin{comment}
+descrizione The FM-index .... [inserire citazione FM-index]
+
+With the advent of NGS data, the investigation of the BWT has moved
+towards its use in indexing huge collections of texts, represented by
+the reads of variable length.
+The notion of Extended Borrows Wheeler has been proposed to deal with a
+collection of texts~\cite{Bauer2011} and its potentiality in
+Bioinformatics to index read data has been investigated in ....
+
+While the BWT has been deeply used for the alignment of reads to a
+reference genome, for the first time the BWT has been explored as a tool
+for de novo assembly.
+
+In~\cite{Simpson2010} Durbin addresses the problem of having a more
+efficient space FM-index implementation of the string graph problem.
+
+---results----
+
+\end{comment}
+
+
+\section{Preliminaries}
+Let $\Sigma = \{\sigma_1, \dots, \sigma_m\}$ be an ordered finite
+alphabet and let $r = a_1 \dots a_l$ be a string over $\Sigma$.
+We denote by $r[i]$ the $i$-th symbol $a_i$ of $r$ and by $r[i,j]$ (with
+$i \leq j$) the substring $a_i \dots a_j$ of $r$.
+The length $l$ of $r$ is denoted by $|r|$.
+The \emph{reverse} of $r$, denoted by $r'$ or $\rev(r)$, is the string
+$a_l \cdots a_1$ obtained by reading $r$ from right to left.
+The \emph{suffix} and \emph{prefix} of length $k$ of string $r$ are the
+substrings $r[l-k +1, l]$ and $r[1, k]$ of $r$, respectively.
+The $i$-suffix of $r$ is the suffix starting in position $i$ of $r$,
+that is the substring $r[i, l]$.
+
+Let $R = \{r_1, \cdots, r_n\}$ be a collection of $n$ strings over
+$\Sigma$, where each sequence $r_i$ ends with a sentinel symbol \$
+that is not in the alphabet $\Sigma$ and is considered lower than
+any other symbol in $\Sigma$.
+\YP{C'è inconsistenza sull'alfabeto. \$ appartiene o meno a $\Sigma$?} \notaestesa{RR}{Togliere \$ da $\Sigma$}
+The \emph{generalized suffix array (GSA)} of the collection $R$ is a data
+structure that allows to index the collection~\cite{Shi1996}.
+It is defined as the array $\SA(R)$ where each element $\SA(R)[i]$ is
+equal to $(k, j)$ if and only if the $k$-suffix of string $r_{j}$ is the
+$i$-th lowest element in the lexicographic order of the set of all the
+suffixes of the strings in $R$.
+Clearly, the size of the suffix array is the sum of the length of all
+strings in the collection $R$, that is $\sum_{r \in R}|r|$.
+
+The \emph{Burrows-Wheeler transform (BWT)} of the collection $R$ is
+defined as the sequence $B$ such that $B[i]=r_{j}[k -1]$ if $k > 1$
+and $\SA(R)[i] = (k,j)$, otherwise $B[i]= \$$.
+Informally, $B[i]$ is the symbol that precedes the $k$-suffix of
+string $r_j$ where such suffix is the $i$-th lowest in the ordering
+given by the generalized suffix array $\SA$.
+Since $B$ is a string (actually, a permutation of the concatenation of
+the strings in $R$), we are also able to define the
+FM-index~\cite{Ferragina2005} of the BWT of the collection $R$.
+The arrays that constitute the FM-index are defined as usual: $C(\sigma)$ denotes the number of symbols in $R$ smaller than the symbol
+$\sigma$, while $\Occ(\sigma, i)$ is the array that reports the number
+of occurrences in $B[1, i]$ of the symbol $\sigma$.
+Notice that $\sigma$ may be the sentinel $\$$.
+
+%Now, the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$ reports
+%the sequence of symbols that precedes the ordered suffices in the
+%generalized  suffix array $SA[i,k]$.
+
+The two arrays $C(\sigma)$ and $Occ(\sigma, i)$
+allow to compute in linear time
+\YP{Giusto?}
+all occurrences of a string $Q$ in the collection $R$
+using the backward extension algorithm~\cite{Ferragina2005}.
+
+% Observe that the string $B[i,k]$ for indexes $1 \leq i \leq k \leq N$
+% reports the sequence of symbols that precedes the ordered suffices in
+% the generalized suffix array $SA[i,k]$.
+
+
+
+
+
+
+\subsection{Forward and backward extension of $Q$-intervals}
+
+In the following let $B$ be the BWT for the collection $R$.
+%\notaestesa{RR}{La definizione di $B'$ \'e stata spostata ad appena prima la definizione di linked intervals} Moreover, let $B'$ be the BWT of the set $R'$ of the reversed reads,
+%that is $R' = \{ rev(r): r \in R\}$.
+We are especially interested into some substrings or \emph{intervals} of $B$ that are identified by a string $Q$.
+%In this case we will say that the \emph{$Q$-interval} of $B$ is the substring $B[b, e -1]$
+%consisting of the symbols that precede the string $Q$ in any string of $R$.
+%Equivalently the
+A $Q$-interval is equal to the maximal interval $[b, e)$, such that
+$Q$ is a prefix of all suffixes in the interval $SA[b, e-1]$.
+We define the \emph{length} of a $Q$-interval as the length of
+the string $Q$, and the \emph{width} of a $Q$-interval $[b, e)$ as the
+difference $(e-b)$.
+A $Q$-interval on $B$ of width larger than $1$ represents a string $Q$
+that occurs more than once in $R$.
+%Whenever $Q$ begins with a $\$$, the $Q$-interval is also called a \emph{$\$$-interval}.
+%In the following, given an interval $q=[b,e)$, we denote with $R(q)=R(b,e)$ the reads containing the
+%BWT symbols of $B[b, e-1]$.
+
+The pattern matching algorithm using the FM-index is based on the idea of backward extension~\cite{Ferragina2005},
+and it can be stated as a progressive refinement of a $Q$-interval by adding a new symbol to the beginning of $Q$.
+More formally, given a $Q$-interval $[b,e)$ and a symbol $\sigma \in \Sigma$, the backward
+extension of $[b,e)$ with $\sigma$ (or \emph{backward
+$\sigma$-extension}) is the $\sigma Q$-interval $[b_{\sigma},e_{\sigma})$
+-- the $\sigma Q$-interval represents the  suffixes starting with
+the string $\sigma Q$. The interval $[b_{\sigma},e_{\sigma})$ can be quickly computed
+from $[b,e)$ using the FM-index arrays $C(\sigma)$ and
+$Occ(\sigma, i)$, since the width $(e_{\sigma}-b_{\sigma})$ of the $\sigma Q$-interval is equal
+to the number of occurrences of  $\sigma$ in $B[b,e-1]$, that is $Occ(\sigma, e-1)-Occ(\sigma, b-1)$. Then $b_{\sigma} =C(\sigma) + Occ(\sigma, b-1)$, while $e_{\sigma} =C(\sigma) + Occ(\sigma, e-1) +1 $ \notaestesa{RR}{Controllare +1}.
+
+In the following,
+we say that a  $Q$-interval $[b,e)$, with a backward $\sigma$-extension $[b_{\sigma},e_{\sigma})$, has $(e_{\sigma}-b_{\sigma})$ possible backward
+extensions with $\sigma$.
+Given a $Q$-interval $q=[b,e)$ we denote with $X(q)$ (or $X(b,e)$)
+the set of all  backward $\sigma$-extensions of $q$, that is $X(q)=\{ \sigma Q\text{-interval}: \sigma\in\Sigma\}$.
+Similarly, the forward extension of a $Q$-interval $[b,e)$ with the symbol
+$\sigma$ (or  \emph{forward $\sigma$-extension}) is the
+$Q \sigma$-interval $[b^f_{\sigma},e^f_{\sigma})$ -- the forward extension represents the suffixes
+starting with $Q \sigma$. In the following, we say that a
+$Q$-interval $[b,e)$ with  a forward $\sigma$-extension
+$[b^f_{\sigma},e^f_{\sigma})$ has $(e^f_{\sigma}-b^f_{\sigma})$
+possible forward extensions with $\sigma$. Notice that the interval
+$[b^f_{\sigma},e^f_{\sigma})$ is contained in $[b,e)$, but it is not as easy to compute as the corresponding backward extension. How to forward extend a BWT interval will be explained in the following relatively to intervals on $B'$, forward extended from the related linked intervals on $B$ (see Definition~\ref{def:linked-intervals}).
+
+Let $B'$ be the BWT of the set $R'$ of the reversed reads,
+that is $R' = \{ rev(r): r \in R\}$.
+
+\begin{definition}
+\label{def:linked-intervals}
+Let  $Q=rev(Q')$.
+Then the $Q$-interval $[b,e)$ on $B$ and the $Q'$-interval $[b',e')$ on $B'$ are
+\emph{linked}.
+\end{definition}
+
+Clearly each $Q$-interval on $B$ is linked with exactly one $Q'$-interval on $B'$.
+Moreover, two linked intervals have same width and length, hence $(e-b)=(e'-b')$~\cite{Lam2009,Simpson2010}.
+Notice that when the length of the linked intervals is $1$ (\ie $Q=rev(Q)=\sigma$), then $[b,e)=[b',e')$,
+since the two FM-index functions $C(\sigma)$ and $C'(\sigma)$ (related to $B'$) are the same.
+In fact, the set of symbols of $R$ is equal to the set of symbols of $R'$.
+It is possible to show that, given two linked intervals $[b,e)$ and $[b',e')$, even the backward $\sigma$-extension $[b_{\sigma},e_{\sigma})$ of $[b,e)$ and the forward $\sigma$-extension $[b^{'f}_{\sigma},e^{'f}_{\sigma})$ of $[b',e')$ are linked intervals.
+In fact, since the interval $[b_{\sigma},e_{\sigma})$ is a $\sigma Q$-interval and the interval $[b^{'f}_{\sigma},e^{'f}_{\sigma})$ is a $rev(Q) \sigma$-interval, then they are linked by Definition~\ref{def:linked-intervals}.
+Moreover, the number of possible backward extensions with $\sigma$ of $[b,e)$ is equal to the number of possible forward extensions with $\sigma$ of $[b',e')$.
+Also,  the start $b^{'f}_{\sigma}$ is given by adding to $b'$ the number of symbols that are smaller than $\sigma$ and are in $B[b,e-1]$,
+while the end $e^{'f}_{\sigma}$ is given by adding to $b^{'f}_{\sigma}$ the number of symbols $\sigma$ which are in $B[b,e-1]$~\cite{Simpson2010}.
+
+\begin{proposition}
+\label{proposition:linked-intervals}
+Let $B$ and $B'$ be respectively the BWT of a text $T$ and $rev(T)$, let $Q$ be a substring of $T$ and let $\sigma$ be a symbol.
+Let $[b,e)$ be the $Q$-interval on $B$.
+Then it is possible to compute in $O(1)$ time the $\sigma Q$-interval on $B$ and the $rev(Q) \sigma$-interval on $B'$
+using only of the FM-index functions $C(\sigma)$ and $Occ(\sigma, i)$.
+\end{proposition}
+
+A special case of this argument applies when
+$Q$ is a prefix of $w > 0$ reads in $R$.
+In this case, the $Q$-interval $[b,e)$ has $w$ possible backward $\alpha$-extensions, and  $B[b,e-1]$ contains $w$ $\$$s.
+At the same time, the $\$ Q$-interval (\ie the backward $\$$-extension of $[b,e)$) represents the set of $w$ reads with prefix $Q$.
+Hence the $rev(Q)$-interval $[b',e')$ (linked to $[b,e)$) has $w$ forward $\$$-extensions.
+Finally, since $\$$ is the smallest symbol of $\Sigma$ \notaestesa{RR}{Risolvere la questione $\$$ incluso in $\Sigma$}, the $rev(Q) \$$-interval is $[b',b'+w)$.
+
+
+%When a substring $Q$ occurs $m>0$ times as a suffix in $R$, then the
+%$rev(Q)$-interval on $B'$ contains $m>0$ symbols $\$$, and the $\$
+%rev(Q)$-interval represents the set of the $m$ reads %where $Q$ occurs
+%as a suffix.
+
+%\begin{definition}
+%A \emph{S-interval} is a $rev(Q)$-interval $[b',e')$ on $B'$ having
+%$m>0$ backward extensions with symbol $\$$  ($m$ is called the
+%\emph{dimension} of the \emph{S-interval}).
+%\end{definition}
+
+Our procedure will compute the arc set $A_r$ of all outgoing arcs for each read $r$,
+by building all possible $Q$-intervals that might be overlaps of two
+reads in $R$, and then iteratively forward extending only the $Q$-intervals that
+are prefixes of some read $r_{e}$ until the sentinel symbol \$ is
+found (\ie the read $r_{e}$ has been completely read).
+In any instant, for each read $r$ only one extension $r_{e}$ is stored; in fact after examining a $Q$-interval, the read $r_{e}$ is update, if necessary.
+
+
+
+Two parts of the algorithm exploit the FM-index to perform
+backward extensions to determine the intervals of overlapping
+prefixes and forward extensions to extend those prefixes and build the
+terminal extensions.
+
+
+\section{Building the Overlap Graph}
+
+
+
+In order to simplify the algorithm we make two assumptions regarding the read set $R$.
+The first assumption is that $R$ is made of \emph{substring-free} strings, that is there are not two reads $r_{1}, r_{2}\in R$ such that
+$r_{1}$  is a substring of  $r_{2}$.
+The second assumption is that an arc $(r_{1}, r_{2})$ of the String Graph exists only if the overlap of $r_{1}$ and $r_{2}$ is at least a certain constant $\tau$.
+
+
+
+Observe that the construction of the String Graph in~\cite{Simpson2010} works in two
+steps.
+In the first one, for each read $r$ in the collection $R$ all
+$Q$-intervals, where $Q$ is the overlap of $r$ and some read extending $r$,
+are computed in time linear in
+the  length of $r$.
+In the second step, each of these intervals are forward extended until
+we find the first \$; such a $Q\alpha\$$-interval becomes an
+irreducible edge.
+Observe that the algorithm  in~\cite{Simpson2010} requires to keep the whole FM-index
+and BWT sequence for $R$ and $R'$ in main memory, since it is impossible to
+restrict in a portion of the BWT or of the FM-index the $Q$-intervals
+and their extensions.
+Moreover, the algorithm requires to recompute the $Q$-intervals a number of
+times that is equal to the number of different reads in $R$ share the
+string $Q$ as a suffix.
+
+
+In our approach, we keep the BWT $B$  and  $B'$, respectively  for the collection $R$ of reads and its
+reverse version, $R'$,  in secondary memory and we read them sequentially,
+and during this process we iteratively forward and backward extend each
+$Q$-interval computed at a previous iteration.
+
+Our algorithm  will compute the arc set $A$  of the overlap graph
+by building all possible $Q$-intervals that might be overlaps of two
+reads in $R$, and then iteratively forward extending only the $Q$-intervals that
+are prefixes of some read $r$ until the sentinel symbol \$ is
+found, meaning that the read $r$ has been completely processed by the algorithm.
+More precisely,    all edges    $e=(r,r')$ of the overlap graph incident on $r$ where the overlap of $r$ and $r'$ is a fixed string $S$ (called {\em seed}) are  associated to a pair  $(q'_1, q'_2)$ of $Q$-intervals on $B'$,
+where $q'_1$ is the interval  representing   read  $r$ and $q'_2$ is the  $S$-interval representing all reads
+ $r'$ with overlap $S$ with read $r$. Such a pair is called {\em terminal extension pair} and is formally defined below.
+
+
+
+
+
+We will also detail how we can compute efficiently all terminal extension pairs
+using the idea of bidirectional FM-index~\cite{Lam2009}.
+
+\begin{definition}\label{def:extension-pair}
+Let $S$ and $E$ be two strings and let $L$ be equal to $|S|+|E|$.
+Then let $q_{1}'$ be the $rev(E)rev(S)\$$-interval of $B'$ and let  $q_{2}'$ be the $\$rev(S)$-interval of $B'$.
+If both $q_{1}'$ and  $q_{2}'$ are nonempty, then the pair  $(q_{1}', q_{2}')$ is called
+an \emph{extension pair} of length $L$.
+% is a pair $(q_{1}', q_{2}')$ of
+% intervals on $B'$, such that $q_{2}''$ is a $rev(E)rev(S)\$$-interval,
+% $q_{2}'$ is a $\$rev(S)$-interval, and $|rev(E)rev(S)| = L$.
+Moreover $(q_{1}', q_{2}')$ is a \emph{terminal} extension pair
+if and only if $q_{1}'$ has a nonempty \$-backward extension on $B'$.
+\end{definition}
+
+The interval $q_{1}'$ represents   the reads with prefix $SE$, while $q_{2}'$
+represents the reads with suffix $S$.
+The  string $E$ is called the \emph{extension} of the
+pair, while the string $S$ is called the \emph{seed}.
+In other words, the extension pair corresponds to the fact that the reads related to $q_{2}'$ are extended by the reads
+of $q_{1}'$.
+In a terminal extension pair, the concatenation of the seed and the extension is
+equal to some read $r \in R$ and it is immediate to verify  that for each read $r'$ represented in the $q_{2}'$-interval, since $r'$ is extended by $r$,
+the pair $(r', r)$ is an edge of the overlap graph.
+
+
+The correctness of our approach relies on the fact that all possible
+terminal extension pairs will be examined during the iterations and thus
+the arc set of the final overlap  graph over $R$ will be computed.
+More precisely, we will construct all extension pairs with seed at least $\tau$ long, since only such extension pairs can result in arcs.
+Moreover, the extension pairs are computed for increasing dimension.
+
+
+
+
+
+
+To compute the extension pairs we need to find, among all Q-intervals, those corresponding to prefixes of a read.
+This fact is formalized with the notion of prefix-interval.
+
+\begin{definition}
+A \emph{prefix-interval} is a $rev(Q)$-interval $[b',e')$ on $B'$ containing
+a $rev(Q)\$$-interval of width $w_{\$}>0$.
+Moreover, $w_{\$}$ is called the \emph{\$-width}
+of the prefix-interval.
+\end{definition}
+
+A \emph{prefix-interval} $[b',e')$ of width $w_{\$}$ represents the $(e'-b')$
+reads sharing $rev(Q)$, and $w_{\$}$ among these reads share the string $Q$ as a
+prefix.
+
+The main step of our external memory algorithm consists in  building efficiently
+the $Q$-intervals on $B$ and the $rev(Q)$-intervals on
+$B'$ by iteratively increasing the length $l$ of $Q$.
+The first iteration considers $Q$-intervals where $l=\tau$.
+Each iteration increases $l$ by one, until $l$ is equal to the maximum length
+of a read in $R$.
+
+
+Our algorithm builds upon two methods presented in~\cite{Bauer2011,Cox2012}.
+The first method computes the BWT of a collection of strings using $|\Sigma|$
+external files $F_b$, where each file $F_b(\sigma)$ contains the portion of BWT related to the suffixes
+starting with the symbol $\sigma$.
+The second method allows to construct (in external files) $Q$-intervals
+of increasing length. \notaestesa{RR}{Introdurre qui brevemente le procedure processInterval e processLinkedInterval}
+
+\begin{comment}
+In particular, the procedure \emph{processInterval} given
+in~\cite{Cox2012} is used in our algorithm to produce the sorted list
+(lexicographical order) of the intervals of a given length $l$, from the
+sorted list of the intervals of length $l-1$ (intervals of length $1$
+can be easily obtained by means of the FM-index function $C$).
+\notaestesa{Raffa}{Togliere lo pseudocodice della procedura processInterval: \'e della Rosone e non nostro.}.
+\notaestesa{GDV}{ Concordo di togliere lo pseudocodice.
+Bisogna dire però cosa calcola la procedura}
+
+We extend the procedure \emph{processInterval} to
+\emph{processLinkedInterval}, where we produce not only the $Q$-intervals on $B$, but also the linked
+$rev(Q)$-intervals on $B'$.
+\end{comment}
+
+
+
+Let us now describe the main algorithm  \emph{buildGraph$(R, \tau)$} that
+builds the overlap graph.
+At each iteration $j$ (starting from $j=0$) the procedure builds  two  lists
+that are actually implemented by files that are read sequentially,
+
+\begin{itemize}
+\item $\mathcal{Q}_{j+1}$, containing the nonempty $Q$-intervals $[b, e)$ on $B$ with length $(j+ 1 + \tau)$,
+each one with its linked
+  $rev(Q)$-interval $[b', e')$ on $B'$. The list is  ordered by increasing values of $b$.
+%\item $\mathcal{P}$, containing the nonempty $rev(Q)$-intervals $[b', e')$ of
+ % length $(j+ 1 + \tau)$ which are prefix-intervals, each one with its \$-width $w_{\$}$. The list is ordered by increasing values of $b'$.
+\item $\mathcal{E}_{j +1}$, containing the extension pairs $(q_{1}', q_{2}')$ of
+  length $(j+1 +\tau)$.  The list is ordered by increasing values of $b'$.
+
+  %, each one with its extension $e$ $> 0$
+\end{itemize}
+
+A $Q$-interval  $[b,e)$ in $\mathcal{Q}_{j+1}$ represents a
+string $Q$, of length $(j+1 +\tau)$, while
+the linked $rev(Q)$-interval  $[b',e')$ in $\mathcal{Q}_{j+1}$  represents a
+string $Q$, of length $(j+1+ \tau)$, occurring $w_\$$ times as a prefix in $R$.
+In fact,   the interval $[b',b'+w_\$)$ represents the reads having $Q$ as
+a prefix. An extension pair $(q_{1}', q_{2}')$ in $\mathcal{E}_{j+1}$ represents the fact that the reads related to $q_{2}'$ are extended by the reads of $q_{1}'$ and the overlap (\ie the seed) is of length $<(j+1+\tau)$.
+Notice that the lists $\mathcal{Q}_{j+1}$ and  $\mathcal{E}_{j+1}$ are stored in $|\Sigma|$ external file.
+
+Now,  extension pairs in $\mathcal{E}_{j+1}$ are computed from extension pairs in  $\mathcal{E}_{j}$ or from prefix-intervals in the list $Q_j$ that may provide seeds of length $j + \tau$ of extension pairs. In order to discover new seeds from prefix-intervals, the algorithm at iteration $j$  builds the list $\mathcal{P}$, called {\em seed-list},  of prefix-intervals  which are $rev(Q)$-intervals $[b', e')$ in the list $Q_j$. Observe that  $\mathcal{P}$  which is  stored in a unique external file.
+
+
+
+%\notaestesa{paola}{since they are lexicographically ordered w.r.t. .... dire come sono ordinati per simbolo iniziale}
+
+%At each iteration, we analyze those list to find new possible arcs of the String Graph and to determine whether they are reducible.
+%Clearly,  the lists obtained with the  $j$-th iteration will be used in the subsequent  $(j+1)$-th iteration.
+
+
+
+
+Before the first iteration of the algorithm , the list $\mathcal{Q}_0$ contains the
+$Q$-intervals of length $\tau$ (representing strings $Q$ of length $\tau$), while  $\mathcal{E}_0$ and $\mathcal{P}$ are empty.
+The list $\mathcal{Q}_0$ is computed  by building intervals of increasing length by means of our procedure \emph{processLinkedInterval} (starting from intervals of length $1$, easily computed from $C(\sigma)$).
+
+
+
+During the $j$-th iteration, we compute the lists described before as follows:
+(i) the list $\mathcal{Q}_{j+1}$ of the
+intervals of length $(j+\tau+1)$  -- by backward extending, with each symbol different from \$, each $Q$-interval $[b, e)$ in $\mathcal{Q}_{j}$ (and forward extending, as detailed  below, the
+linked $rev(Q)$-interval on $B'$). While computing $\mathcal{Q}_{j+1}$ we compute the seed-list $\mathcal{P}$.
+We compute
+(ii) the list $\mathcal{E}_{j+1}$ of
+extension pairs of length $(j+\tau+1)$  taking ordered intervals   either from the  list   $\mathcal{E}_{j}$ or from the seed-list $\mathcal{P}$.    In the first case, a new  extension pair
+$(q_{1}',q_{2}')$ is added to $\mathcal{E}_{j+1}$, since   $q_{1}'$ is a backward $\sigma$-extension
+of an interval $[b',b'+w_\$)$ which is the forward \$-extension of a prefix-interval in $\mathcal{P}$,  -- the string $E$ of the computed pair consists of a single character. In the second case,
+we obtain  extension pairs $(q_{1}',q_{2}') \in \mathcal{E}_{j+1}$  from $(q',q_{2}')\in \mathcal{E}_{j}$, where
+$q_{1}'$ is a backward $\sigma$-extension
+of a $q'$   -- the string $E$ of the computed pair is one
+character longer than that one of $(q', q_{2}')$ computed in iteration $j$.
+% --
+% or (iii c)
+% $q_{2}'$ is a $\sigma$ backward extension
+% of $q'$ where $(q_{1}',q')\in \mathcal{E}_{j}$ -- we move the first character of
+% the extension to the end of the seed.
+
+
+% The list $\mathcal{Q}_{j}$ will be used during the next iteration
+% $(j+1)$, and represents common strings of length increased by $1$.
+\noindent
+{\bf  Computing  the list $Q_{j+1} $ and $Q$-intervals}
+
+Since the core of our approach is the extension of $Q$-intervals, we will
+describe the steps that are necessary to achieve that.
+The problem has been tackled in the literature by
+the procedure \emph{processInterval}~\cite{Cox2012} which is also used in our algorithm to produce the sorted list
+(lexicographical order) of the intervals of a given length $l$, from the
+sorted list of the intervals of length $l-1$. Notice that the intervals of length $1$
+can be easily obtained from the  function $C(\sigma$) which is part of the FM-index.
+
+The procedure \emph{processInterval} takes in input a $Q$-interval $[b,e)$ of
+length $l$, the BWT $B$, a vector $\Pi$ of $|\Sigma|$ counters, an array $F$ of
+$|\Sigma|$ external files, and writes all the backward $\sigma_i$-extensions of
+$[b,e)$ into the files $F$. Notice that is never necessary computing $Q$-intervals, where $Q$ starts with \$, since we are interested in strings $Q$ composed of symbols $\sigma$ different from \$.
+More precisely, the $\sigma_i Q$-interval is appended to the file $F[i]$.
+This procedure computes the FM-index function $Occ(\sigma_i, i)$ using two
+vectors: the (global) input vector $\Pi$ and the local vector $\pi$.
+The first one stores in $\Pi[i]$ the number of occurrences of  the symbol
+$\sigma_i$ in the BWT prefix $B[1,b-1]$ (\ie $Occ(\sigma_{i}, b-1)$) while $\pi[i]$ stores the number of occurrences of $\sigma_i$ in the interval $[b,e)$. At the beginning, the vector $\Pi$ contains $|\Sigma|$ counters, each one set to $0$, and the $|\Sigma|$ files $F$ are empty.
+After calling this procedure on each one of the $Q$-intervals of length $l$, supposed to be available in lexicographic order (thus, two consecutive intervals are disjoint), then  at the end each file $F[i]$ will contain the sorted list of the intervals of length $(l+1)$, starting with symbol $\sigma_i$. Considering files $F$ in the order $F[1], F[2], \ldots ,F[|\Sigma|]$, we obtain the sorted list of the intervals of length $(l+1)$. After each procedure call, the vector $\Pi$ is updated, to be passed to the next procedure call.\\
+By assuming that input $Q$-intervals of length $l$ are available in lexicographical order, this procedure is able to update $\Pi$ and $\pi$ by reading the symbols of $B$ consecutively.
+In fact, the $Q$-intervals occurs consecutively along the BWT $B$ and  thus while reading $B$ the number of symbols needed to update $\Pi$ and $\pi$ are counted.
+
+\noindent
+{\bf Computing  linked $Q$-intervals on $B'$.}
+
+We have extended \emph{processInterval} to manage at the same time  the linked intervals on
+$B'$; see procedure \emph{processLinkedInterval}.
+Our procedure takes in input a $Q$-interval $[b,e)$ and its linked
+$rev(Q)$-interval $[b',e')$, and outputs (appending to the external files $F$)
+the extended $\sigma_i Q$-intervals, each  with the linked $rev(Q)
+\sigma_i$-interval on $B'$
+Our procedure writes to $F$ the start and the end of the output intervals on the
+complete BWTs $B$ and $B'$ (see line 5), differently from~\cite{Cox2012} where they write, for each output $Q$-interval, its start \wrt to the BWT segment related to the starting symbol of $Q$, and its width.
+At each iteration $i$ over the alphabet symbols the forward $\sigma_i$-extension
+of the $rev(Q)$-interval $[b',e')$ is performed by counting
+the number of symbols in $B[b,e)$ which are lexicographically smaller than
+$\sigma_i$ just as in~\cite{Simpson2010}  \notaestesa{paola}{qua a mio parere va detto come viene fatto}.
+We recall that the correctness of \emph{processLinkedInterval} is based on the
+fact that all $Q$-intervals are processed (and extended) in lexicographic order.
+
+% \notaestesa{Raffa}{Qui invece va la descrizione della nuova procedura \emph{processSingleInterval}, sempre se la teniamo... che determina la lista di tutti gli intervalli estesi di un $Q'$-interval su $B'$ - vedi modifica 6}.
+% Notice that the files $F(\sigma)$ must be read according to the lexicographic order.
+
+
+
+
+
+
+
+\begin{comment}
+More precisely, the steps .... in algorithm \emph{processLinkedInterval}
+directly provides the values of the new $\sigma Q$-interval and such
+value is appended at the end of the new updated list (or file), in order
+to maintain the lexicographic ordering.
+In fact, the sorted property of the file, allows to update the files
+while reading the files themselves, thus minimizing the operations on the
+file.
+\notaestesa{PB}{nota bene il passo dal 3 al 9 non si capisce come sia
+implementato in termini di memoria esterna ed interna - io sarei per
+descrivere la procedura processLinkedInterval- dettagliandola rispetto
+ai linked intervals, che però vanno definiti prima, in termini
+costruttivi}.
+
+
+Intervals $[b,e)$ in $\mathcal{Q}_j$ represent common strings $Q$ of
+length $(j+\tau)$.
+Their link to the $rev(Q)$-interval $[b',e')$ on $B'$ is easily
+maintained (during the backward extension of the intervals of length
+$(j+\tau-1)$ to produce the intervals in $Q_j$) by Prop.~\ref{proposition:linked-intervals}.
+This list is partioned into $|\Sigma|$ files according to the starting
+symbol of $Q$, and maintained sorted by ascending value of the start
+$b$.
+\end{comment}
+
+\notaestesa{RR}{Aggiungere tutti i riferimenti allo pseudocodice dopo averlo sistemato}
+
+\noindent
+{\bf  Computing the {\em seed-list}.}
+Each element of the list $\mathcal{P}$ is made of a  \emph{prefix-interval} $[b',e')$
+and its \$-width $w_\$ $ (recall that $w_\$ $ is  the number of     \$ backward \$-extension of  the $Q$-interval $[b,e)$ that is linked to $[b',e')$).
+The list $\mathcal{P}$ is actually stored as a file and is sorted by ascending value of the starting
+value $b'$ (\ie lexicographical order of $rev(Q)$). \notaestesa{RR}{Citare il classico problema di ordinamento in memoria esterna con la relativa citazione}.
+%Each \emph{prefix-interval} $[b', e')$ with length $(j+  \tau)$ and  \$-width $w_\$$ is obtained directly from the previous step 2 as linked to a $Q$-interval $[b, e)$ on $B$ with exactly $w_\$$ %backward \$-extensions.
+%, and is computed (at the iteration $j$) from the list $\mathcal{Q}_j$, by
+%taking into account that a
+%\emph{prefix-interval} $[b', e')$ with length $(j+\tau)$ and  \$-width $w_\$$ is linked to a $Q$-interval $[b, e)$ on $B$ with exactly $w_\$$ backward \$-extensions.
+Notice that the only operations allowed on that file are appending an item to
+the end and popping (\ie reading from the head and deleting) an item.
+%Let us recall that a \emph{prefix-interval} $[b', e')$ correspond to
+%the ordered list of reads having substring $rev(Q)$ on $B'$.
+
+%in $B'$.
+
+\noindent
+{\bf Computing  extension pairs in $\mathcal{E}_{j+1}$ from the seed list.}
+
+
+From each  prefix-interval in $\mathcal{P}$ we then compute the extension pairs $(q_{1}', q_{2}')$ with
+length $(j+\tau+1)$ and extension equal to $1$ (\ie the string $E$ is composed of one symbol) as follows.
+More precisely, given an element  $<[b',e'), w_\$>$ of $\mathcal{P}$,
+we pose $q_{2}'$ equal to the forward \$-extension of  $[b',e')$, where   $q_{2}' = [b',b'+w_\$)$
+(recall that $q_{2}'$ represents reads with suffix the seed $S$).
+
+
+Then
+for each $q_{1}'\in X(b',b'+w_\$)$ we add the extension pair  $(q_{1}',q_{2}')$ to
+the list $\mathcal{E}_{j+1}$ (recall that $ X(b',b'+w_\$)$ is the list of backward extensions of interval $[b',b'+w_\$)$).
+
+
+Notice that the interval $[b', b'+w_\$)$ (under our assumption) cannot have
+extensions with symbol \$: in fact, no read in $R$ can be equal to the string $Q$.
+
+\noindent
+{\bf Computing  extension pairs in $\mathcal{E}_{j+1}$ by extending   extension pairs in $\mathcal{E}_{j}$.}
+
+Moreover we try to extend each extension pair with length $(j+\tau)$ (and extension $>1$) into some
+extension pairs of length $(j+\tau+1)$.
+More precisely, for each extension pair $(q', q_{2}')$ in  $\mathcal{E}_j$ and
+for each $q_{1}'\in X(q')$ we add the extension pair  $(q_{1}',q_{2}')$ to
+the list $\mathcal{E}_{j+1}$.
+% At each iteration $j$, the interval $q_{1}'$ of a pair $(q_{1}', q_{2}')$ with
+% extension $e$ in $\mathcal{E}_j$ is backward extended on $B'$, where
+% $q_{1}'$ is given.
+% Observe that each $\sigma$  backward extension corresponds to a  forward
+% extend by $\sigma$ on $B$ the  \$ $Q$-intervals, \ie computing the
+% interval of reads having $Q \sigma$ has prefix (see figure \ref{}).
+If  $q'$ has an  extension with symbol \$
+into the interval $[b'_r, b'_r+1)$, then given  $r$ the unique  read represented by that
+interval, for   each read  $r'$ represented by the
+interval $q_{2}'$, the edge $(r,r')$ is added to the arc set of the overlap graph.
+ In this last case, no extension pairs are added to $\mathcal{E}_{j+1}$ since they relative edges have been discovered.
+
+%$j$-th iteration.
+%Otherwise (if $q'$ has no extensions with symbol \$), an extension
+%pair $(q_e, q_{2}')$ (of dimension $(j+\tau+1)$ and extension $e+1$) is
+%added to the list $\mathcal{E}_{j+1}$, for each $q_e \in X(q_{1}')$, where
+%$X(q_{1}')$ is the set of the intervals obtained by backward extending
+%$q_{1}'$ with each $\sigma \in \Sigma$.
+
+At each iteration $j$, the list $\mathcal{E}_{j+1}$ receives extension
+pairs both from the seed-list  and $\mathcal{E}_{j}$.
+Since, the list  $\mathcal{E}_{j}$  and the seed-list are ordered w.r.t. the start of  $q'_1$ and $Q$-intervals in $\mathcal{P}$, respectively and since the  length of $Q$-intervals $[b', b'+w_\$)$ in $\mathcal{P}$ is
+equal to the length  of  $Q$-intervals $q'_1$ in $\mathcal{E}_{j}$, the
+algorithm can extend the union of the two lists at each iteration, and therefore keep
+sorted also the list $\mathcal{E}_{j+1}$, by ascending value of the
+start of $q'$ on $B'$.\notaestesa{GDV}{ dove ho la
+  garanzia che non ci sono salti di inizio di $q_{1}'$?} \notaestesa{RR}{Spiegare qui la questione degli extension pairs in $\mathcal{E}_j$, con diverso seed, che hanno in comune $q'$}
+
+
+
+
+%A $rev(Q)$-interval  $[b',e')$ in $\mathcal{P}$ represents common
+%strings $Q$ of length $(j+\tau)$ occurring $w_\$$ times as a prefix in $R$.
+%Recall that the interval $[b',b'+w_\$)$ represents the reads having $Q$ as
+%a prefix.
+
+
+%The seeds of the extension pairs in $\mathcal{E}_j$
+%%(partitioned in $|\Sigma|$ files according to the first symbol of ??)
+%have a length $< (j+\tau)$ and are the common substrings considered at
+%the previous iterations $< j$.
+
+
+
+\section*{Pseudocode}
+Denoto con $A(q_{1}', q_{2}')$ il set delle coppie tra i reads del secondo intervallo e i reads del primo intervallo.
+Ricordarsi di indicizzare nella parte discorsiva i file e gli array FM-index per simbolo e non per indice.
+Inoltre rinominerei processLinkedInterval in extendLinkedIntervals
+
+\begin{algorithm}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+
+Let $R'$ be the set of the reverse of the input reads, let $B$ and $B'$ be respectively the BWT of $R$ and $R'$, let $C$ be the corresponding array of the FM-index, and let $\mathcal{Q}_{0}$ be the $Q$-intervals of length $\tau$, each with its linked $rev(Q)$-interval\;
+
+Let $A$ be the arc set of the overlap graph, initially empty\;
+
+$\mathcal{E}_0 \gets \emptyset$\;
+
+$j \gets 0$\;
+
+\tcp{Until $\mathcal{Q}_j$ or $\mathcal{E}_j$ is nonempty}
+\While{$(\mathcal{Q}_j \cup \mathcal{E}_j) \ne \emptyset$}{
+
+ $\mathcal{Q}_{j+1}\gets$ $|\Sigma|$ empty files\;
+
+\tcp{Now we can compute and sort all prefix-intervals, and we compute all $Q$-intervals of length $(j+\tau+1)$}
+
+$\mathcal{P}\gets$ empty file\;
+
+$\Pi(\sigma) \gets 0$ for each $\sigma \in \Sigma$\;
+
+ \ForEach{$\sigma \in \Sigma$}{
+      \ForEach{$\langle [b,e),[b',e')\rangle \in \mathcal{Q}_j(\sigma)$}{
+	processLinkedInterval$([b, e), [b', e'), \mathcal{Q}_{j+1})$\;
+        \If{$[b',e')$ is a prefix-interval} {
+             Let $w_\$$ be the number of \$-extensions of $[b,e)$\;
+             Add $\langle [b', e'), w_\$ \rangle$ to $\mathcal{P}$\
+}
+}
+  }
+
+  sort $\mathcal{P}$\;
+
+\tcp{Now we can compute all extension pairs of length $(j+\tau+1)$}
+
+$\Pi(\sigma) \gets 0$ for each $\sigma \in \Sigma \cup \{\$\}$\;
+
+ $\mathcal{E}_{j+1}\gets$ $(|\Sigma|+1)$ empty files\;
+
+    $\langle [b', e'), w_\$ \rangle \gets$ the first prefix-interval of $\mathcal{P}$\;
+    $(q_{1}', q_{2}') \gets$ the first extension pair of $\mathcal{E}_j$\;
+
+\tcp{Until no more elements can be read from $\mathcal{P}$ and $\mathcal{E}_j$}
+    \While{$((\mathcal{P} \cup \mathcal{E}_j) \neq \emptyset)$} {
+		\If{$(b'$ is less than the start of $q_{1}'$)} {
+\tcp{We extend a prefix-interval, and (if possible) compute an extension pair whose extension consists of a single character}
+			extendPrefixInterval$([b', e'), w_\$, \mathcal{E}_{j+1})$\;
+                        $\langle [b', e'), w_\$ \rangle \gets$ the next prefix-interval of $\mathcal{P}$\;
+                      }
+		\Else {
+\tcp{We extend a preexisting extension pair and, if necessary, update the arc set of the overlapping graph}
+      $A_t \gets$ extendExtensionPair$(q_{1}', q_{2}', \mathcal{E}_{j+1})$\;
+                  \If{$A_t$ is not empty}{
+                   Add $A_t$ to A\;
+             }
+
+
+    $(q_{1}', q_{2}') \gets$ the next extension pair of $\mathcal{E}_j$\;
+ 		}
+	}
+
+  $j \gets j+1$\;
+}
+\Return{the overlap graph $G(R,A)$}\;
+
+\caption{buildGraph($R$, $\tau$)}
+\label{alg:build-graph}
+
+\end{algorithm}
+
+\begin{algorithm}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\tcp{$\Pi[\sigma]$ must be number of $\sigma$ in $B[0,b)$, for each $\sigma \in \Sigma$}
+Update $\Pi$ such that $\Pi[\sigma]$ is the number of $\sigma$ in $B[0, b)$\;
+$\pi(\sigma) \gets$ number of $\sigma$ in $B[b,e)$, for each $\sigma \in \Sigma$\;
+
+$\pi sum \gets 0$\;
+ \ForEach{$\sigma \in \Sigma$}{
+   \If{ $\pi[\sigma] > 0$ } {
+\tcp{We compute the the $\sigma Q$-interval on $B$ and the $rev(Q) \sigma$-interval on $B'$}
+       $b_e \gets C[\sigma] + \Pi[\sigma]$+1\;
+       $e_e \gets b_e + \pi[\sigma]$\;
+       $b'_e \gets b' + \pi sum$\;
+       $e'_e \gets b'_e + \pi[\sigma]$\;
+      Append $\langle [b_e, e_e), [b'_e, e'_e)\rangle$ to $F(\sigma)$\;
+     }
+\tcp{$\pi sum$ maintains the number of symbols $< \sigma$ in $B[b,e)$}
+
+     $\pi sum \gets \pi sum + \pi[\sigma]$\;
+                      }
+$\Pi \gets \Pi+\pi$\;
+
+\caption{processLinkedInterval($[b,e)$,$[b',e')$ $F$)}
+\label{alg:process-linked-interval}
+\end{algorithm}
+
+\begin{algorithm}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+\tcp{$\Pi[\sigma]$ must be number of $\sigma$ in $B'[0,b')$, for each $\sigma \in \Sigma \cup \{\$\}$}
+Update $\Pi$ such that $\Pi[\sigma]$ is the number of $\sigma$ in $B'[0, b')$\;
+
+$\pi(\sigma) \gets$ number of $\sigma$ in $B'[b',e')$, for each $\sigma \in \Sigma \cup \{\$\}$\;
+$\pi_p(\sigma) \gets$ number of $\sigma$ in $B'[b',b'+w_\$)$, for each $\sigma \in \Sigma$\;
+
+\tcp{We check if $[b',e')$ has nonempty backward \$-extension}
+\If{ $\pi[\$] > 0$ } {
+ % $b'_p \gets \Pi[ 0 ]$\;
+   $q_{2}' \gets [(\Pi[\$]+1), (\Pi[ \$ ] + \pi[ \$ ]+1))$\;
+\tcp{The interval $[b',b'+w_\$)$ must have (under our assumption) empty backward \$-extension}
+ \ForEach{$\sigma \in \Sigma$}{
+\tcp{We compute all backward $\sigma$-extensions of $[b',b'+w_\$)$}
+
+    \If{ $\pi_p[ \sigma ] > 0$} {
+        $q_{1}' \gets [(C(\sigma)+\Pi[\sigma]+1), (C(\sigma)+\Pi[ \sigma ] + \pi_p[ \sigma ]+1))$\;
+      Append $(q_{1}', q_{2}')$ to $F(\sigma)$
+    }
+  }
+}
+$\Pi \gets \Pi + \pi$
+
+\caption{extendPrefixInterval($[b', e')$, $w_\$$, $F$)}
+\label{alg:processPInterval}
+\end{algorithm}
+
+\begin{algorithm}
+\SetKwInOut{Input}{Input}\SetKwInOut{Output}{Output}
+Let $b'$ and $e'$ be respectively the start and the end of $q_{1}'$\;
+%Let $b_{s}'$ and $e_{s}'$ be respectively the start and the end of $q_{2}'$\;
+
+\tcp{$\Pi[\sigma]$ must be number of $\sigma$ in $B'[0,b')$, for each $\sigma \in \Sigma \cup \{\$\}$}
+Update $\Pi$ such that $\Pi[\sigma]$ is the number of $\sigma$ in $B'[0, b')$\;
+
+$\pi(\sigma) \gets$ number of $\sigma$ in $B'[b',e')$, for each $\sigma \in \Sigma \cup \{\$\}$\;
+
+\tcp{We check if the extension pair is terminal}
+\If{ $\pi[ \$ ] > 0$ } {
+      $b_{t}' \gets \Pi[ \$ ]$+1\;
+      $e_{t}' \gets b_{t}' + \pi[ \$ ]$\;
+      $q_{t}' \gets [b_{t}',e_{t}')$\;
+\tcp{We return an arc set of the overlap graph}
+      \Return $A(q_{t}', q_{2}')$\;
+  }
+\Else {
+ \ForEach{$\sigma \in \Sigma$}{
+    $b'_e \gets C[ \sigma ] + \Pi[ \sigma ]+1$\;
+    $e'_e \gets b'_e + \pi[ \sigma ]$\;
+      $q_{e}' \gets [b_{e}',e_{e}')$\;
+    Append $(q_{t}', q_{2}')$ to $F(\sigma)$\;
+      \Return an empty arc set\;
+
+  }
+}
+
+$\Pi \gets \Pi + \pi$
+
+\caption{extendExtensionPair($q_{1}'$, $q_{2}'$, $F$)}
+\label{alg:processExtPair}
+\end{algorithm}
+
+\section{On the complexity}
+
+
+
+
+
+We recall that the input data consist of a set of  $R$ of $n$ reads of maximum
+length $l$, and that $N$ is the total length of all input reads.
+% and let us recall that $n$ is the total number of reads ($R$)
+% The time complexity for building the BWT of the collection $R$ of reads
+% is the one reported in the paper ((Lightweight BWT Construction for Very
+% Large String Collections)\cite{}).
+% More precisely, using BCR we can build the data structure in
+% $O(l\times sort(n))$ whereas using BCRext the time complexity
+% is $O(ln)$.
+Observe that the \emph{buildGraph} procedure consists of  at most $l$ iterations.
+In each iteration (i) we extend the intervals in the lists $\mathcal{Q_{j}}$ (which is an
+adaptation of the BCR algorithm~\cite{Bauer2013}) and $\mathcal P$, (ii) we sort
+$\mathcal P$, and (iii) we extend the extension pairs in $\mathcal{E_{j}}$.
+
+Each extension of an interval or of an extension pair consists of a linear scan
+of the lists and some $O(1)$-time operations on each element of the list.
+Since, for each list, the input and the output intervals are disjoint, there can
+be at most $N$ intervals in each list, therefore $O(N)$ is also the time spent
+at each iteration.
+
+
+\begin{comment}
+times the procedures ExtendQonLeft and ExtendQonRight.
+In fact, those two procedures
+%the procedures ExtendQonLeft and ExtendQonRight
+apply the backward extension to every $Q$-interval in $\mathcal{Q}_j$ at
+most $l$ times, since there can't be any interval related to a pattern
+$Q$ such that $|Q| > l$. % $Q$-interval has length at least $\tau$.
+
+On the other hand the procedures ExtendQonLeft and ExtendQonRight aim to
+build all the possible $Q$-intervals linked to the maximal overlaps
+between the reads (the irreducible edges of the String Graph) by means of
+an incremental approach that rely on the computation of the
+$Q$-intervals during the previous steps.
+
+Thus, the time complexity of these procedures may be measured by
+considering the total number of possible $Q$-intervals that we have to
+compute for every length of $Q$ (more precisely for $|Q| \in \{1 \dots
+l\}$).
+% the fact that after the total number of iterations they have extended
+% at most all possible $Q$-intervals in the data set $R$ for $|Q| \in
+% \{1 \dots l\}$.
+
+Then the total  complexity of ExtendQonLeft and ExtendQonRight is at
+most $O(N_Q)$, where $N_Q$ is the total number of
+$Q$-intervals (i.e. distinct substrings of $R$).
+
+An estimate of $N_Q$ can be given as $O(l \times n)$ (let us recall that
+the number of distinct strings in a word on length $x$ is  at most $x$
+((Trovare articolo e citare)\cite{})).
+\end{comment}
+
+Note that during the iteration step the \emph{buildGraph} procedure has also to
+sort $\mathcal{P}$. Since each interval must be sorted by its beginning (\ie a
+single number), in order to sort  $\mathcal{P}$ we have to sort $n$ integers,
+which can be done in $sort(n)$ time.
+
+Since there are at most $l$ iterations, the overall time complexity is
+$O(l (n + sort(n))=O(l \cdot sort(n))$.
+% of BWT in external memory and thus an estimate of the time over real
+% data can be ....
+
+
+
+\section{Conclusion and future work}
+%The above notion of String Graph applies to assembling RNA-seq data into
+%Splicing Graph~\cite{Beretta2013}.
+%When assembling RNA-seq data with an overlap graph, the final output
+%graph is not a line path, since the graph should represent the
+%alternative transcripts derived by the alternative splicing on the gene
+%structure.
+%In fact, RNA-seq data are classified into \emph{spliced} and
+%\emph{unspliced} reads.
+%Unspliced reads are reads that cover regions that are either coding or
+%not coding ones, i.e. they are absent or present in a transcript
+%sequence.
+%On the contrary a spliced read $r$ contains of at least two consecutive
+%substrings $r_i $, $r_{i+1}$ such that there exists at least two
+%transcripts where $r_i$ is present in a transcript sequence together
+%with $r_{i+1}$ while $r_i$ is present and $r_{i+1}$ is absent in the
+%transcript sequence.
+%
+%In order to include this case we give a more general notion of
+%irreducible edges of an overlap graph.
+%Under the assumption that a read is not included in another one, the
+%transitive reduction of an overlap graph, by which we get a String Graph
+%from an overlap graph, corresponds to require that the set of reads that
+%extends a read $r$ is irreducible.
+%This definition includes also the case of Splicing Graphs...
+
+% <<<<<<< HEAD
+% In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
+% a time complexity that  is similar to the one for building the BWT.
+% Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
+% we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
+% An interesting open problem would be to use properties of $Q$-intervals to find irreducible edges while extending $Q$-intervals in the general case of input reads producing a string graph that is not necessarily a line graph, as in the transcriptomic application of the string graph to build a splicing-graph (\cite{Berettaet al}.
+We have  proposed an external memory algorithm for building an overlap  graph from a set $R$ of reads.
+Moreover we have shown that our approach is efficient, as the time complexity of
+the whole algorithm is not significantly larger that that of a necessary
+procedure, that is the lightweight BWT construction.
+
+There are at least two important directions for further research; the first is
+to devise an external memory algorithm to directly compute the string graph,
+sidestepping the need for computing the overlap graph, the second is to
+better understand the differences between string graphs associated to genomic
+reads and to RNA-seqs, since in the latter context graph models of gene structure
+have been recently proposed, such as the splicing graph~\cite{Beretta2013}.
+
+\bibliographystyle{splncs03}
+\bibliography{biblioBWTpaper}
+
+
+\end{document}
+
+%  LocalWords:  transcriptomic novo NGS Bruijn BWT iff unspliced
