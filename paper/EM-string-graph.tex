@@ -59,7 +59,7 @@
 
 \begin{document}
 
-\title{Assembling of string graphs by a lightweight BWT}
+\title{Assembling Overlap Graphs via Lightweight BWT Construction}
 
 \author{%
   Paola Bonizzoni \and
@@ -84,8 +84,15 @@
 \YP{Page limit: 10 pages + a cleary marked appendix}
 
 \begin{abstract}
+In this paper we tackle the problem of reducing memory usage in sequence
+assembly, providing an external memory algorithm to compute the overlap graph of
+a set of sequence, which is the bottleneck in some sequencing approaches.
 
-
+Our algorithm builds upon some recent results on lightweight Burrows-Wheeler
+transform (BWT) construction and on bidirectional BWT to compute efficiently the
+pairwise overlap of a set of sequences and to represent those overlaps with a
+directed graph, with an overall time complexity that is the same as the known
+algorithm to compute the BWT.
 \end{abstract}
 
 \begin{comment}
@@ -190,16 +197,15 @@ can be read or written sequentially only.
 Moreover, we strive to minimize the number of passes over those files, as a
 simpler adaptation of the algorithm of~\cite{Bauer2011} would require a number
 of passes equal to the number of input reads in the worst case.
+The time complexity of our algorithm is $O(l \cdot  sort(n))$, which is also the
+time complexity of the BCR algorithm~\cite{Bauer2013} for the external memory
+construction of the BWT.
+We also point out that in practice all input reads have approximately the same
+length, hence the time to read the input data is $\Omega(ln)$, therefore our
+time complexity differs from a lower bound only by a $\log n$ factor.
 
-\notaestesa{GDV}{ Accenno su sperimentazione oppure su complessità}
-\notaestesa{PB}{
-Note sulla complessità dell'algoritmo-
-While the space complexity construction of the string graph may only be given by the space taken
-in RAM by the overlap graph,  the time complexity increases only of a logarithmic factor w.r.t to the one for building
-in secondary memory the BWT for the collection of reads.
-More precisely, we obtain a time complexity of the algorithm that is $O(l \times (n + sort(n)))$, where $n$ is the total number  of the reads and $l$ their maximal length, and $O(l \times  sort(n))$
-is the time for secondary memory construction of the BWT.
-}
+
+
 
 
 
@@ -1211,23 +1217,31 @@ $\Pi \gets \Pi+\pi$\;
 \section{On the complexity}
 
 
-------ricordarsi la questione del fatto che usando un  dollaro unico per tutti i reads si perde l'ordiamento  dei reads  -----
 
 
 
-Given a set of reads $R$ of cardinality $n$, let $l$ be the maximal
-length of a read in $R$.
-
+We recall that the input data consist of a set of  $R$ of $n$ reads of maximum
+length $l$, and that $N$ is the total length of all input reads.
 % and let us recall that $n$ is the total number of reads ($R$)
+% The time complexity for building the BWT of the collection $R$ of reads
+% is the one reported in the paper ((Lightweight BWT Construction for Very
+% Large String Collections)\cite{}).
+% More precisely, using BCR we can build the data structure in
+% $O(l\times sort(n))$ whereas using BCRext the time complexity
+% is $O(ln)$.
+Observe that the \emph{buildGraph} procedure consists of  at most $l$ iterations.
+In each iteration (i) we extend the intervals in the lists $\mathcal{Q_{j}}$ (which is an
+adaptation of the BCR algorithm~\cite{Bauer2013}) and $\mathcal P$, (ii) we sort
+$\mathcal P$, and (iii) we extend the extension pairs in $\mathcal{E_{j}}$.
 
-The time complexity for building the BWT of the collection $R$ of reads
-is the one reported in the paper ((Lightweight BWT Construction for Very
-Large String Collections)\cite{}).
-More precisely, using BCR we can build the data structure in
-$O(l\times sort(n))$ whereas using BCRext the time complexity
-is $O(ln)$.
+Each extension of an interval or of an extension pair consists of a linear scan
+of the lists and some $O(1)$-time operations on each element of the list.
+Since, for each list, the input and the output intervals are disjoint, there can
+be at most $N$ intervals in each list, therefore $O(N)$ is also the time spent
+at each iteration.
 
-Observe that the \emph{buildGraph} procedure consists of iterating at most $l$
+
+\begin{comment}
 times the procedures ExtendQonLeft and ExtendQonRight.
 In fact, those two procedures
 %the procedures ExtendQonLeft and ExtendQonRight
@@ -1256,17 +1270,15 @@ $Q$-intervals (i.e. distinct substrings of $R$).
 An estimate of $N_Q$ can be given as $O(l \times n)$ (let us recall that
 the number of distinct strings in a word on length $x$ is  at most $x$
 ((Trovare articolo e citare)\cite{})).
+\end{comment}
 
 Note that during the iteration step the \emph{buildGraph} procedure has also to
-sort $\mathcal{P}$.
-Recall that, at a given iteration $i$, $\mathcal{P}$ is the set of
-$Q$-intervals such that $Q$ is prefix for at least one read and $|Q| = i
-+ \tau$; it's fairly clear that $|\mathcal{P}| \leq n$.
-This procedure has a total time complexity $O(l \times
-sort(n))$.
+sort $\mathcal{P}$. Since each interval must be sorted by its beginning (\ie a
+single number), in order to sort  $\mathcal{P}$ we have to sort $n$ integers,
+which can be done in $sort(n)$ time.
 
-Hence the time complexity for building the String Graph is
-$O(l \times (n + sort(n)))$.
+Since there are at most $l$ iterations, the overall time complexity is
+$O(l (n + sort(n))=O(l \cdot sort(n))$.
 % of BWT in external memory and thus an estimate of the time over real
 % data can be ....
 
@@ -1298,13 +1310,12 @@ $O(l \times (n + sort(n)))$.
 %extends a read $r$ is irreducible.
 %This definition includes also the case of Splicing Graphs...
 
-<<<<<<< HEAD
-In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
-a time complexity that  is similar to the one for building the BWT.
-Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
-we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
-An interesting open problem would be to use properties of $Q$-intervals to find irreducible edges while extending $Q$-intervals in the general case of input reads producing a string graph that is not necessarily a line graph, as in the transcriptomic application of the string graph to build a splicing-graph (\cite{Berettaet al}.
-=======
+% <<<<<<< HEAD
+% In this paper we propose an algorithm for building a string graph from a set $R$ of reads in secondary memory using a lightweight BWT construction, while retaining
+% a time complexity that  is similar to the one for building the BWT.
+% Now, under the assumption that the string graph is a line graph  (as in the genomic case), we can build such a graph by directly computing only irreducible edges, otherwise
+% we take an overlap graph in main memory and then we apply transitive reduction to obtain the string graph.
+% An interesting open problem would be to use properties of $Q$-intervals to find irreducible edges while extending $Q$-intervals in the general case of input reads producing a string graph that is not necessarily a line graph, as in the transcriptomic application of the string graph to build a splicing-graph (\cite{Berettaet al}.
 We have  proposed an external memory algorithm for building an overlap  graph from a set $R$ of reads.
 Moreover we have shown that our approach is efficient, as the time complexity of
 the whole algorithm is not significantly larger that that of a necessary
@@ -1317,7 +1328,6 @@ better understand the differences between string graphs associated to genomic
 reads and to RNA-seqs, since in the latter context graph models of gene structure
 have been recently proposed, such as the splicing graph~\cite{Beretta2013}.
 
->>>>>>> ed65da8... rivista introduzione e conclusioni
 \bibliographystyle{splncs03}
 \bibliography{biblioBWTpaper}
 
