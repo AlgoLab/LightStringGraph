@@ -167,9 +167,9 @@ Burrows-Wheeler Transform (BWT) and of related text indices (such as the
 FM-index) has sprung~\cite{Bauer2011,Bauer2013,Ferragina2012} showing that it is possible to
 arbitrarily reduce the use of RAM for building the BWT and indexing texts.
 In this paper, based upon the work in~\cite{Bauer2011}, we show an external
-memory algorithm to compute the overlap graph and an efficient, albeit not
-entirely external memory) approach to remove all transitive arcs of the overlap
-graph, hence resulting in a string graph.
+memory algorithm to compute the overlap graph and, on that graph, an efficient
+(albeit not entirely external memory) approach to remove all transitive
+arcs of the overlap graph can be then applied to obtain a string graph.
 % The construction of the String graph in~\cite{Simpson2010} works in two
 % steps.
 % In the first one, for each read $r$ in the collection $R$, the position
@@ -203,7 +203,7 @@ only extends the pattern by adding a character to the beginning).
 This algorithm is the main component of our procedure to construct the overlap graph.
 
 Notice that all large-size intermediate data are stored as external files that
-can be read or written sequentially only.
+are read (or written) only in sequential passes.
 Moreover, we strive to minimize the number of passes over those files, as a
 simpler adaptation of the algorithm of~\cite{Bauer2011} would require a number
 of passes equal to the number of input reads in the worst case.
@@ -479,10 +479,10 @@ we find the first \$; such a $Q\alpha\$$-interval becomes an
 irreducible edge.
 Observe that the algorithm  in~\cite{Simpson2010} requires to keep the whole FM-index
 and BWT sequence for $R$ and $R'$ in main memory, since it is impossible to
-restrict the execution in a portion of the BWT or of the FM-index the $Q$-intervals
+restrict   in a portion of the BWT or of the FM-index the computation of $Q$-intervals
 and their extensions.
 Moreover, the algorithm requires to recompute the $Q$-intervals a number of
-times that is equal to the number of different reads in $R$ share the
+times that is equal to the number of different reads in $R$ sharing  the
 string $Q$ as a suffix.
 
 
@@ -523,8 +523,6 @@ In other words, the extension pair corresponds to the fact that the reads relate
 of $q_{1}'$.
 In a terminal extension pair, the concatenation of the seed and the extension is
 equal to some read $r \in R$.
-It is immediate to verify  that for each read $r'$ represented in the $q_{2}'$-interval, since $r'$ is extended by $r$,
-the pair $(r', r)$ is an arc of the overlap graph.
 
 
 The correctness of our approach relies on the fact that all possible
@@ -971,14 +969,14 @@ the number of distinct strings in a word on length $x$ is  at most $x$
 ((Trovare articolo e citare)\cite{})).
 \end{comment}
 
-Note that during the iteration step the \emph{buildGraph} procedure has also to
-sort $\mathcal{P}$. Since each interval must be sorted by its beginning (\ie a
+Note that the \emph{buildGraph} procedure has also to
+sort $\mathcal{P}$ at each iteration.
+Since the intervals must be sorted by their begin indexes (\ie a
 single number), in order to sort  $\mathcal{P}$ we have to sort $n$ integers,
 which can be done in $sort(n)$ time.
 %
 Since there are at most $l$ iterations, the overall time complexity is
-%$O(l (n + sort(n))=O(l \cdot sort(n))$.
-$O(l \cdot sort(n))$.
+$O(l (n + sort(n))=O(l \cdot sort(n))$.
 % of BWT in external memory and thus an estimate of the time over real
 % data can be ....
 
