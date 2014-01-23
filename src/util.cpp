@@ -227,3 +227,26 @@ ifstream& operator>>( ifstream& in, JoinedQInterval** jint )
     *jint = NULL;
   return in;
 }
+
+ofstream& operator<<( ofstream& out, const QInterval& i )
+{
+  BWTPosition begin = i.get_begin( );
+  BWTPosition end = i.get_end( );
+  out.write( (char *) &begin, sizeof( BWTPosition ) );
+  out.write( (char *) &end, sizeof( BWTPosition ) );
+  out.flush( );
+
+  return out;
+}
+
+ifstream& operator>>( ifstream& in, QInterval** i )
+{
+  BWTPosition begin=0, end=0;
+  in.read( (char *) &begin, sizeof( BWTPosition ) );
+  in.read( (char *) &end, sizeof( BWTPosition ) );
+  if( begin != end )
+    *i = new QInterval( begin, end );
+  else
+    *i = NULL;
+  return in;
+}

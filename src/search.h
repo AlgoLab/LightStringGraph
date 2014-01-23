@@ -16,6 +16,8 @@
 using std::vector;
 using std::deque;
 
+void build_tau_intervals( BWTReader& b, QIntervalManager& jqmgr, vector< NucleoCounter >& C, int T );
+
 // Build all the Q-intervals such that |Q| = T
 void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< NucleoCounter >& C, int T );
 

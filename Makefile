@@ -1,67 +1,56 @@
-#Makefile
+# Makefile for LightStrinGraph
 
-SRC_DIR:=src
-OBJ_DIR:=obj
-BIN_DIR:=bin
+SRC_DIR	=src/
+OBJ_DIR	=obj/
+BIN_DIR	=bin/
 
-CFLAGS+= -g -Wall -O2 -DDEBUG -march=native -Wno-deprecated
-CXXFLAGS+= ${CFLAGS}
-LIBS = #-l boost_graph
+CFLAGS	= -g -Wall -DDEBUG -O2 -march=native -Wno-deprecated
+CXXFLAGS= ${CFLAGS}
+LIBS 	= #
 
-.PHONY: low_mem
-low_mem: CXXFLAGS=${CFLAGS} -D LOW_MEM_USG
-low_mem: all
+# BGSA_EX	= bgsa/bgsa
+# BGSA_CPP= bgsa/bgsa.cpp
+BGSA_DEP= $(OBJ_DIR)partialBWTReader.o \
+	$(OBJ_DIR)BWTReader.o \
+	$(OBJ_DIR)util.o \
+	$(OBJ_DIR)q_interval.o \
+	$(OBJ_DIR)joined_q_interval.o \
+	$(OBJ_DIR)edge_joined_interval.o \
+	$(OBJ_DIR)bgsa/bgsa.o
 
-.PHONY: all
-all:action string_graph bgsa
+# LSG_EX	= lsg/lsg
+# LSG_CPP	= lsg/lsg.cpp
+LSG_DEP= $(OBJ_DIR)BWTReader.o \
+	$(OBJ_DIR)GSAReader.o \
+	$(OBJ_DIR)joined_q_interval.o \
+	$(OBJ_DIR)search.o \
+	$(OBJ_DIR)edge_joined_interval.o \
+	$(OBJ_DIR)util.o \
+	$(OBJ_DIR)partialBWTReader.o \
+	$(OBJ_DIR)q_interval.o \
+	$(OBJ_DIR)lsg/lsg.o
 
-string_graph: action read_input
-build_gsa:action bgsa
+all: lsg bgsa
 
-.PHONY: action
-action:
-	@echo "Compiling..."
+${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
+	@echo '* Compiling $<'
+	@mkdir -p $(dir $@)
+	@$(CXX) $(CXXFLAGS) \
+	-o $@ \
+	-c $< -I$(SRC_DIR)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp Makefile
-	@echo '* Compiling $<'; \
-	mkdir -pv $(dir $@) ; \
-	$(CXX) $(CXXFLAGS) -o $@ -c $< -Isrc
+lsg: $(LSG_DEP)
+	@echo 'Linking $@'
+	@mkdir -p $(BIN_DIR)
+	@$(CXX) $(CXXFLAGS) \
+	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR)
 
-read_input_OBJS= \
-	${OBJ_DIR}/q_interval.o \
-	${OBJ_DIR}/edge_joined_interval.o \
-	${OBJ_DIR}/joined_q_interval.o \
-	${OBJ_DIR}/util.o \
-	${OBJ_DIR}/partialBWTReader.o \
-	${OBJ_DIR}/BWTReader.o \
-	${OBJ_DIR}/GSAReader.o \
-	${OBJ_DIR}/search.o \
-	${OBJ_DIR}/main.o
+bgsa: $(BGSA_DEP)
+	@echo 'Linking $@'
+	@mkdir -p $(BIN_DIR)
+	@$(CXX) $(CXXFLAGS) \
+	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR)
 
-input_bgsa_OBJS= \
-	${OBJ_DIR}/reconstruct_gsa.o \
-	${OBJ_DIR}/partialBWTReader.o \
-	${OBJ_DIR}/BWTReader.o \
-	${OBJ_DIR}/util.o \
-	${OBJ_DIR}/q_interval.o \
-	${OBJ_DIR}/edge_joined_interval.o \
-	${OBJ_DIR}/joined_q_interval.o
-
-${BIN_DIR}/stringGraph: ${read_input_OBJS}
-	@echo 'Linking $@'; \
-	mkdir -p ${BIN_DIR}; \
-	${CXX} ${CXXFLAGS} -o $@ $^ ${LIBS}
-
-${BIN_DIR}/bgsa: ${input_bgsa_OBJS}
-	@echo 'Linking $@'; \
-	mkdir -p ${BIN_DIR}; \
-	${CXX} ${CXXFLAGS} -o $@ $^ ${LIBS}
-
-.PHONY: read_input
-read_input: ${BIN_DIR}/stringGraph
-bgsa: ${BIN_DIR}/bgsa
-
-.PHONY: clean
 clean:
-	@echo "Cleaning..."; \
-	rm -f ${OBJ_DIR}/* ${BIN_DIR}/*
+	@echo "Cleaning..."
+	rm -rf ${OBJ_DIR} ${BIN_DIR}

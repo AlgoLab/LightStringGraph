@@ -15,16 +15,23 @@
 using std::vector;
 using std::string;
 using std::deque;
+using std::stringstream;
 
+int TAU    =0;
+int CYCNUM =0;
 
 void show_usage(){
-    std::cerr << "Usage: stringGraph -B <BWTFilenamePrefix> ";
+    std::cerr << "Usage: lsg -B <BWTFilenamePrefix> ";
     std::cerr << "-R <RevBWTFilenamePrefix> ";
-    std::cerr << "-G <gsaFilename>" << std::endl;
+    std::cerr << "-G <gsaFilename> ";
+    std::cerr << "-T <TAU> ";
+    std::cerr << "-C <CycNum>" << std::endl;
     std::cerr << std::endl << "Options:" << std::endl;
     std::cerr << "\t-B, --BWT \t <BWTFilenamePrefix>" << std::endl;
     std::cerr << "\t-R, --RevBWT \t <RevBWTFilenamePrefix>" << std::endl;
     std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
+    std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
+    std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
     std::cerr << std::endl;
 }
 
@@ -44,14 +51,28 @@ int main ( int argc, char** argv )
     for (int i = 1; i < argc; i++) {
         if (i + 1 != argc){
             if (string(argv[i]) == "--BWT" || string(argv[i]) == "-B") {
-                bwt_pre = string(argv[++i]);
+	      bwt_pre = string(argv[++i]);
             } else if (string(argv[i]) == "--RevBWT" || string(argv[i]) == "-R") {
-                rev_bwt_pre = string(argv[++i]);
+	      rev_bwt_pre = string(argv[++i]);
             } else if (string(argv[i]) == "--GSA" || string(argv[i]) == "-G") {
-                gsa_file = string(argv[++i]);
+	      gsa_file = string(argv[++i]);
+	    } else if (string(argv[i]) == "--TAU" || string(argv[i]) == "-T") {
+	      stringstream convert(string(argv[++i]));
+	      if( !( convert >> TAU ) ) {
+		std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (TAU)." << std::endl;
+		std::cerr << "Aborting.." << std::endl;
+		std::exit( -1 );
+	      }
+	    } else if (string(argv[i]) == "--CycNum" || string(argv[i]) == "-C") {
+	      stringstream convert(string(argv[++i]));
+	      if( !( convert >> CYCNUM ) ) {
+		std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (CYCNUM)." << std::endl;
+		std::cerr << "Aborting.." << std::endl;
+		std::exit( -1 );
+	      }
             } else {
-                std::cerr << "Invalid arguments, please try again.\n";
-                return 1;
+	      std::cerr << "Invalid arguments, please try again.\n";
+	      return 1;
             }
         }
     }
@@ -109,7 +130,7 @@ int main ( int argc, char** argv )
     {
       std::cerr << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl ) << std::endl;
       JoinedQInterval jint ( c->at( nucl ), c->at( nucl+1 ),
-  			     c->at( nucl ), c->at( nucl+1 ) );
+			     c->at( nucl ), c->at( nucl+1 ) );
       imgr.add_interval ( jint, (Nucleotide) nucl );
     }
 
@@ -147,33 +168,33 @@ int main ( int argc, char** argv )
       	{
 	  for( unsigned int j =0; j < (*it)->get_second_interval( ).size( ); ++j )
 	    {
-	      vector< GSAEntry* >* first_interval =
-		gsardr.get( (*it)->get_first_interval( ).get_begin( ),
-			    (*it)->get_first_interval( ).get_end( ) );
-	      vector< GSAEntry* >* second_interval =
-		gsardr.get( (*it)->get_second_interval( )[ j ]->get_begin( ),
-			    (*it)->get_second_interval( )[ j ]->get_end( ) );
-	      EdgeLength len = (*it)->get_len( )[ j ];
+	      // vector< GSAEntry* >* first_interval =
+	      // 	gsardr.get( (*it)->get_first_interval( ).get_begin( ),
+	      // 		    (*it)->get_first_interval( ).get_end( ) );
+	      // vector< GSAEntry* >* second_interval =
+	      // 	gsardr.get( (*it)->get_second_interval( )[ j ]->get_begin( ),
+	      // 		    (*it)->get_second_interval( )[ j ]->get_end( ) );
+	      // EdgeLength len = (*it)->get_len( )[ j ];
 	      
-	      for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
-		   it_f != first_interval->end( ); ++it_f )
-		{
-		  for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
-		       it_s != second_interval->end( ); ++it_s )
-		    {
-		      checkIfIrreducible( sg, p, *it_f, *it_s, len );
-		    }
-		}
+	      // for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
+	      // 	   it_f != first_interval->end( ); ++it_f )
+	      // 	{
+	      // 	  for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
+	      // 	       it_s != second_interval->end( ); ++it_s )
+	      // 	    {
+	      // 	      checkIfIrreducible( sg, p, *it_f, *it_s, len );
+	      // 	    }
+	      // 	}
 
-	      for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
-		   it_f != first_interval->end( ); ++it_f )
-		  delete *it_f;
-	      delete first_interval;
+	      // for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
+	      // 	   it_f != first_interval->end( ); ++it_f )
+	      // 	  delete *it_f;
+	      // delete first_interval;
 
-	      for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
-		   it_s != second_interval->end( ); ++it_s )
-		  delete *it_s;
-	      delete second_interval;
+	      // for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
+	      // 	   it_s != second_interval->end( ); ++it_s )
+	      // 	  delete *it_s;
+	      // delete second_interval;
 	    }
 	  delete *it;
 	}
@@ -218,28 +239,28 @@ int main ( int argc, char** argv )
 
   std::cerr << "SG SIZE : " << sg.size( ) << std::endl;
 
-  std::cerr << "Output edges.." << std::endl;
+  // std::cerr << "Output edges.." << std::endl;
 
-  // delete sg
-  bool first_edge = true;
+  // // delete sg
+  // bool first_edge = true;
 
-  std::cout << "{" << std::endl << "\t\"edges\": [" << std::endl;
-  for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
-       it != sg.end( ); ++it )
-    {
-      if( !first_edge )
-	std::cout << "," << std::endl;
-      else
-	first_edge = false;
-      std::cout << "\t\t{" << std::endl
-		<< "\t\t\t\"from\" : " << it->second->first_read << "," << std::endl
-		<< "\t\t\t\"to\" : " << it->second->second_read << "," << std::endl
-		<< "\t\t\t\"length\" : " << it->second->len << std::endl
-		<< "\t\t}";
-      delete it->second;
-      it->second = NULL;
-    }
-  std::cout << std::endl << "\t]" << std::endl << "}" << std::endl;
+  // std::cout << "{" << std::endl << "\t\"edges\": [" << std::endl;
+  // for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
+  //      it != sg.end( ); ++it )
+  //   {
+  //     if( !first_edge )
+  // 	std::cout << "," << std::endl;
+  //     else
+  // 	first_edge = false;
+  //     std::cout << "\t\t{" << std::endl
+  // 		<< "\t\t\t\"from\" : " << it->second->first_read << "," << std::endl
+  // 		<< "\t\t\t\"to\" : " << it->second->second_read << "," << std::endl
+  // 		<< "\t\t\t\"length\" : " << it->second->len << std::endl
+  // 		<< "\t\t}";
+  //     delete it->second;
+  //     it->second = NULL;
+  //   }
+  // std::cout << std::endl << "\t]" << std::endl << "}" << std::endl;
   
 
   delete c;

@@ -9,11 +9,12 @@ using std::vector;
 #define BUFFERSIZE 1024
 #define IM_BUFFERSIZE 256
 
-#define TAU 50
-#define CYCNUM 160
+// #define TAU 1
+// #define CYCNUM 99
 
 #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
 #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
+#define QIntervalManager IntervalManager< QInterval >
 
 // Position on a BWT
 typedef unsigned int BWTPosition; // 2^32 positions = ~ 4 billion bases
@@ -31,8 +32,8 @@ enum Nucleotide
     BASE_A,
     BASE_C,
     BASE_G,
-    BASE_T,
     BASE_N,
+    BASE_T,
     BASE_Z,
     //    NOT_IN_ALPHABET,
     ALPHABET_SIZE

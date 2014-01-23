@@ -9,6 +9,7 @@
 #include "types.h"
 #include "edge_joined_interval.h"
 #include "joined_q_interval.h"
+#include "q_interval.h"
 
 using std::ofstream;
 using std::ifstream;
@@ -24,12 +25,16 @@ Nucleotide cton ( char c );
 // by two Q-intervals
 void checkIfIrreducible( SGraph&, Precedencies&, GSAEntry*, GSAEntry*, EdgeLength& );
 
+ofstream& operator<<( ofstream&, const QInterval& );
+
+ifstream& operator>>( ifstream&, QInterval** );
+
 ofstream& operator<<( ofstream&, const EdgeInterval& );
 
 ifstream& operator>>( ifstream&, EdgeInterval* );
 
 ofstream& operator<<( ofstream&, const JoinedQInterval& );
 
-ifstream& operator>>( ifstream&, JoinedQInterval* ); 
+ifstream& operator>>( ifstream&, JoinedQInterval* );
 
 #endif

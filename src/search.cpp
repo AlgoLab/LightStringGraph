@@ -1,12 +1,54 @@
 #include "search.h"
 
+void build_tau_intervals( BWTReader& b, QIntervalManager& imgr,
+			  vector< NucleoCounter >& C, int T )
+{
+  // Populate
+  QInterval* qint;
+  for( int i( 0 ); i < T; ++i )
+    {
+#ifdef DEBUG
+      unsigned long int nwintc =0;
+#endif
+      std::cerr << "Building tau intervals - " << i+1 << "/" << T << std::endl;
+      while( (qint = imgr.get_next_interval( ) ) )
+	{
+	  BWTPosition begin = qint->get_begin( );
+	  BWTPosition end = qint->get_end( );
+	  b.move_to( begin );
+	  vector< NucleoCounter > occ_begin( b.get_Pi( ) );
+	  b.move_to( end );
+	  vector< NucleoCounter > occ_end( b.get_Pi( ) );
+	  for( int base( 1 ); base < ALPHABET_SIZE; ++base )
+	    {
+	      BWTPosition new_begin = C[ base ] + occ_begin[ base ];
+	      BWTPosition new_end = C[ base ] + occ_end[ base ];
+	      if( new_end - new_begin >= 2 )
+		{
+		  // Shared substring
+#ifdef DEBUG
+		  ++nwintc;
+#endif
+		  QInterval new_interval ( new_begin, new_end );
+		  imgr.add_interval( new_interval, (Nucleotide) base );
+		}
+	    }
+	}
+      b.reset( );
+      imgr.swap_files( );
+#ifdef DEBUG
+      std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
+#endif
+    }
+}
+
 void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, 
 			  vector< NucleoCounter >& C, int T)
 {
   JoinedQInterval* jqin;
   for( int i( 0 ); i < T; ++i)
     {
-      std::cerr << "Building tau intervals - " << i+1 << "/" << TAU << std::endl;
+      std::cerr << "Building tau intervals - " << i+1 << "/" << T << std::endl;
       unsigned long int nwintc =0; // new intervals
       unsigned long int uniquebkwe =0; // unique backward extension
       while( (jqin = jqmgr.get_next_interval()) )
@@ -286,6 +328,67 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
       else
 	{
 	  std::cerr << "ERROR: This shouldn't happen." << std::endl;
+	  std::cerr << "MERGED : ";
+	  if( merged )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "i_m NULL : ";
+	  if( i_m == NULL )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "i_l NULL : ";
+	  if( i_l == NULL )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "COMPARE i_m, i_l : ";
+	  if( CompareEdgeInterval( i_m, i_l ) )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "COMPARE i_l, i_m : ";
+	  if( CompareEdgeInterval( i_l, i_m ) )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "EQUALFIRST i_m, i_l : ";
+	  if( EqualFirstEdgeInterval( i_m, i_l ) )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "EQUALSECOND i_m, i_l : ";
+	  if( EqualSecondEdgeInterval( i_m, i_l ) )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "OVERLAP i_m->first, i_l->first : ";
+	  if( int_overlap( i_m->get_first_interval( ), i_m->get_first_interval( ) ) )
+	    std::cerr << "True";
+	  else
+	    std::cerr << "False";
+	  std::cerr << std::endl;
+
+	  std::cerr << "FIRST i_m : ";
+	  std::cerr << i_m->get_first_interval( ).get_begin( ) << ", " << i_m->get_first_interval( ).get_end( ) << std::endl;
+	  std::cerr << "FIRST i_l : ";
+	  std::cerr << i_l->get_first_interval( ).get_begin( ) << ", " << i_l->get_first_interval( ).get_end( ) << std::endl;
+
 	  std::exit( -1 );
 	}
     } // ~while interval exists
