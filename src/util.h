@@ -32,6 +32,7 @@ ifstream& operator>>( ifstream&, QInterval** );
 ofstream& operator<<( ofstream&, const EdgeInterval& );
 
 ifstream& operator>>( ifstream&, EdgeInterval* );
+ifstream& operator>>( ifstream&, EdgeInterval** );
 
 ofstream& operator<<( ofstream&, const JoinedQInterval& );
 

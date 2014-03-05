@@ -31,7 +31,7 @@ public:
   EdgeInterval( const BWTPosition &, const BWTPosition &,
 		const BWTPosition &, const BWTPosition & );
   EdgeInterval( const BWTPosition &, const BWTPosition &,
-		const BWTPosition &, const BWTPosition &, 
+		const BWTPosition &, const BWTPosition &,
 		const EdgeLength& );
   EdgeInterval( ) : _suffixI( ), _extendI( 0, 0 ), _len( 0 ) { };
   EdgeInterval( const BWTPosition&, const BWTPosition&, vector< QInterval* >&,
@@ -50,7 +50,7 @@ public:
   vector< QInterval* >& get_second_interval( );
 
 private:
-  EdgeInterval( const EdgeInterval& other) : 
+ EdgeInterval( const EdgeInterval& other) :
   _suffixI( ), _extendI( 0, 0 ), _len( 0 ) { };
 
   EdgeInterval& operator=( const EdgeInterval& other ) { return *this; }

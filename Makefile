@@ -24,6 +24,7 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)GSAReader.o \
 	$(OBJ_DIR)joined_q_interval.o \
 	$(OBJ_DIR)search.o \
+	$(OBJ_DIR)ext_sort.o \
 	$(OBJ_DIR)edge_joined_interval.o \
 	$(OBJ_DIR)util.o \
 	$(OBJ_DIR)partialBWTReader.o \

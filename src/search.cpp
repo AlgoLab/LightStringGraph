@@ -98,15 +98,16 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
 }
 
 
-vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
-					  vector< NucleoCounter >& C )
+size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
+			 vector< NucleoCounter >& C, std::string outputfn )
 {
   JoinedQInterval* jqin;
   unsigned long int nwintc =0; // new intervals counter
-  unsigned long int nwltc =0; // new left terminated intervals
+  size_t nwltc =0; // new left terminated intervals
   unsigned long int uniquebkwe =0; // unique backward extension
-  vector< EdgeInterval* >* LT = new vector< EdgeInterval* >(); // Left-terminated
+  // vector< EdgeInterval* >* LT = new vector< EdgeInterval* >(); // Left-terminated
 							     // intervals
+  std::ofstream outputLT( outputfn.c_str(), std::ios::binary );
   while( (jqin = jqmgr.get_next_interval()) )
     {
       // Get occ at the beginning and end of the interval
@@ -143,7 +144,9 @@ vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager&
 				   jqin->get_reverse_interval( ).get_begin( ),
 				   jqin->get_reverse_interval( ).get_end( ), 
 				   0 );
-	      LT->push_back( new_interval );
+	      outputLT << *new_interval;
+	      delete new_interval;
+	      //LT->push_back( new_interval );
 	    }
 
 	  else if ( new_end - new_begin == 1 )
@@ -155,6 +158,8 @@ vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager&
       // delete jqin;
     } // ~while
 
+  outputLT.close();
+
 #ifdef DEBUG
   std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
   std::cerr << "--> Generated " << nwltc << " new left-terminated intervals."
@@ -163,48 +168,45 @@ vector< EdgeInterval* >* search_step_left( BWTReader& b, JoinedQIntervalManager&
 	    << std::endl;
 #endif
 
-  std::cerr << "--> Sorting LT" << std::endl;
-  std::sort( LT->begin(), LT->end(), CompareEdgeIntervalReverse );
-  return LT;
+  // std::cerr << "--> Sorting LT" << std::endl;
+  // std::sort( LT->begin(), LT->end(), CompareEdgeIntervalReverse );
+  return nwltc;
 }
 
 vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, 
-					   vector< NucleoCounter >& C, vector< EdgeInterval* >* LT )
+					    vector< NucleoCounter >& C, std::ifstream* LT )
 {
 
   vector< EdgeInterval* >* edges_to_test = new vector< EdgeInterval* >( );
   EdgeInterval* i_l = NULL; // interval from LT
   EdgeInterval* i_m = imgr.get_next_interval( ); // interval from imgr
 
-  unsigned long int nwintc =0; // new interval counter
+  unsigned long int nwintc  =0; // new interval counter
   unsigned long int rejintc =0; // rejected LT interval counter
   unsigned long int mrgintc =0; // intervals from imgr merged with the ones from LT
 
   // read first interval from LT if it exists
-  if( LT->size( ) > 0 )
-    {
-      i_l = LT->back( );
-      LT->pop_back( );
-    }
+  if(! ((*LT) >> &i_l) )
+    i_l = NULL;
 
   while( ( i_l != NULL ) || ( i_m != NULL ) )
     {
       bool merged = false;
       while( ( i_l != NULL ) && ( i_m != NULL ) && EqualFirstEdgeInterval( i_l, i_m ) )
-      	{
-      	  // Need to merge i_lt and i_mgr because the first interval (the one we
-      	  // need to extend) is the same. Note that we don't know if i_lt is
-      	  // right-terminal as for now
-      	  ++mrgintc;
+	{
+	  // Need to merge i_lt and i_mgr because the first interval (the one we
+	  // need to extend) is the same. Note that we don't know if i_lt is
+	  // right-terminal as for now
+	  ++mrgintc;
 	  merged = true;
-      	  for( unsigned int i( 0 ); i < i_m->get_second_interval( ).size( ); ++i )
-      	    {
+	  for( unsigned int i( 0 ); i < i_m->get_second_interval( ).size( ); ++i )
+	    {
 	      i_l->add_suffix_interval( i_m->get_second_interval( )[ i ],
 					i_m->get_len( )[ i ] );
-      	    }
-      	  // delete i_m;
-      	  i_m = imgr.get_next_interval( );
-      	} // ~while merge
+	    }
+	  // delete i_m;
+	  i_m = imgr.get_next_interval( );
+	} // ~while merge
 
       if( ( i_l != NULL ) && ( ( i_m == NULL ) || CompareEdgeInterval( i_l, i_m ) ) )
 	{
@@ -266,14 +268,9 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	    }
 
 	  delete i_l;
-	  if( LT->size( ) > 0 )
-	    {
-	      i_l = LT->back( );
-	      LT->pop_back( );
-	    }
-	  else
+	  if(!( (*LT) >> &i_l ))
 	    i_l = NULL;
-	} // ~if i_l comes first than i_m
+	} // ~if i_l comes before than i_m
       else if( ( i_m != NULL ) && ( ( i_l == NULL ) || CompareEdgeInterval( i_m, i_l ) ) )
 	{
 	  // Extend the interval that comes from the interval manager. If it
@@ -321,7 +318,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 		      delete new_interval;
 		    } // ~if new_int_end > new_int_begin
 		} // ~for
-	    }	  
+	    }
 	  // delete i_m;
 	  i_m = imgr.get_next_interval( );
 	} // ~if i_m comes first than i_l
@@ -402,7 +399,6 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
   std::cerr << "--> Got " << edges_to_test->size( ) << " new intervals on GSA to test." 
 	    << std::endl;
 #endif
-
   return edges_to_test;
 }
 

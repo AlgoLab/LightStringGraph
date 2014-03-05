@@ -11,6 +11,7 @@
 #include "types.h"
 #include "search.h"
 #include "edge_joined_interval.h"
+#include "ext_sort.h"
 
 using std::vector;
 using std::string;
@@ -106,7 +107,7 @@ int main ( int argc, char** argv )
       qIntFilenames.push_back( qIntFilename.str( ) );
       revqIntFilenames.push_back( revqIntFilename.str( ) );
     }
-  
+
   JoinedQIntervalManager imgr( qIntFilenames );
   EdgeJoinedQIntervalManager revimgr( revqIntFilenames );
 
@@ -122,19 +123,18 @@ int main ( int argc, char** argv )
 						   // simply check if c and
 						   // rev_c are equal.
   std::cerr << "done." << std::endl;
-
-  //  std::cerr << "C size: " << c->size() << std::endl;
   std::cerr << "C contains : " << std::endl;
 
   for (int nucl( BASE_A ); (unsigned int) nucl < ALPHABET_SIZE; ++nucl)
     {
-      std::cerr << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl ) << std::endl;
+      std::cerr << ntoc( (Nucleotide) nucl ) << ": " << c->at( nucl )
+		<< std::endl;
       JoinedQInterval jint ( c->at( nucl ), c->at( nucl+1 ),
 			     c->at( nucl ), c->at( nucl+1 ) );
       imgr.add_interval ( jint, (Nucleotide) nucl );
     }
 
-  std::cout.flush( );
+  std::cerr.flush( );
   imgr.swap_files();
 
   build_tau_intervals( br, imgr, *c, TAU);
@@ -145,123 +145,27 @@ int main ( int argc, char** argv )
 
   for( int i( 0 ); i < CYCNUM; ++i ) // TODO: while exists interval in imgr or revimgr
     {
-      vector< EdgeInterval* >* LT;
+      // vector< EdgeInterval* >* LT;
       vector< EdgeInterval* >* RT;
 
       std::cerr << "Left search step #" << i+1 << std::endl;
       br.reset( );
       revbr.reset( );
-      LT = search_step_left( br, imgr, *c );
+      size_t newlti = search_step_left( br, imgr, *c, "oedgeinterval" );
       imgr.swap_files( );
+      std::cerr << "--> Radix sorting " << newlti << " elements..." << std::endl;
+      std::ifstream* newLT = ext_sort( newlti, "oedgeinterval" );
 
       std::cerr << "Right search step #" << i+1 << std::endl;
-      RT = search_step_right( revbr, revimgr, *rev_c, LT );
+      RT = search_step_right( revbr, revimgr, *rev_c, newLT );
       revimgr.swap_files( );
+      newLT->close();
+      delete newLT;
+      RT->clear( );
+      delete RT;
 
       // All intervals got from search_step_right should be in GSA[ $ ]
-      bool rt_int_in_GSA$ = true; 
-
-      std::cerr << "Analysis and delete" << std::endl;
-
-      for( vector< EdgeInterval* >::iterator it = RT->begin( );
-       	   it != RT->end( ); ++it )
-      	{
-	  for( unsigned int j =0; j < (*it)->get_second_interval( ).size( ); ++j )
-	    {
-	      // vector< GSAEntry* >* first_interval =
-	      // 	gsardr.get( (*it)->get_first_interval( ).get_begin( ),
-	      // 		    (*it)->get_first_interval( ).get_end( ) );
-	      // vector< GSAEntry* >* second_interval =
-	      // 	gsardr.get( (*it)->get_second_interval( )[ j ]->get_begin( ),
-	      // 		    (*it)->get_second_interval( )[ j ]->get_end( ) );
-	      // EdgeLength len = (*it)->get_len( )[ j ];
-	      
-	      // for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
-	      // 	   it_f != first_interval->end( ); ++it_f )
-	      // 	{
-	      // 	  for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
-	      // 	       it_s != second_interval->end( ); ++it_s )
-	      // 	    {
-	      // 	      checkIfIrreducible( sg, p, *it_f, *it_s, len );
-	      // 	    }
-	      // 	}
-
-	      // for( vector< GSAEntry* >::iterator it_f = first_interval->begin( );
-	      // 	   it_f != first_interval->end( ); ++it_f )
-	      // 	  delete *it_f;
-	      // delete first_interval;
-
-	      // for( vector< GSAEntry* >::iterator it_s = second_interval->begin( );
-	      // 	   it_s != second_interval->end( ); ++it_s )
-	      // 	  delete *it_s;
-	      // delete second_interval;
-	    }
-	  delete *it;
-	}
-
-     rt_int_in_GSA$ ?
-       std::cerr << "All RT intervals are in GSA[$]." << std::endl :
-       std::cerr << "Not all RT intervals are in GSA[$] (THAT'S NOT GOOD)." << std::endl ;
-     
-     LT->clear( );
-     RT->clear( );
-     vector< EdgeInterval* >( ).swap( *LT ); // Memory trick?
-     vector< EdgeInterval* >( ).swap( *RT );
-     delete LT;
-     delete RT;
     }
-
-  // TODO: find first read in a better way
-  // unsigned int begin_of_graph =0;
-  // for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
-  //      it != sg.end( ); ++it )
-  //   {
-  //     if( p.find( it->second->first_read ) == p.end( ) )
-  // 	{
-  // 	  begin_of_graph = it->second->first_read;
-  // 	}      
-  //   }
-
-  // bool ended = false;
-
-  // // print edges
-  // while( !ended )
-  //   {
-  //     std::cout << "Edge : " << sg[ begin_of_graph ]->first_read << " -> "
-  // 		<< sg[ begin_of_graph ]->second_read << " len: "
-  // 		<< sg[ begin_of_graph ]->len << std::endl;
-  //     ended = ( sg.find( sg[begin_of_graph]->second_read ) == sg.end( ) );
-  //     if( !ended )
-  // 	{
-  // 	  begin_of_graph = sg[begin_of_graph]->second_read;
-  // 	}
-  //   }
-
-  std::cerr << "SG SIZE : " << sg.size( ) << std::endl;
-
-  // std::cerr << "Output edges.." << std::endl;
-
-  // // delete sg
-  // bool first_edge = true;
-
-  // std::cout << "{" << std::endl << "\t\"edges\": [" << std::endl;
-  // for( std::map< unsigned int, SGEdge*>::iterator it = sg.begin( );
-  //      it != sg.end( ); ++it )
-  //   {
-  //     if( !first_edge )
-  // 	std::cout << "," << std::endl;
-  //     else
-  // 	first_edge = false;
-  //     std::cout << "\t\t{" << std::endl
-  // 		<< "\t\t\t\"from\" : " << it->second->first_read << "," << std::endl
-  // 		<< "\t\t\t\"to\" : " << it->second->second_read << "," << std::endl
-  // 		<< "\t\t\t\"length\" : " << it->second->len << std::endl
-  // 		<< "\t\t}";
-  //     delete it->second;
-  //     it->second = NULL;
-  //   }
-  // std::cout << std::endl << "\t]" << std::endl << "}" << std::endl;
-  
 
   delete c;
   delete rev_c;

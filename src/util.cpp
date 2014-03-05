@@ -64,7 +64,7 @@ Nucleotide cton ( char c )
       break;
     default:
 #ifndef DEBUG
-      std::cerr << "ERROR: Received char '" << c << "' " 
+      std::cerr << "ERROR: Received char '" << c << "' "
 		<< " int( " << int(c) << " ). Which base is it?"
 		<< std::endl;
 #endif
@@ -147,18 +147,18 @@ ofstream& operator<<( ofstream& out, const EdgeInterval& edgeint )
   return out;
 }
 
-ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
+ifstream& operator>>( ifstream& in, EdgeInterval* edgeint )
 {
   // First we read the _extendI interval
   BWTPosition extend_b =0;
   in.read( (char *) &extend_b, sizeof( BWTPosition ) );
   BWTPosition extend_e =0;
   in.read( (char *) &extend_e, sizeof( BWTPosition ) );
-  
+
   // Then we read the number of intervals in _suffixI (an unsigned long)
   unsigned int length =0;
   in.read( (char *) &length, sizeof( unsigned int ) );
-  
+
   // We read the first _suffixI (we are sure that at least ONE interval is in
   // _suffixI)
   BWTPosition suffix_b =0;
@@ -171,7 +171,53 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
   if( extend_b != extend_e )
     {
       // Then we create the edgeinterval
-      *edgeint = new EdgeInterval( extend_b, extend_e, suffix_b, suffix_e, suffix_len );
+      edgeint = new EdgeInterval( extend_b, extend_e, suffix_b, suffix_e, suffix_len );
+
+      // Finally, we read all the remaining intervals in _suffixI (if needed)
+      for( unsigned long i( 1 ); i < length; ++i )
+	{
+	  in.read( (char *) &suffix_b, sizeof( BWTPosition ) );
+	  in.read( (char *) &suffix_e, sizeof( BWTPosition ) );
+	  in.read( (char *) &suffix_len, sizeof( EdgeLength ) );
+	  if( suffix_e > suffix_b )
+	    {
+	      QInterval temp( suffix_b, suffix_e );
+	      edgeint->add_suffix_interval( &temp, suffix_len );
+	    }
+	}
+    }
+  else
+    {
+      edgeint = NULL;
+    }
+  return in;
+}
+
+ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
+{
+  // First we read the _extendI interval
+  BWTPosition extend_b =0;
+  in.read( (char *) &extend_b, sizeof( BWTPosition ) );
+  BWTPosition extend_e =0;
+  in.read( (char *) &extend_e, sizeof( BWTPosition ) );
+
+  // Then we read the number of intervals in _suffixI (an unsigned long)
+  unsigned int length =0;
+  in.read( (char *) &length, sizeof( unsigned int ) );
+
+  // We read the first _suffixI (we are sure that at least ONE interval is in
+  // _suffixI)
+  BWTPosition suffix_b =0;
+  in.read( (char *) &suffix_b, sizeof( BWTPosition ) );
+  BWTPosition suffix_e =0;
+  in.read( (char *) &suffix_e, sizeof( BWTPosition ) );
+  EdgeLength suffix_len =0;
+  in.read( (char *) &suffix_len, sizeof( EdgeLength ) );
+
+  if( extend_b != extend_e )
+    {
+      // Then we create the edgeinterval
+      (*edgeint) = new EdgeInterval( extend_b, extend_e, suffix_b, suffix_e, suffix_len );
 
       // Finally, we read all the remaining intervals in _suffixI (if needed)
       for( unsigned long i( 1 ); i < length; ++i )
@@ -188,10 +234,11 @@ ifstream& operator>>( ifstream& in, EdgeInterval** edgeint )
     }
   else
     {
-      *edgeint = NULL;
+      edgeint = NULL;
     }
   return in;
 }
+
 
 ofstream& operator<<( ofstream& out, const JoinedQInterval& jint )
 {

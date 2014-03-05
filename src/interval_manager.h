@@ -193,7 +193,7 @@ public:
       }
     (*(_outputFiles[ (int) n ])) << i;
     // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
-    return true;  
+    return true;
   } // add_interval
 
 private:
@@ -220,7 +220,7 @@ private:
     _buffer.clear( );
 
     interval_t* i = NULL;
-    while( _buffer.size( ) < IM_BUFFERSIZE && 
+    while( _buffer.size( ) < IM_BUFFERSIZE &&
 	   ( ( _inputFile && ((*_inputFile) >> &i ) ) || ( _nextInputFile < _filenames.size( ) ) ) )
       {
 	if( i == NULL )
