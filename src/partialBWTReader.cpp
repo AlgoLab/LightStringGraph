@@ -72,6 +72,8 @@ bool partialBWTReader::move_to ( BWTPosition & p )
     {
       std::cerr << "Can't move to " << p << " because the current position is "
 		<< _start + _position << std::endl;
+      std::cerr << "_start    = " << _start << std::endl;
+      std::cerr << "_position = " << _position << std::endl;
       std::exit( -1 );
     }
   while ( ( _bufferlen != 0 ) &&
@@ -81,10 +83,10 @@ bool partialBWTReader::move_to ( BWTPosition & p )
       char currentChar = _buffer[ _position ];
       ++_occurrencesBeforeStart[ cton( currentChar ) ];
 #ifdef DEBUG_VERBOSE
-      if( cton( currentChar ) == NOT_IN_ALPHABET )
-	std::cout << "Found NOT_IN_ALPHABET in position : " << _start + _position << std::endl;
-      else if (currentChar == 'N')
-	std::cout << "Found N in position : " << _start + _position << std::endl;
+      if( cton( currentChar ) == ALPHABET_SIZE )
+	std::cerr << "Found ALPHABET_SIZE in position : " << _start + _position << std::endl;
+      else if( cton( currentChar ) == BASE_N )
+	std::cerr << "Found N in position : " << _start + _position << std::endl;
 #endif
       ++_position;
       if ( _position == _bufferlen )
