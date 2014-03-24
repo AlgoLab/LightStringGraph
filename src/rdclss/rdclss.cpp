@@ -50,11 +50,8 @@ void spliced_classifier( BWTReader& bwtr, GSAReader& gsar,
 	    {
 	      if( (*it)->numSeq >= readsnum )
 		(*it)->numSeq -= readsnum;
-	      // std::cerr << (*it)->numSeq << " spliced " << numofbases << std::endl;
 	      long arrayposition = (*it)->numSeq / 8;
 	      short offset = (*it)->numSeq % 8;
-	      // std::cout << "Array position: " << arrayposition << std::endl
-	      // 		<< "Offset: " << offset << std::endl;
 	      splicedflag[ arrayposition ] |= (0b10000000 >> offset);
 	      delete *it;
 	    }
@@ -209,9 +206,9 @@ int main( int argc, char** argv )
       for( int j( 0 ); j < 8 && i*8+j < nreads; ++j )
 	{
 	  if( splicedflag[ i ] & (0b10000000 >> j ) )
-	    std::cout << 1;
+	    std::cerr << 1;
 	  else
-	    std::cout << 0;
+	    std::cerr << 0;
 	}
     }
 

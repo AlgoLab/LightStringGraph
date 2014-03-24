@@ -15,3 +15,7 @@ data/
 *.lai
 *.la
 *.a
+
+# Dotfiles
+.*
+!/.gitignore

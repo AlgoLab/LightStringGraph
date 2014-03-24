@@ -11,11 +11,11 @@ BWTReader::BWTReader ( vector< string >& filenamesIN )
     }
 
 #ifdef DEBUG_VERBOSE
-  std::cout << "Initializing BWTReader on files :" << std::endl;
+  std::cerr << "Initializing BWTReader on files :" << std::endl;
   for ( vector< string >::iterator it = _filenamesIN.begin();
 	it != _filenamesIN.end();
 	++it)
-    std::cout << *it << std::endl;
+    std::cerr << *it << std::endl;
 #endif
 
   if ( _filenamesIN.size() >= 1 )
@@ -50,12 +50,21 @@ bool BWTReader::move_to ( BWTPosition & p )
 	  return false;
 	}
 #ifdef DEBUG_VERBOSE
-      std::cout << "BWT trying to move to position " << p << " that is outside current file." << std::endl;
-      std::cout << "Open BWT file: " << _filenamesIN[ _nextBWTFilename ] << std::endl;
+      std::cerr << "BWT trying to move to position " << p << " that is outside current file." << std::endl;
+      std::cerr << "Open BWT file: " << _filenamesIN[ _nextBWTFilename ] << std::endl;
 #endif
       partialBWTReader* nextBWT =
 	new partialBWTReader( _filenamesIN[ _nextBWTFilename++ ], _currentBWT->get_position( ), _currentBWT->get_Pi( ) );
 
+#ifdef DEBUG_VERBOSE
+      if(_nextBWTFilename < _filenamesIN.size())
+	std::cerr << "Next BWT file is " << _filenamesIN[_nextBWTFilename]
+		  << std::endl << " index = " << _nextBWTFilename << std::endl;
+      else
+	std::cerr << "Next BWT file is " << "NONE"
+		  << std::endl << " index = " << _nextBWTFilename << std::endl;
+#endif
+	
       delete _currentBWT;
       _currentBWT = nextBWT;
     }
@@ -72,9 +81,17 @@ vector< NucleoCounter >* BWTReader::get_C ( )
   BWTPosition pos = 0;
 
   // Move to the end
-  for ( ; _nextBWTFilename < ALPHABET_SIZE -1; ++_nextBWTFilename)
+  // for ( ; _nextBWTFilename < ALPHABET_SIZE -1; ++_nextBWTFilename)
+    {
       while ( this->move_to( pos ) )
-	pos += (BWTPosition) BUFFERSIZE;
+	{
+	  pos += (BWTPosition) BUFFERSIZE;
+	}
+    }
+
+#ifdef DEBUG_VERBOSE
+  std::cerr << "Reached the end.." << std::endl;
+#endif
 
   vector< NucleoCounter >* C = new vector< NucleoCounter >();
   NucleoCounter acc =0;
@@ -96,7 +113,7 @@ void BWTReader::reset ( )
   delete _currentBWT;
   _currentBWT = new partialBWTReader ( _filenamesIN[ 0 ] );
 #ifdef DEBUG_VERBOSE
-  std::cout << "(RESET) Open BWT file: " << _filenamesIN[ 0 ] << std::endl;
+  std::cerr << "(RESET) Open BWT file: " << _filenamesIN[ 0 ] << std::endl;
 #endif
   _nextBWTFilename = 1;
 }

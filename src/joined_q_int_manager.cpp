@@ -116,7 +116,7 @@
 // 	}
 //       remove( nextfile.str().c_str() );
 // #ifdef DEBUG_VERBOSE
-// 	std::cout << "Renamed file " << nextfile.str() << " to " << *it << std::endl;
+// 	std::cerr << "Renamed file " << nextfile.str() << " to " << *it << std::endl;
 // #endif
 //     }
 //   _init_new_outputfiles( );
@@ -141,7 +141,7 @@
 //       return false;
 //     }
 // #ifdef DEBUG_VERBOSE
-//   std::cout << "WRITING " << i.get_interval().get_begin() << " "
+//   std::cerr << "WRITING " << i.get_interval().get_begin() << " "
 // 	    << i.get_interval().get_end() << " "
 // 	    << i.get_reverse_interval().get_begin() << " "
 // 	    << i.get_reverse_interval().get_end() << " TO " << ntoc( n ) << std::endl;

@@ -4,7 +4,7 @@ SRC_DIR	=src/
 OBJ_DIR	=obj/
 BIN_DIR	=bin/
 
-CFLAGS	= -g -Wall -DDEBUG -O2 -march=native -Wno-deprecated
+CFLAGS	= -g -Wall -DDEBUG -O2 -march=native -Wno-deprecated -std=gnu++0x
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 

@@ -125,7 +125,7 @@ public:
 	  }
 	remove( nextfile.str().c_str() );
 #ifdef DEBUG_VERBOSE
-	std::cout << "Renamed file " << nextfile.str() << " to " << *it << std::endl;
+	std::cerr << "Renamed file " << nextfile.str() << " to " << *it << std::endl;
 #endif
       }
     _init_new_outputfiles( );
