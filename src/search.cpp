@@ -184,6 +184,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
   unsigned long int nwintc  =0; // new interval counter
   unsigned long int rejintc =0; // rejected LT interval counter
   unsigned long int mrgintc =0; // intervals from imgr merged with the ones from LT
+  unsigned long int nwett   =0; // new edges to test
 
   // read first interval from LT if it exists
   if(! ((*LT) >> &i_l) )
@@ -217,8 +218,15 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	  BWTPosition end_f_i = i_l->get_first_interval( ).get_end( );        // end of Q'$-interval
 	  BWTPosition end_s_i = i_l->get_second_interval( )[ 0 ]->get_end( ); // end of Q'-interval
 
+#ifdef DEBUG_VERBOSE
+	  std::cerr << "In search_step_left : first section" << std::endl;
+	  std::cerr << "Moving to position :" << begin_f_i << std::endl;
+#endif
 	  b.move_to( begin_f_i );
 	  vector< NucleoCounter > occ_b( b.get_Pi( ) );
+#ifdef DEBUG_VERBOSE
+	  std::cerr << "Moving to position :" << end_s_i << std::endl;
+#endif
 	  b.move_to( end_f_i );
 	  vector< NucleoCounter > occ_e_f( b.get_Pi( ) );
 	  b.move_to( end_s_i );
@@ -251,7 +259,17 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 							   i_l->get_len( )[ i ] +1 );
 		      if( base == BASE_$ )
 			{
-			  edges_to_test->push_back( new_interval );
+			  std::vector< EdgeLength >::iterator eit = new_interval->get_len().begin();
+			  std::vector< QInterval* >::iterator qit = new_interval->get_second_interval().begin();
+			  for(; qit != new_interval->get_second_interval().end(); ++qit, ++eit)
+			    {
+			      std::cout << "(" << new_interval->get_first_interval().get_begin()
+					<< "," << new_interval->get_first_interval().get_end() << ")";
+			      std::cout << "(" << (*qit)->get_begin()
+					<< "," << (*qit)->get_end() << ")";
+			      std::cout << *eit << "\n";
+			    }
+			  // edges_to_test->push_back( new_interval );
 			}
 		      else
 			{
@@ -278,8 +296,15 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	  BWTPosition begin_f = i_m->get_first_interval( ).get_begin( );  // begin of Q'$-interval (same as begin Q'-interval)
 	  BWTPosition end_f = i_m->get_first_interval( ).get_end( );      // end of Q'$-interval
 
+#ifdef DEBUG_VERBOSE
+	  std::cerr << "In search_step_left : second section" << std::endl;
+	  std::cerr << "Moving to position :" << begin_f << std::endl;
+#endif
 	  b.move_to( begin_f );
 	  vector< NucleoCounter > occ_b( b.get_Pi( ) );
+#ifdef DEBUG_VERBOSE
+	  std::cerr << "Moving to position :" << end_f << std::endl;
+#endif
 	  b.move_to( end_f );
 	  vector< NucleoCounter > occ_e( b.get_Pi( ) );
 
@@ -295,7 +320,19 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 		  new_interval->add_suffix_interval( i_m->get_second_interval( )[ i ],
 						     i_m->get_len( )[ i ] );
 		}
-	      edges_to_test->push_back( new_interval );
+
+	      std::vector< EdgeLength >::iterator eit = new_interval->get_len().begin();
+	      std::vector< QInterval* >::iterator qit = new_interval->get_second_interval().begin();
+	      for(; qit != new_interval->get_second_interval().end(); ++qit, ++eit)
+		{
+		  std::cout << "(" << new_interval->get_first_interval().get_begin()
+			    << "," << new_interval->get_first_interval().get_end() << ")";
+		  std::cout << "(" << (*qit)->get_begin()
+			    << "," << (*qit)->get_end() << ")";
+		  std::cout << *eit << "\n";
+		}
+	      
+	      // edges_to_test->push_back( new_interval );
 	    }
 	  else
 	    {
@@ -396,8 +433,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
   std::cerr << "--> Generated " << nwintc << " new intervals on BWT'" << std::endl;
   std::cerr << "--> Merged " << mrgintc << " intervals from lt and from interval manager" << std::endl;
   std::cerr << "--> Rejected " << rejintc << " intervals from LT " << std::endl;
-  std::cerr << "--> Got " << edges_to_test->size( ) << " new intervals on GSA to test." 
-	    << std::endl;
+  std::cerr << "--> Got " << nwett << " new edges to test."  << std::endl;
 #endif
   return edges_to_test;
 }

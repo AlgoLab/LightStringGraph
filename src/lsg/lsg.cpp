@@ -118,10 +118,14 @@ int main ( int argc, char** argv )
   std::cerr.flush( );
 
   vector< NucleoCounter >* c = br.get_C( );
+#ifdef DEBUG_VERBOSE
+  std::cerr << "Building vector rev_C..";
+#endif
   vector< NucleoCounter >* rev_c = revbr.get_C( ); // Actually there's no need
 						   // for this. Maybe we can
 						   // simply check if c and
 						   // rev_c are equal.
+ 
   std::cerr << "done." << std::endl;
   std::cerr << "C contains : " << std::endl;
 
@@ -134,14 +138,27 @@ int main ( int argc, char** argv )
       imgr.add_interval ( jint, (Nucleotide) nucl );
     }
 
+#ifdef DEBUG_VERBOSE
+  bool crevcequal = true;
+  for(int nucl(BASE_A); (unsigned int) nucl < ALPHABET_SIZE; ++nucl)
+    {
+      if(c->at(nucl) != rev_c->at(nucl))
+	crevcequal = false;
+    }
+  if(crevcequal)
+    std::cerr << "C and REV_C are equals" << std::endl;
+  else
+    std::cerr << "C and REV_C are not equals" << std::endl;
+#endif
+
   std::cerr.flush( );
   imgr.swap_files();
 
   build_tau_intervals( br, imgr, *c, TAU);
 
   // temporary
-  SGraph sg; // String graph
-  Precedencies p; // p[ x ] = y if exists an edge y->x in sg
+  // SGraph sg; // String graph
+  // Precedencies p; // p[ x ] = y if exists an edge y->x in sg
 
   for( int i( 0 ); i < CYCNUM; ++i ) // TODO: while exists interval in imgr or revimgr
     {
@@ -151,19 +168,22 @@ int main ( int argc, char** argv )
       std::cerr << "Left search step #" << i+1 << std::endl;
       br.reset( );
       revbr.reset( );
-      size_t newlti = search_step_left( br, imgr, *c, "oedgeinterval" );
+      size_t newlti = search_step_left( br, imgr, *c, P_FILE );
       imgr.swap_files( );
       std::cerr << "--> Radix sorting " << newlti << " elements..." << std::endl;
-      std::ifstream* newLT = ext_sort( newlti, "oedgeinterval" );
+      std::ifstream* newLT = ext_sort( newlti, P_FILE );
 
       std::cerr << "Right search step #" << i+1 << std::endl;
       RT = search_step_right( revbr, revimgr, *rev_c, newLT );
+
       revimgr.swap_files( );
       newLT->close();
       delete newLT;
       RT->clear( );
       delete RT;
 
+      remove(P_FILE.c_str());
+      remove(MERGED_FILES.c_str());
       // All intervals got from search_step_right should be in GSA[ $ ]
     }
 

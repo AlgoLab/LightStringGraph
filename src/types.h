@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <cstdint>
 
 using std::vector;
 
@@ -17,13 +18,13 @@ using std::vector;
 #define QIntervalManager IntervalManager< QInterval >
 
 // Position on a BWT
-typedef unsigned int BWTPosition; // 2^32 positions = ~ 4 billion bases
+typedef uint64_t BWTPosition;
 
 // Edge Length
 typedef unsigned int EdgeLength; // should be enough for short reads
 
 // Nucleotide counter
-typedef unsigned int NucleoCounter;
+typedef uint64_t NucleoCounter;
 
 // Possible Nucleotide in sequence
 enum Nucleotide
