@@ -2,9 +2,10 @@
 
 // ctor
 QInterval::QInterval ( const BWTPosition& begin, 
-		       const BWTPosition& end ) : 
-  _begin( begin ), _end( end )
+		       const BWTPosition& end )
 {
+  _begin = begin;
+  _end = end;
 }
 
 // destructor

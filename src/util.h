@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <vector>
 #include <fstream>
+#include <ctime>
 
 #include "types.h"
 #include "edge_joined_interval.h"
@@ -37,5 +38,7 @@ ifstream& operator>>( ifstream&, EdgeInterval** );
 ofstream& operator<<( ofstream&, const JoinedQInterval& );
 
 ifstream& operator>>( ifstream&, JoinedQInterval* );
+
+std::string now( const char* format );
 
 #endif

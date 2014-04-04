@@ -4,7 +4,9 @@ SRC_DIR	=src/
 OBJ_DIR	=obj/
 BIN_DIR	=bin/
 
-CFLAGS	= -g -Wall -DDEBUG -O2 -march=native -Wno-deprecated -std=gnu++0x
+STXXLLIB=-L${STXXLPATH}/lib -lstxxl -lpthread
+STXXLINC=-I${STXXLPATH}/include
+CFLAGS	= -g -Wall -DDEBUG -O2 -march=native -Wno-deprecated -std=gnu++0x -I. -fopenmp
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 
@@ -36,21 +38,21 @@ all: lsg bgsa
 ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	@echo '* Compiling $<'
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) \
+	$(CXX) $(CXXFLAGS) ${STXXLINC} \
 	-o $@ \
 	-c $< -I$(SRC_DIR)
 
 lsg: $(LSG_DEP)
-	@echo 'Linking $@'
+	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
-	@$(CXX) $(CXXFLAGS) \
-	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR)
+	$(CXX) $(CXXFLAGS) \
+	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR)  ${STXXLLIB}
 
 bgsa: $(BGSA_DEP)
-	@echo 'Linking $@'
+	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
-	@$(CXX) $(CXXFLAGS) \
-	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR)
+	$(CXX) $(CXXFLAGS) \
+	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR) ${STXXLLIB}
 
 clean:
 	@echo "Cleaning..."

@@ -10,6 +10,7 @@ void build_tau_intervals( BWTReader& b, QIntervalManager& imgr,
 #ifdef DEBUG
       unsigned long int nwintc =0;
 #endif
+      std::cerr << "[ " << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;      
       std::cerr << "Building tau intervals - " << i+1 << "/" << T << std::endl;
       while( (qint = imgr.get_next_interval( ) ) )
 	{
@@ -99,7 +100,7 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr,
 
 
 size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
-			 vector< NucleoCounter >& C, std::string outputfn )
+			 vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v )
 {
   JoinedQInterval* jqin;
   unsigned long int nwintc =0; // new intervals counter
@@ -107,7 +108,7 @@ size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
   unsigned long int uniquebkwe =0; // unique backward extension
   // vector< EdgeInterval* >* LT = new vector< EdgeInterval* >(); // Left-terminated
 							     // intervals
-  std::ofstream outputLT( outputfn.c_str(), std::ios::binary );
+  // std::ofstream outputLT( outputfn.c_str(), std::ios::binary );
   while( (jqin = jqmgr.get_next_interval()) )
     {
       // Get occ at the beginning and end of the interval
@@ -139,13 +140,20 @@ size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
 	    {
 	      // New left-terminated interval
 	      ++nwltc;
-	      EdgeInterval* new_interval =
-		new EdgeInterval ( new_rev_begin, new_rev_end, 
-				   jqin->get_reverse_interval( ).get_begin( ),
-				   jqin->get_reverse_interval( ).get_end( ), 
-				   0 );
-	      outputLT << *new_interval;
-	      delete new_interval;
+	      PODEdgeInterval new_interval;
+	      new_interval.b1 = new_rev_begin;
+	      new_interval.e1 = new_rev_end;
+	      new_interval.b2 = jqin->get_reverse_interval().get_begin();
+	      new_interval.e2 = jqin->get_reverse_interval().get_end();
+	      v.push_back(new_interval);
+	      // EdgeInterval* new_interval =
+	      // 	new EdgeInterval ( new_rev_begin, new_rev_end, 
+	      // 			   jqin->get_reverse_interval( ).get_begin( ),
+	      // 			   jqin->get_reverse_interval( ).get_end( ), 
+	      // 			   0 );
+	      
+	      // outputLT << *new_interval;
+	      // delete new_interval;
 	      //LT->push_back( new_interval );
 	    }
 
@@ -155,10 +163,8 @@ size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
 	      ++uniquebkwe;
 	    }
 	} // ~for
-      // delete jqin;
-    } // ~while
 
-  outputLT.close();
+    } // ~while
 
 #ifdef DEBUG
   std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
@@ -168,16 +174,15 @@ size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
 	    << std::endl;
 #endif
 
-  // std::cerr << "--> Sorting LT" << std::endl;
-  // std::sort( LT->begin(), LT->end(), CompareEdgeIntervalReverse );
   return nwltc;
 }
 
-vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, 
-					    vector< NucleoCounter >& C, std::ifstream* LT )
+//vector< EdgeInterval* >*
+void search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, 
+			vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v )
 {
 
-  vector< EdgeInterval* >* edges_to_test = new vector< EdgeInterval* >( );
+  // vector< EdgeInterval* >* edges_to_test = new vector< EdgeInterval* >( );
   EdgeInterval* i_l = NULL; // interval from LT
   EdgeInterval* i_m = imgr.get_next_interval( ); // interval from imgr
 
@@ -185,10 +190,22 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
   unsigned long int rejintc =0; // rejected LT interval counter
   unsigned long int mrgintc =0; // intervals from imgr merged with the ones from LT
   unsigned long int nwett   =0; // new edges to test
+  unsigned long int v_pos   =0; // Position reached in v
 
   // read first interval from LT if it exists
-  if(! ((*LT) >> &i_l) )
-    i_l = NULL;
+  if(v_pos < v.size())
+    {
+      PODEdgeInterval x = v[v_pos];
+      i_l = new EdgeInterval(x.b1, x.e1, x.b2, x.e2, 0);
+      ++v_pos;
+    }
+  else
+    {
+      i_l = NULL;
+    }
+
+  // if(! ((*LT) >> &i_l) )
+  //   i_l = NULL;
 
   while( ( i_l != NULL ) || ( i_m != NULL ) )
     {
@@ -270,6 +287,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 			      std::cout << *eit << "\n";
 			    }
 			  // edges_to_test->push_back( new_interval );
+			  delete new_interval;
 			}
 		      else
 			{
@@ -286,9 +304,20 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	    }
 
 	  delete i_l;
-	  if(!( (*LT) >> &i_l ))
-	    i_l = NULL;
-	} // ~if i_l comes before than i_m
+	  if(v_pos < v.size())
+	    {
+	      PODEdgeInterval x = v[v_pos];
+	      i_l = new EdgeInterval(x.b1, x.e1, x.b2, x.e2, 0);
+	      ++v_pos;
+	    }
+	  else
+	    {
+	      i_l = NULL;
+	    }
+	  
+	  // if(!( (*LT) >> &i_l ))
+	  //   i_l = NULL;
+	} // ~if i_l comes before i_m
       else if( ( i_m != NULL ) && ( ( i_l == NULL ) || CompareEdgeInterval( i_m, i_l ) ) )
 	{
 	  // Extend the interval that comes from the interval manager. If it
@@ -331,7 +360,7 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 			    << "," << (*qit)->get_end() << ")";
 		  std::cout << *eit << "\n";
 		}
-	      
+	      delete new_interval;
 	      // edges_to_test->push_back( new_interval );
 	    }
 	  else
@@ -427,15 +456,15 @@ vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalMan
 	}
     } // ~while interval exists
 
-  std::cerr << "--> Sorting RT" << std::endl;
-  std::sort( edges_to_test->begin( ), edges_to_test->end( ), CompareEdgeIntervalReverse );
+  // std::cerr << "--> Sorting RT" << std::endl;
+  // std::sort( edges_to_test->begin( ), edges_to_test->end( ), CompareEdgeIntervalReverse );
 #ifdef DEBUG
   std::cerr << "--> Generated " << nwintc << " new intervals on BWT'" << std::endl;
   std::cerr << "--> Merged " << mrgintc << " intervals from lt and from interval manager" << std::endl;
   std::cerr << "--> Rejected " << rejintc << " intervals from LT " << std::endl;
   std::cerr << "--> Got " << nwett << " new edges to test."  << std::endl;
 #endif
-  return edges_to_test;
+
 }
 
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )

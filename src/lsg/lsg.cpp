@@ -3,6 +3,7 @@
 #include <deque>
 #include <sstream>
 #include <iostream>
+#include <stxxl.h>
 
 #include "BWTReader.h"
 #include "GSAReader.h"
@@ -18,21 +19,27 @@ using std::string;
 using std::deque;
 using std::stringstream;
 
-int TAU    =0;
-int CYCNUM =0;
+int			TAU    		=0;
+int			CYCNUM 		=0;
+//const stxxl::uint64	BLOCK_SIZE 	=256 * 1024 * 1024; // 256 MBytes
+const stxxl::uint64	MEMORY_SORT_SIZE=512 * 1024 * 1024; // 512 MBytes
 
 void show_usage(){
     std::cerr << "Usage: lsg -B <BWTFilenamePrefix> ";
     std::cerr << "-R <RevBWTFilenamePrefix> ";
     std::cerr << "-G <gsaFilename> ";
     std::cerr << "-T <TAU> ";
-    std::cerr << "-C <CycNum>" << std::endl;
+    std::cerr << "-C <CycNum> ";
+    // std::cerr << "-M <memoryConsumption> ";
+    std::cerr << std::endl;
     std::cerr << std::endl << "Options:" << std::endl;
     std::cerr << "\t-B, --BWT \t <BWTFilenamePrefix>" << std::endl;
     std::cerr << "\t-R, --RevBWT \t <RevBWTFilenamePrefix>" << std::endl;
     std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
     std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
     std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
+    // std::cerr << "\t-M, --Mem \t <memoryConsumption>";
+    // std::cerr << std::endl;
     std::cerr << std::endl;
 }
 
@@ -74,10 +81,10 @@ int main ( int argc, char** argv )
             } else {
 	      std::cerr << "Invalid arguments, please try again.\n";
 	      return 1;
-            }
-        }
+	    }
+	}
     }
-
+    
     if ( bwt_pre == "" || rev_bwt_pre == "" || gsa_file == "") {
         std::cerr << "Missing argument(s)." << std::endl;
         show_usage();
@@ -162,30 +169,43 @@ int main ( int argc, char** argv )
 
   for( int i( 0 ); i < CYCNUM; ++i ) // TODO: while exists interval in imgr or revimgr
     {
+      stxxl::VECTOR_GENERATOR< PODEdgeInterval >::result prefix_interval;
       // vector< EdgeInterval* >* LT;
-      vector< EdgeInterval* >* RT;
+      // vector< EdgeInterval* >* RT;
 
+      std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
       std::cerr << "Left search step #" << i+1 << std::endl;
       br.reset( );
       revbr.reset( );
-      size_t newlti = search_step_left( br, imgr, *c, P_FILE );
+      size_t newlti = search_step_left( br, imgr, *c, prefix_interval);
       imgr.swap_files( );
-      std::cerr << "--> Radix sorting " << newlti << " elements..." << std::endl;
-      std::ifstream* newLT = ext_sort( newlti, P_FILE );
-
+      std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
+      std::cerr << "--> Sorting " << newlti << " elements..." << std::endl;
+      stxxl::sort(prefix_interval.begin(), prefix_interval.end(), SortPODEdgeInterval(), MEMORY_SORT_SIZE);
+      // std::ifstream* newLT = ext_sort( P_FILE );
+      // remove(P_FILE.c_str());
+      // std::ifstream* newLT = new std::ifstream( MERGED_FILES.c_str(), std::ios::binary );
+      
+      std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
       std::cerr << "Right search step #" << i+1 << std::endl;
-      RT = search_step_right( revbr, revimgr, *rev_c, newLT );
+      search_step_right( revbr, revimgr, *rev_c, prefix_interval );
 
       revimgr.swap_files( );
-      newLT->close();
-      delete newLT;
-      RT->clear( );
-      delete RT;
+      // newLT->close();
+      // delete newLT;
+      // RT->clear( );
+      // delete RT;
 
-      remove(P_FILE.c_str());
       remove(MERGED_FILES.c_str());
       // All intervals got from search_step_right should be in GSA[ $ ]
     }
+
+  // for( std::vector<string>::iterator it=qIntFilenames.begin(); it != qIntFilenames.end();
+  //      ++it)
+  //   remove((*it).c_str());
+  // for( std::vector<string>::iterator it=revqIntFilenames.begin(); it != revqIntFilenames.end();
+  //      ++it)
+  //   remove((*it).c_str());
 
   delete c;
   delete rev_c;

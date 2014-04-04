@@ -5,11 +5,13 @@
 
 /* Basic class that represent Q-Intervals. */
 
-class QInterval
+struct PODQInterval
 {
- protected:
-  BWTPosition _begin, _end; // interval's start and end
+  BWTPosition _begin, _end;
+};
 
+class QInterval : public PODQInterval
+{
  public:
   QInterval ( const BWTPosition&, const BWTPosition& );
   ~QInterval ( );

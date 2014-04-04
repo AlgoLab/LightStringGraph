@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+#include <stxxl.h>
 
 #include "BWTReader.h"
 #include "joined_q_int_manager.h"
@@ -25,7 +26,7 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< N
 // Given the Q-intervals in jqmgr returns a deque of tuple of intervals
 // ( $Q-interval{begin, end}, Q-interval{begin, end} ).
 size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
-		       vector< NucleoCounter >& C, std::string outputfn );
+			 vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v );
 
 // Right step search
 // Given the Q-intervals in imgr and in LT extends them and returns a deque of
@@ -33,7 +34,9 @@ size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
 // that the first interval identifies the reads that have Q as suffix and the
 // second the reads that have Q as prefix.
 // IT DELETES THE CONTENT OF LT
-vector< EdgeInterval* >* search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, vector< NucleoCounter >& C, std::ifstream* LT );
+// vector< EdgeInterval* >*
+void search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr,
+			vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v );
 
 // Count the occurrences of characters lexicographically smaller than base.
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );

@@ -45,8 +45,16 @@ public:
       {
 	_filenames.push_back( *it );
 	// touch files
-	std::ofstream temp ((*it).c_str(), std::ios::binary);
-	temp.close();
+	std::ifstream t((*it).c_str(), std::ios::binary);
+	if(!t.good())
+	  {
+	    std::cerr << *it << " does not exists" << std::endl;
+	    std::ofstream temp ((*it).c_str(), std::ios::binary);
+	    temp.close();
+	  }
+	else
+	  std::cerr << *it << " does exists" << std::endl;
+	t.close();
       }
 
     _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
@@ -72,8 +80,8 @@ public:
 	  it != _outputFiles.end( ); ++it )
       {
 	(*it)->close( );
-	delete *it;
-	*it = NULL;
+	delete (*it);
+	(*it) = NULL;
       }
     if( _inputFile != NULL )
       {
@@ -85,7 +93,14 @@ public:
 	 it != _buffer.end( ); ++it )
       {
 	delete *it;
-	*it = NULL;
+	(*it) = NULL;
+      }
+
+    for( typename vector< string >::iterator it = _filenames.begin();
+	 it != _filenames.end(); ++it)
+      {
+	remove((*it).c_str());
+	remove( std::string((*it) + "_next").c_str());
       }
   } // ~IntervalManager
 
@@ -107,7 +122,7 @@ public:
       {
 	(*it)->flush();
 	(*it)->close();
-	delete *it;
+	delete (*it);
       }
     _outputFiles.clear();
     for ( vector< string >::iterator it = _filenames.begin( );

@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <limits>
 
 #include "q_interval.h"
 #include "types.h"
@@ -16,6 +17,50 @@ using std::ifstream;
  * EdgeInterval stores 2 intervals on BWT' and should be used during the right
  * extension procedure.
  *******************************************************************************/
+
+struct PODEdgeInterval {
+  BWTPosition b1;
+  BWTPosition e1;
+  BWTPosition b2;
+  BWTPosition e2;
+
+  PODEdgeInterval& operator=(const PODEdgeInterval& x)
+  {
+    b1 = x.b1;
+    e1 = x.e1;
+    b2 = x.b2;
+    e2 = x.e2;
+    return *this;
+  }
+};
+
+struct SortPODEdgeInterval {
+
+  bool operator()(const PODEdgeInterval& x, const PODEdgeInterval& y) const
+  {
+    return (x.b1 < y.b1);
+  }
+
+  static PODEdgeInterval min_value()
+  {
+    PODEdgeInterval x;
+    x.b1 = std::numeric_limits<BWTPosition>::min();
+    x.e1 = std::numeric_limits<BWTPosition>::min();
+    x.b2 = std::numeric_limits<BWTPosition>::min();
+    x.e2 = std::numeric_limits<BWTPosition>::min();
+    return x;
+  }
+
+  static PODEdgeInterval max_value()
+  {
+    PODEdgeInterval x;
+    x.b1 = std::numeric_limits<BWTPosition>::max();
+    x.e1 = std::numeric_limits<BWTPosition>::max();
+    x.b2 = std::numeric_limits<BWTPosition>::max();
+    x.e2 = std::numeric_limits<BWTPosition>::max();
+    return x;
+  }
+};
 
 class EdgeInterval
 {
