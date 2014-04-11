@@ -9,5 +9,5 @@ alist_add(adj_list*, uint32_t);
 int
 cmp(const void *, const void *);
 
-uint32_t *
-acompact(uint32_t, uint32_t *);
+void
+acompact(adj_list*);

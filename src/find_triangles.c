@@ -9,13 +9,13 @@
 #include <assert.h>
 #include "find_triangles.h"
 // The following size is the number of bits used
-#define TABLE_BITS 10
+#define TABLE_BITS 20
 #define TABLE_SIZE (1 << TABLE_BITS)
 #define MASKED_ENTRY(x) { x & (TABLE_SIZE - 1) }
 
-#define DEBUG 0
+#define LOG_TRACE 0
 #define debug_print(fmt, ...)                                           \
-    do { if (DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__); } while (0)
+    do { if (LOG_TRACE) fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, __LINE__, __func__, __VA_ARGS__); } while (0)
 
 void
 alist_add(adj_list* orig, uint32_t elem) {
@@ -44,13 +44,19 @@ int cmp(const void *a, const void *b){
 
 
 /* sort and remove all duplicates from an array */
-uint32_t *
-acompact(uint32_t count, uint32_t *array) {
+void
+acompact(adj_list* orig) {
+    uint32_t count = orig->count;
+    uint32_t *array = orig->list;
     qsort(array, count, sizeof(uint32_t), cmp);
+    for (unsigned int i=0; i<count; i++) {
+        debug_print("%d %d\n", i, array[i]);
+    }
     uint32_t distinct = 1;
     for (uint32_t i=1; i<count; i++)
         if (array[i-1] != array[i])
             distinct++;
+    debug_print("%d %d\n", count, distinct);
     uint32_t *new = malloc(distinct * sizeof(uint32_t));
     if (new == NULL)
         exit(EXIT_FAILURE);
@@ -59,8 +65,12 @@ acompact(uint32_t count, uint32_t *array) {
     for (uint32_t i=1; i<count; i++)
         if (array[i-1] != array[i])
             new[distinct++] = array[i];
+    for (unsigned int i=0; i<distinct; i++) {
+        debug_print("%d %d\n", i, new[i]);
+    }
     free(array);
-    return(new);
+    orig->list = new;
+    orig->count = distinct;
 }
 
 
@@ -92,7 +102,7 @@ main(void)
 
 /* compact and order adjacency list */
     for (uint32_t v=0; v < TABLE_SIZE; v++)
-        table[v]->list = acompact(table[v]->count, table[v]->list);
+        acompact(table[v]);
 
 
 /* output transitive arcs */
