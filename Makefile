@@ -8,7 +8,7 @@ CFLAGS	= -g -Wall -DDEBUG -O2 -march=native -Wno-deprecated
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 CFLAGS_EXTRA =  -m64 -std=c99 -pedantic -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
-CFLAGS_DEBUG = -g
+CFLAGS_DEBUG = -g  -lefence
 CFLAGS_LIBS = `pkg-config --cflags glib-2.0` `pkg-config --cflags zlib`
 LDLIBS = `pkg-config --libs glib-2.0` `pkg-config --libs zlib`
 
