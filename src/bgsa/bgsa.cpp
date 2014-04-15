@@ -15,30 +15,17 @@ void show_usage( )
 {
   std::cerr << "Usage: bgsa -i <GSAFileInput> ";
   std::cerr << "-o <GSAFileOutput> ";
+  std::cerr << "-l <length> ";
   std::cerr << std::endl << "Options:" << std::endl;
   std::cerr << "\t-i, --input \t <GSAFileInput>" << std::endl;
   std::cerr << "\t-o, --output \t <GSAFileOutput>" << std::endl;
+  std::cerr << "\t-l, --length \t <length>" << std::endl;
   std::cerr << std::endl;
-}
-
-// ifstream& operator>>( ifstream& in, GSAEntry& x )
-// {
-//   in.read( (char *) &x.sa, sizeof( unsigned int ) );
-//   in.read( (char *) &x.numSeq, sizeof( unsigned int ) );
-//   return in;
-// }
-
-ofstream& operator<<( ofstream& out, GSAEntry& x )
-{
-  out.write( (char *) &x.sa, sizeof( unsigned int ) );
-  out.write( (char *) &x.numSeq, sizeof( unsigned int ) );
-  out.flush( );
-  return out;
 }
 
 int main( int argc, char** argv )
 {
-  if( argc < 3 )
+  if( argc < 5 )
     {
       show_usage( );
       return 1;
@@ -46,6 +33,7 @@ int main( int argc, char** argv )
  
   string inputGSA ="";
   string outputGSA ="";
+  SequenceLength seqlen;
  
   for (int i = 1; i < argc; i++)
     {
@@ -55,7 +43,17 @@ int main( int argc, char** argv )
 	    inputGSA = string(argv[++i]);
 	else if (string(argv[i]) == "--output" || string(argv[i]) == "-o") 
 	    outputGSA = string(argv[++i]);
-      } 
+	else if (string(argv[i]) == "--length" || string(argv[i]) == "-l")
+	  {
+	    std::stringstream convert(string(argv[++i]));
+	    if( !( convert >> seqlen ) )
+	      {
+		std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (length)." << std::endl;
+		std::cerr << "Aborting.." << std::endl;
+		std::exit( -1 );
+	      }
+	  }
+      }
     else 
       {
 	std::cerr << "Invalid arguments, please try again.\n";
@@ -66,29 +64,20 @@ int main( int argc, char** argv )
   ifstream gsain( inputGSA.c_str( ), std::ios::binary );
   ofstream gsaout( outputGSA.c_str( ), std::ios::binary );
   
-  NucleoCounter sentinelnum =0;
-
   std::cerr << "Reconstructing GSA from " << inputGSA << " to " << outputGSA
-	    << "*..." << std::endl;
+	    << "...";
 
   GSAEntry x;
 
   while( gsain >> x )
     {
-      if( x.sa == 0 )
-	{
-	  gsaout << x;
-	  ++sentinelnum;
-	  if( sentinelnum % 5678 == 0 )
-	    std::cerr << "\rNumber of $ found : " << sentinelnum;
-	}
+      x.sa = seqlen - x.sa;
+      gsaout << x;
     }
-
-  std::cerr << "\rNumber of $ found : " << sentinelnum << std::endl;
-  std::cerr << "..done" << std::endl;
-  
+ 
   gsain.close( );
   gsaout.close( );
+  std::cerr << "..done" << std::endl;
 
   return 0;
 }
