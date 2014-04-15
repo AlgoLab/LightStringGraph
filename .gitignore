@@ -18,4 +18,6 @@ data/
 
 # Dotfiles
 .*
-!/.gitignore
+stxxl.*
+script/
+lib/
