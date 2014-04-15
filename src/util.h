@@ -39,6 +39,8 @@ ofstream& operator<<( ofstream&, const JoinedQInterval& );
 
 ifstream& operator>>( ifstream&, JoinedQInterval* );
 
+ifstream& operator>>( ifstream&, GSAEntry& );
+
 std::string now( const char* format );
 
 #endif

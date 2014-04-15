@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <stxxl.h>
 
 #include "types.h"
 #include "partialBWTReader.h"
@@ -43,6 +44,8 @@ class BWTReader
   /* - false otherwise                                                                     */
   /*****************************************************************************************/
   bool move_to ( BWTPosition& p );
+
+  void move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos );
 
   /****************************************************************************/
   /* Get PI vector (occurrences of every nucleotide before current position). */

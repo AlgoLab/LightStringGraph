@@ -21,12 +21,12 @@ void show_usage( )
   std::cerr << std::endl;
 }
 
-ifstream& operator>>( ifstream& in, GSAEntry& x )
-{
-  in.read( (char *) &x.sa, sizeof( unsigned int ) );
-  in.read( (char *) &x.numSeq, sizeof( unsigned int ) );
-  return in;
-}
+// ifstream& operator>>( ifstream& in, GSAEntry& x )
+// {
+//   in.read( (char *) &x.sa, sizeof( unsigned int ) );
+//   in.read( (char *) &x.numSeq, sizeof( unsigned int ) );
+//   return in;
+// }
 
 ofstream& operator<<( ofstream& out, GSAEntry& x )
 {

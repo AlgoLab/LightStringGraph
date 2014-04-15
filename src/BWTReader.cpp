@@ -35,6 +35,18 @@ BWTPosition BWTReader::get_position ( ) const
   return _currentBWT->get_position();
 }
 
+void BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
+{
+  for( BWTPosition i = _currentBWT->get_position(); i < p; ++i )
+    {
+      move_to( i );
+      if( cton(_currentBWT->get_current_nucleotide()) == BASE_$  )
+	prefixpos.push_back( i );
+    }
+  move_to( p );
+}
+
+
 bool BWTReader::move_to ( BWTPosition & p )
 {
   while( !_currentBWT->move_to( p ) )
@@ -55,15 +67,6 @@ bool BWTReader::move_to ( BWTPosition & p )
 #endif
       partialBWTReader* nextBWT =
 	new partialBWTReader( _filenamesIN[ _nextBWTFilename++ ], _currentBWT->get_position( ), _currentBWT->get_Pi( ) );
-
-#ifdef DEBUG_VERBOSE
-      if(_nextBWTFilename < _filenamesIN.size())
-	std::cerr << "Next BWT file is " << _filenamesIN[_nextBWTFilename]
-		  << std::endl << " index = " << _nextBWTFilename << std::endl;
-      else
-	std::cerr << "Next BWT file is " << "NONE"
-		  << std::endl << " index = " << _nextBWTFilename << std::endl;
-#endif
 	
       delete _currentBWT;
       _currentBWT = nextBWT;

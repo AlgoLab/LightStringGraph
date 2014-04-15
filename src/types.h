@@ -5,10 +5,9 @@
 #include <vector>
 #include <cstdint>
 
-using std::vector;
+#include <stxxl.h>
 
-#define BUFFERSIZE 1024
-#define IM_BUFFERSIZE 256
+using std::vector;
 
 // #define TAU 1
 // #define CYCNUM 99
@@ -41,11 +40,24 @@ enum Nucleotide
   };
 
 // As defined in BEETL/src/shared/Tools.hh (ElementType)
+
+// Type to represent: Number of sequences
+// below limits to 4 billion reads max - change to uint64_t for more
+typedef uint32_t SequenceNumber;
+
+// Type to represent: Sequence length (in biologic case 100)
+typedef uint32_t SequenceLength;
+
 struct GSAEntry
 {
-  unsigned int sa; // suffix array position
-  unsigned int numSeq; // sequence number
+  SequenceLength sa; // suffix array position
+  SequenceNumber numSeq; // sequence number
 };
+
+//typedef stxxl::vector< BWTPosition, PAGE_SIZE, stxxl::lru_pager< PAGE_NUM >, BLOCK_SIZE * 1024 * 1024, stxxl::RC > BWTPExtVect;
+//typedef stxxl::vector< SequenceNumber, PAGE_SIZE, stxxl::lru_pager< PAGE_NUM >, BLOCK_SIZE * 1024 * 1024, stxxl::RC > SeqNExtVect;
+typedef std::vector< BWTPosition > BWTPExtVect;
+typedef std::vector< SequenceNumber > SeqNExtVect;
 
 // temporary
 struct SGEdge

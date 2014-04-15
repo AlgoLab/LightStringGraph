@@ -6,11 +6,11 @@ char ntoc ( Nucleotide base )
 
   switch ( base )
     {
-    case BASE_A:
-      ret = 'A';
-      break;
     case BASE_$:
       ret = '$';
+      break;
+    case BASE_A:
+      ret = 'A';
       break;
     case BASE_C:
       ret = 'C';
@@ -295,6 +295,13 @@ ifstream& operator>>( ifstream& in, QInterval** i )
     *i = new QInterval( begin, end );
   else
     *i = NULL;
+  return in;
+}
+
+ifstream& operator>>( ifstream& in, GSAEntry& g )
+{
+  in.read( (char *) &g.sa, sizeof( SequenceLength ) );
+  in.read( (char *) &g.numSeq, sizeof( SequenceNumber ) );
   return in;
 }
 

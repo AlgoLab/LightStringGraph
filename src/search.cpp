@@ -1,46 +1,163 @@
 #include "search.h"
 
-void build_tau_intervals( BWTReader& b, QIntervalManager& imgr,
+void build_tau_intervals( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
 			  vector< NucleoCounter >& C, int T )
 {
-  // Populate
   QInterval* qint;
-  for( int i( 0 ); i < T; ++i )
+  for( int i( 1 ); i < T; ++i )
     {
-#ifdef DEBUG
-      unsigned long int nwintc =0;
-#endif
-      std::cerr << "[ " << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;      
-      std::cerr << "Building tau intervals - " << i+1 << "/" << T << std::endl;
-      while( (qint = imgr.get_next_interval( ) ) )
+      unsigned long int nwintc 	=0;
+      unsigned long int rejintc	=0;
+
+      std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
+      std::cerr << "--> Building tau intervals - " << i+1 << "/" << T << std::endl;
+      std::cerr << "--> Testing suffixes of length " << i << std::endl;
+      while( (qint = qmgr.get_next_interval()) )
 	{
 	  BWTPosition begin = qint->get_begin( );
 	  BWTPosition end = qint->get_end( );
-	  b.move_to( begin );
-	  vector< NucleoCounter > occ_begin( b.get_Pi( ) );
-	  b.move_to( end );
-	  vector< NucleoCounter > occ_end( b.get_Pi( ) );
-	  for( int base( 1 ); base < ALPHABET_SIZE; ++base )
+
+	  if( !(grdr.move_to( begin )) )
 	    {
-	      BWTPosition new_begin = C[ base ] + occ_begin[ base ];
-	      BWTPosition new_end = C[ base ] + occ_end[ base ];
-	      if( new_end - new_begin >= 2 )
+	      std::cerr << "ERROR IN: seach.cpp:build_tau_interval" << std::endl;
+	      std::cerr << "Can't move to " << begin << std::endl;
+	      std::cerr << "Aborting..." << std::endl;
+	      std::exit( -1 );
+	    }
+
+	  b.move_to( begin );
+	  GSAEntry beginGSA = grdr.get_v( );
+
+	  if( beginGSA.sa == (SequenceLength) i )
+	    {
+	      vector< NucleoCounter > occ_begin( b.get_Pi( ) );
+	      b.move_to( end );
+	      vector< NucleoCounter > occ_end( b.get_Pi( ) );
+	      for( int base( BASE_A ); base < ALPHABET_SIZE; ++base )
 		{
-		  // Shared substring
-#ifdef DEBUG
-		  ++nwintc;
-#endif
-		  QInterval new_interval ( new_begin, new_end );
-		  imgr.add_interval( new_interval, (Nucleotide) base );
+		  BWTPosition new_begin = C[ base ] + occ_begin[ base ];
+		  BWTPosition new_end 	= C[ base ] + occ_end[ base ];
+		  if( new_end - new_begin >= 2 )
+		    {
+		      // Shared substring
+		      ++nwintc;
+		      QInterval new_interval ( new_begin, new_end );
+		      qmgr.add_interval( new_interval, (Nucleotide) base );
+		    }
 		}
+	    }
+	  else
+	    {
+	      ++rejintc;
 	    }
 	}
       b.reset( );
-      imgr.swap_files( );
+      grdr.reset( );
+      qmgr.swap_files( );
 #ifdef DEBUG
       std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
+      std::cerr << "--> Rejected " << rejintc << " intervals (string is not suffix)." << std::endl;
 #endif
     }
+}
+
+void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr, vector< NucleoCounter >& C, int iteration )
+{
+  QInterval* qint		=NULL;
+  unsigned long int nwintc	=0;
+  unsigned long int rejintc	=0;
+  unsigned long int nwedgc	=0;
+  unsigned long int notsuffc	=0;
+
+  SeqNExtVect	rsuff;
+  SeqNExtVect	rpref;
+  BWTPExtVect	rprefixpos;
+
+  std::cerr << "--> Testing suffixes of length " << iteration << std::endl;
+  std::cerr << "--> Producing suffixes of length " << iteration +1 << std::endl;
+
+  while( (qint = qmgr.get_next_interval()) )
+    {
+      BWTPosition begin	= qint->get_begin();
+      BWTPosition end	= qint->get_end();
+
+      if( !(grdr.move_to( begin )) )
+	{
+	  std::cerr << "ERROR IN: search.cpp:left_step" << std::endl;
+	  std::cerr << "Can't move to " << begin << std::endl;
+	  std::cerr << "Aborting..." << std::endl;
+	  std::exit(-1);
+	}
+      GSAEntry gsafent 	= grdr.get_v(); // GSA entry @ begin
+
+      b.move_to( begin );
+
+      if( gsafent.sa == (SequenceLength) iteration )
+	{
+	  vector< NucleoCounter > occ_begin	= b.get_Pi();
+	  b.move_to_storing_sent( end, rprefixpos );
+	  vector< NucleoCounter > occ_end	= b.get_Pi();
+	  // Output edges if they exists
+	  if(rprefixpos.size() > 0)
+	    {
+
+	      grdr.get_seq_sent( iteration , rsuff );
+	      grdr.get_seq_at_pos( rprefixpos, rpref );
+
+	      size_t rsize = rsuff.size();
+	      size_t psize = rpref.size();
+
+	      if(rsize * psize > 0)
+		{
+		  nwedgc += rsize * psize;
+
+		  for( SeqNExtVect::iterator rsi = rsuff.begin(); rsi != rsuff.end(); ++rsi)
+		    for( SeqNExtVect::iterator psi = rpref.begin(); psi != rpref.end(); ++psi)
+		      std::cout << *rsi << "," << *psi << "," << iteration << std::endl;
+		  // std::cout << "-->FROM NODES" << std::endl;
+		  // for(SeqNExtVect::bufreader_type sufreader(rsuff); !sufreader.empty(); ++sufreader)
+		  //   {
+		  //     std::cout << *sufreader << std::endl;
+		  //   }
+		  // std::cout << "-->TO NODES" << std::endl;
+		  // for(SeqNExtVect::bufreader_type prefreader(rpref); !prefreader.empty(); ++prefreader)
+		  //   {
+		  //     std::cout << *prefreader << std::endl;
+		  //   }
+		}
+	    }
+	  rprefixpos.clear();
+	  rsuff.clear();
+	  rpref.clear();
+
+	  // Extend interval
+	  for( int base( BASE_A ); base < ALPHABET_SIZE; ++base )
+	    {
+	      BWTPosition new_begin	= C[ base ] + occ_begin[ base ];
+	      BWTPosition new_end	= C[ base ] + occ_end[ base ];
+	      if( new_end - new_begin >= 2 )
+		{
+		  QInterval new_interval( new_begin, new_end );
+		  qmgr.add_interval( new_interval, (Nucleotide) base );
+		  ++nwintc;
+		}
+	      else
+		{
+		  ++rejintc;
+		}
+	    }
+	}
+      else
+	{
+	  ++notsuffc;
+	}
+    }
+#ifdef DEBUG
+  std::cerr << "--> Generated " << nwintc << " new intervals" << std::endl;
+  std::cerr << "--> Rejected " << rejintc << " unique backward extensions" << std::endl;
+  std::cerr << "--> Rejected " << notsuffc << " intervals (pattern is not suffix)" << std::endl;
+  std::cerr << "--> Produced " << nwedgc << " new edges" << std::endl;
+#endif
 }
 
 void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, 
@@ -390,69 +507,6 @@ void search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr,
 	} // ~if i_m comes first than i_l
       else
 	{
-	  std::cerr << "ERROR: This shouldn't happen." << std::endl;
-	  std::cerr << "MERGED : ";
-	  if( merged )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "i_m NULL : ";
-	  if( i_m == NULL )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "i_l NULL : ";
-	  if( i_l == NULL )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "COMPARE i_m, i_l : ";
-	  if( CompareEdgeInterval( i_m, i_l ) )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "COMPARE i_l, i_m : ";
-	  if( CompareEdgeInterval( i_l, i_m ) )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "EQUALFIRST i_m, i_l : ";
-	  if( EqualFirstEdgeInterval( i_m, i_l ) )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "EQUALSECOND i_m, i_l : ";
-	  if( EqualSecondEdgeInterval( i_m, i_l ) )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "OVERLAP i_m->first, i_l->first : ";
-	  if( int_overlap( i_m->get_first_interval( ), i_m->get_first_interval( ) ) )
-	    std::cerr << "True";
-	  else
-	    std::cerr << "False";
-	  std::cerr << std::endl;
-
-	  std::cerr << "FIRST i_m : ";
-	  std::cerr << i_m->get_first_interval( ).get_begin( ) << ", " << i_m->get_first_interval( ).get_end( ) << std::endl;
-	  std::cerr << "FIRST i_l : ";
-	  std::cerr << i_l->get_first_interval( ).get_begin( ) << ", " << i_l->get_first_interval( ).get_end( ) << std::endl;
-
-	  std::exit( -1 );
 	}
     } // ~while interval exists
 

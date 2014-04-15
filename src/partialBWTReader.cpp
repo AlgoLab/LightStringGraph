@@ -50,6 +50,11 @@ vector< NucleoCounter >& partialBWTReader::get_Pi ( )
   return _occurrencesBeforeStart;
 }
 
+char partialBWTReader::get_current_nucleotide( )
+{
+  return _buffer[_position];
+}
+
 partialBWTReader::~partialBWTReader ( )
 {
   delete[] _buffer;
@@ -82,12 +87,6 @@ bool partialBWTReader::move_to ( BWTPosition & p )
     {
       char currentChar = _buffer[ _position ];
       ++_occurrencesBeforeStart[ cton( currentChar ) ];
-#ifdef DEBUG_VERBOSE
-      if( cton( currentChar ) == ALPHABET_SIZE )
-	std::cerr << "Found ALPHABET_SIZE in position : " << _start + _position << std::endl;
-      else if( cton( currentChar ) == BASE_N )
-	std::cerr << "Found N in position : " << _start + _position << std::endl;
-#endif
       ++_position;
       if ( _position == _bufferlen )
 	{

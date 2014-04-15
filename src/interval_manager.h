@@ -92,7 +92,7 @@ public:
     for( typename vector< interval_t* >::iterator it = _buffer.begin( );
 	 it != _buffer.end( ); ++it )
       {
-	delete *it;
+	delete (*it);
 	(*it) = NULL;
       }
 
@@ -130,7 +130,7 @@ public:
 	  ++it)
       {
 	std::ostringstream nextfile;
-	nextfile << *it << "_next";
+	nextfile << (*it) << "_next";
 	remove( (*it).c_str() );
 	if( rename( nextfile.str().c_str(), (*it).c_str() ) )
 	  {
@@ -144,8 +144,7 @@ public:
 #endif
       }
     _init_new_outputfiles( );
-    _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), 
-				    std::ios::binary );
+    _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
     _nextInputFile = 1;
     _populate_buffer( );
   } // swap_files
@@ -161,37 +160,6 @@ public:
       }
     interval_t* i = ( _buffer.size( ) == 0 ) ? NULL : *_nextInterval++;
     return i;
-    /* interval_t* i = NULL; */
-    /* while( !((*_inputFile) >> &i) && (unsigned int) _nextInputFile < _filenames.size( ) ) */
-    /*   { */
-    /* 	_inputFile->close( ); */
-    /* 	delete _inputFile; */
-    /* 	_inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ), */
-    /* 					std::ios::binary ); */
-    /*   } */
-    /* if( _nextInputFile == _filenames.size( ) && i == NULL ) */
-    /*   { */
-    /* 	_inputFile->close( ); */
-    /* 	delete _inputFile; */
-    /* 	_inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary ); */
-    /* 	_nextInputFile = 1; */
-    /*   } */
-    /* return i; */
-    /* if( _nextInterval == _buffer.end( ) ) */
-    /*   { */
-    /* 	for( typename vector< interval_t* >::iterator it = _buffer.begin( ); */
-    /* 	     it != _buffer.end( ); ++it ) */
-    /* 	    if( (*it) != NULL ) */
-    /* 		delete *it; */
-    /* 	_buffer.clear( ); */
-    /* 	_populate_buffer( ); */
-    /* 	_nextInterval = _buffer.begin( ); */
-    /* 	if( _buffer.size( ) == 0 ) */
-    /* 	  return NULL; */
-    /*   } */
-    /* interval_t* i = *_nextInterval; */
-    /* ++_nextInterval; */
-    /* return i; */
   } // get_next_interval
 
   /*****************************************************************************
@@ -211,6 +179,11 @@ public:
     return true;
   } // add_interval
 
+  unsigned short get_next_input_file( )
+  {
+    return _nextInputFile;
+  }
+
 private:
   void _init_new_outputfiles ( )
   {
@@ -218,7 +191,7 @@ private:
 	  ++it)
       {
 	std::ostringstream outfilename;
-	outfilename << *it << "_next";
+	outfilename << (*it) << "_next";
 	_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
 						   std::ios::binary | std::ios::app) );
       }

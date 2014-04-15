@@ -6,8 +6,8 @@
 #include <cstdlib>
 #include <fstream>
 
-#include <types.h>
-#include <util.h>
+#include "types.h"
+#include "util.h"
 
 using std::vector;
 using std::string;
@@ -58,6 +58,8 @@ public:
   /* - false otherwise                                                                     */
   /*****************************************************************************************/
   bool move_to ( BWTPosition & p );
+
+  char get_current_nucleotide();
 
 private:
   // no need of copy ctor nor assignment operator

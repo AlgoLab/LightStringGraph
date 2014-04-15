@@ -7,6 +7,7 @@
 #include <stxxl.h>
 
 #include "BWTReader.h"
+#include "GSAReader.h"
 #include "joined_q_int_manager.h"
 #include "joined_q_interval.h"
 #include "interval_manager.h"
@@ -17,7 +18,9 @@
 using std::vector;
 using std::deque;
 
-void build_tau_intervals( BWTReader& b, QIntervalManager& jqmgr, vector< NucleoCounter >& C, int T );
+void build_tau_intervals( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr, vector< NucleoCounter >& C, int T );
+
+void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr, vector< NucleoCounter >& C, int iteration );
 
 // Build all the Q-intervals such that |Q| = T
 void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< NucleoCounter >& C, int T );
