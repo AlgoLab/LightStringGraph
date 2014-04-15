@@ -5,7 +5,9 @@
 #include <vector>
 #include <cstdint>
 
+#ifdef STXXL
 #include <stxxl.h>
+#endif
 
 using std::vector;
 

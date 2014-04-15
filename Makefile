@@ -5,6 +5,8 @@ OBJ_DIR	=obj/
 BIN_DIR	=bin/
 
 ifneq ($(MAKECMDGOALS), clean)
+
+ifdef USESTXXL
 ifndef PAGE_SIZE
 $(info PAGE_SIZE not defined. Forced to 4.)
 PAGE_SIZE=4
@@ -24,6 +26,7 @@ ifndef STXXLPATH
 $(info STXXLPATH not defined. Forced to /usr.)
 STXXLIB=/usr
 endif
+endif
 
 ifndef BUFFERSIZE
 $(info BUFFERSIZE not defined. Forced to 1024)
@@ -32,14 +35,21 @@ endif
 
 ifndef IM_BUFFERSIZE
 $(info IM_BUFFERSIZE not defined. Forced to 1024)
-IM_BUFFERSIZE=256
+IM_BUFFERSIZE=1024
 endif
 endif
 
-DEFINES = -DPAGE_SIZE=${PAGE_SIZE} -DPAGE_NUM=${PAGE_NUM} -DBLOCK_SIZE=${BLOCK_SIZE} -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
+DEFINES = -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
 
+ifdef USESTXXL
+DEFINES += -DPAGE_SIZE=${PAGE_SIZE} -DPAGE_NUM=${PAGE_NUM} -DBLOCK_SIZE=${BLOCK_SIZE}
 STXXLLIB=-L${STXXLPATH}/lib -lstxxl -lpthread
 STXXLINC=-I${STXXLPATH}/include
+else
+STXXLLIB=
+STXXLINC=
+endif
+
 CFLAGS	= -g -Wall -DDEBUG ${DEFINES} -O2 -march=native -Wno-deprecated -std=gnu++0x -I. -fopenmp
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
@@ -63,7 +73,7 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)q_interval.o \
 	$(OBJ_DIR)lsg/lsg.o
 
-all: lsg
+all: lsg bgsa
 
 ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	@echo '* Compiling $<'

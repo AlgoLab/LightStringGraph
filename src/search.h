@@ -4,7 +4,10 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+
+#ifdef USESTXXL
 #include <stxxl.h>
+#endif
 
 #include "BWTReader.h"
 #include "GSAReader.h"
@@ -28,8 +31,8 @@ void build_tau_intervals( BWTReader& b, JoinedQIntervalManager& jqmgr, vector< N
 // Left step search.  
 // Given the Q-intervals in jqmgr returns a deque of tuple of intervals
 // ( $Q-interval{begin, end}, Q-interval{begin, end} ).
-size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
-			 vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v );
+/* size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr, */
+/* 			 vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v ); */
 
 // Right step search
 // Given the Q-intervals in imgr and in LT extends them and returns a deque of
@@ -38,8 +41,8 @@ size_t search_step_left( BWTReader& b, JoinedQIntervalManager& jqmgr,
 // second the reads that have Q as prefix.
 // IT DELETES THE CONTENT OF LT
 // vector< EdgeInterval* >*
-void search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr,
-			vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v );
+/* void search_step_right( BWTReader& b, EdgeJoinedQIntervalManager& imgr, */
+/* 			vector< NucleoCounter >& C, stxxl::vector<PODEdgeInterval> &v ); */
 
 // Count the occurrences of characters lexicographically smaller than base.
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
