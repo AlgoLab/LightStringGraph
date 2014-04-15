@@ -20,7 +20,7 @@ stringGraph outputs (STDOUT) a json-like structure of "edges". Every edge has 3 
 
 1. `from`: source read ID (read position in `a.fa`)
 2. `to`: destination read ID (read position in `a.fa`)
-3. `length`: number of bases in the second read (the one pointed by `to`) that aren't in overlap with the first read
+3. `length`: number of bases in the second read (the one pointed by `to`) that aren't in overlap with the first read.
 
 
 ### NOTE
