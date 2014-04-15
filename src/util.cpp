@@ -298,6 +298,15 @@ ifstream& operator>>( ifstream& in, QInterval** i )
   return in;
 }
 
+ofstream& operator<<( ofstream& out, const GSAEntry& g )
+{
+  out.write( (char *) &g.sa, sizeof( SequenceLength ) );
+  out.write( (char *) &g.numSeq, sizeof( SequenceNumber ) );
+  out.flush( );
+
+  return out;
+}
+
 ifstream& operator>>( ifstream& in, GSAEntry& g )
 {
   in.read( (char *) &g.sa, sizeof( SequenceLength ) );

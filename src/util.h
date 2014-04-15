@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <ctime>
 
 #include "types.h"
@@ -39,6 +40,7 @@ ofstream& operator<<( ofstream&, const JoinedQInterval& );
 
 ifstream& operator>>( ifstream&, JoinedQInterval* );
 
+ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
 
 std::string now( const char* format );
