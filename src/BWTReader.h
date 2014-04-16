@@ -48,7 +48,15 @@ class BWTReader
   /*****************************************************************************************/
   bool move_to ( BWTPosition& p );
 
-  void move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos );
+  
+  /*****************************************************************************************/
+  /* Move to position p in this BWT, update nucleotide occurrences accordingly, and save   */
+  /* indexes of the occurrences of BASE_$ in prefixpos.					   */
+  /* Return value:									   */
+  /* - true if p can be reached							           */
+  /* - false otherwise                                                                     */
+  /*****************************************************************************************/
+  bool move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos );
 
   /****************************************************************************/
   /* Get PI vector (occurrences of every nucleotide before current position). */

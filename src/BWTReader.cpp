@@ -35,15 +35,22 @@ BWTPosition BWTReader::get_position ( ) const
   return _currentBWT->get_position();
 }
 
-void BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
+bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
 {
   for( BWTPosition i = _currentBWT->get_position(); i < p; ++i )
     {
-      move_to( i );
-      if( cton(_currentBWT->get_current_nucleotide()) == BASE_$  )
-	prefixpos.push_back( i );
+      if( move_to( i ) )
+	{
+	  if( cton(_currentBWT->get_current_nucleotide()) == BASE_$  )
+	    {
+	      prefixpos.push_back( i );
+	    }
+	}
+      else
+	return false;
+      
     }
-  move_to( p );
+  return move_to( p );
 }
 
 
