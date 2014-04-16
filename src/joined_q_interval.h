@@ -1,55 +1,61 @@
-#ifndef JOINED_Q_INTERVAL_H
-#define JOINED_Q_INTERVAL_H
+// // -*- c++ -*-
 
-#include <vector>
-#include <fstream>
+//
+//
+// LEGACY
+//
+//
 
-#include "q_interval.h"
+// #ifndef JOINED_Q_INTERVAL_H
+// #define JOINED_Q_INTERVAL_H
 
-using std::vector;
-using std::ofstream;
-using std::ifstream;
+// #include <vector>
+// #include <fstream>
 
-/***********************************************************************/
-/* JoinedQInterval represent a couple of q-intervals q1-int on BWT and */
-/* q2-int on BWT such that q2 = rev(q1).			       */
-/***********************************************************************/
+// #include "q_interval.h"
 
-class JoinedQInterval
-{
- protected:
-  QInterval _int, _revint; // int is on BWT while revint is on BWT'
+// using std::vector;
+// using std::ofstream;
+// using std::ifstream;
 
- public:
-  // ctor
-  JoinedQInterval ( const BWTPosition & begin, const BWTPosition & end,
-		    const BWTPosition & revbegin, const BWTPosition & revend );
-  JoinedQInterval ( ) :  _int( 0, 0), _revint( 0, 0 ) { };
-  // destructor
-  ~JoinedQInterval ( );
-  
-  BWTPosition get_size ( ) const;
-  const QInterval & get_interval ( ) const;
-  const QInterval & get_reverse_interval ( ) const;
+// // JoinedQInterval represent a couple of q-intervals q1-int on BWT and
+// // q2-int on BWT' such that q2 = rev(q1).
 
-  friend ofstream& operator<<( ofstream&, const JoinedQInterval& );
-  friend ifstream& operator>>( ifstream&, JoinedQInterval** );
+// class JoinedQInterval
+// {
+// protected:
+//   QInterval _int, _revint; // int is on BWT while revint is on BWT'
 
-  /* // Backward extend this interval with n and return the new */
-  /* // JoinedQInterval for nQ and rev(Q)n */
-  /* JoinedQInterval* backward_extend_with ( Nucleotide n ) const; */
+// public:
+//   // ctor
+//   JoinedQInterval ( const BWTPosition & begin, const BWTPosition & end,
+//                     const BWTPosition & revbegin, const BWTPosition & revend );
+//   JoinedQInterval ( ) :  _int( 0, 0), _revint( 0, 0 ) { };
+//   // destructor
+//   ~JoinedQInterval ( );
 
-  /* // Backward extend this interval with every possibile nucleotide in */
-  /* // the alphabet */
-  /* vector< JoinedQInterval* >* backward_extend_all ( ) const; */
+//   BWTPosition get_size ( ) const;
+//   const QInterval & get_interval ( ) const;
+//   const QInterval & get_reverse_interval ( ) const;
 
- private:
-  // no need of copy ctor nor assignment operator
-  JoinedQInterval ( const JoinedQInterval& other ) :
-  _int(0,0), _revint(0,0)
-    { };
-  JoinedQInterval& operator= ( const JoinedQInterval& other ) 
-    { return *this; };
-};
+//   friend ofstream& operator<<( ofstream&, const JoinedQInterval& );
+//   friend ifstream& operator>>( ifstream&, JoinedQInterval** );
 
-#endif
+//   /* // Backward extend this interval with n and return the new */
+//   /* // JoinedQInterval for nQ and rev(Q)n */
+//   /* JoinedQInterval* backward_extend_with ( Nucleotide n ) const; */
+
+//   /* // Backward extend this interval with every possibile nucleotide in */
+//   /* // the alphabet */
+//   /* vector< JoinedQInterval* >* backward_extend_all ( ) const; */
+
+// private:
+//   // no need of copy ctor nor assignment operator
+//   JoinedQInterval ( const JoinedQInterval& other ) :
+//     _int(0,0), _revint(0,0)
+//   { };
+//   JoinedQInterval& operator= ( const JoinedQInterval& other )
+//   { return *this; };
+// };
+
+// #endif

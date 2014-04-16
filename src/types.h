@@ -1,3 +1,5 @@
+// -*- c++ -*-
+
 #ifndef TYPES_H
 #define TYPES_H
 
@@ -11,11 +13,8 @@
 
 using std::vector;
 
-// #define TAU 1
-// #define CYCNUM 99
-
-#define JoinedQIntervalManager IntervalManager< JoinedQInterval >
-#define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
+// #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
+// #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
 #define QIntervalManager IntervalManager< QInterval >
 
 // Position on a BWT
@@ -56,20 +55,22 @@ struct GSAEntry
   SequenceNumber numSeq; // sequence number
 };
 
+// STXXL placeholder
 //typedef stxxl::vector< BWTPosition, PAGE_SIZE, stxxl::lru_pager< PAGE_NUM >, BLOCK_SIZE * 1024 * 1024, stxxl::RC > BWTPExtVect;
 //typedef stxxl::vector< SequenceNumber, PAGE_SIZE, stxxl::lru_pager< PAGE_NUM >, BLOCK_SIZE * 1024 * 1024, stxxl::RC > SeqNExtVect;
 typedef std::vector< BWTPosition > BWTPExtVect;
 typedef std::vector< SequenceNumber > SeqNExtVect;
 
+// LEGACY
 // temporary
-struct SGEdge
-{
-  unsigned int first_read;
-  unsigned int second_read;
-  EdgeLength len;
-};
+// struct SGEdge
+// {
+//   unsigned int first_read;
+//   unsigned int second_read;
+//   EdgeLength len;
+// };
 
-typedef std::map< unsigned int, SGEdge* > SGraph;
-typedef std::map< unsigned int, vector< unsigned int > > Precedencies;
+// typedef std::map< unsigned int, SGEdge* > SGraph;
+// typedef std::map< unsigned int, vector< unsigned int > > Precedencies;
 
 #endif

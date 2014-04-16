@@ -1,3 +1,5 @@
+// -*- c++ -*-
+
 #ifndef GSA_READER_H
 #define GSA_READER_H
 
@@ -19,30 +21,44 @@ using std::string;
 class GSAReader
 {
 private:
-  std::ifstream	_inputFile;
-  BWTPosition 	_currentPosition;
-  BWTPosition	_maxPosition;
-  GSAEntry	_lastGSA;
+  std::ifstream   _inputFile;
+  BWTPosition     _currentPosition;
+  BWTPosition     _maxPosition;
+  GSAEntry			_lastGSA;					// Last read GSAEntry
 
 public:
+  // Constructor
   GSAReader( const string& );
+
+  // Destructor
   ~GSAReader( );
+
+  // Move GSAReader to a given position
+  // Return true if position is reached, false otherwise
   bool move_to( const BWTPosition& );
+
+  // Reset GSAReade
   void reset( );
-  //  vector< GSAEntry* >* get( const BWTPosition&, const BWTPosition& );
+
+  // Get last read GSAEntry
   GSAEntry get_v( );
+
   // Gets reads index of contiguous suffixes which length is "length" starting
   // from _currentPosition.
   // _currentPosition and _inputFile will be modified!
-  void get_seq_sent( int length, SeqNExtVect& rsuff ); 
+  void get_seq_sent( int length, SeqNExtVect& rsuff );
+
+  // Gets positions of BASE_$ occurrences in BWT from _currentPosition to position
   void get_seq_at_pos( BWTPExtVect& position, SeqNExtVect& indexes );
+
+  // Get _currentPosition
   BWTPosition get_position( );
 
 private:
   GSAReader( ) { };
   GSAReader( const GSAReader& other ) { };
   GSAReader& operator=( const GSAReader& other ) { return *this; };
-  
+
 };
 
 #endif

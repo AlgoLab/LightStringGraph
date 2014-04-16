@@ -1,3 +1,5 @@
+// -*- c++ -*-
+
 #ifndef BWTREADER_H
 #define BWTREADER_H
 
@@ -19,59 +21,44 @@ using std::string;
 
 class BWTReader
 {
- private:
-  vector< string > _filenamesIN;   // Names of BWT sections
-  unsigned short _nextBWTFilename; // index of next BWTFilename in _filenamesIN
-  partialBWTReader* _currentBWT;
-  
- public:
-  /****************/
-  /* Constructor  */
-  /****************/
+private:
+  vector< string >    _filenamesIN;       // names of BWT sections
+  unsigned short      _nextBWTFilename;   // index of next BWTFilename in _filenamesIoN
+  partialBWTReader*   _currentBWT;      // current BWT section
+
+public:
+  // Constructor
   BWTReader ( vector< string >& filenamesIN );
- 
-  /***************/
-  /* Destructor  */
-  /***************/
+
+  // Destructor
   ~BWTReader ( );
-  
-  /************************/
-  /* Get current position */
-  /************************/
+
+  // Returns current position
   BWTPosition get_position ( ) const;
 
-  /*****************************************************************************************/
-  /* Move to position p in this BWT and update nucleotide occurrences accordingly. 	   */
-  /* Return value:									   */
-  /* - true if p can be reached							           */
-  /* - false otherwise                                                                     */
-  /*****************************************************************************************/
+  // Move to position p in this BWT and update nucleotide occurrences accordingly.
+  // Return value:
+  // - true if p can be reached
+  // - false otherwise
   bool move_to ( BWTPosition& p );
 
-  
-  /*****************************************************************************************/
-  /* Move to position p in this BWT, update nucleotide occurrences accordingly, and save   */
-  /* indexes of the occurrences of BASE_$ in prefixpos.					   */
-  /* Return value:									   */
-  /* - true if p can be reached							           */
-  /* - false otherwise                                                                     */
-  /*****************************************************************************************/
+  // Move to position p in this BWT, update nucleotide occurrences accordingly, and save
+  // indexes of the occurrences of BASE_$ in prefixpos.
+  // Return value:
+  // - true if p can be reached
+  // - false otherwise
   bool move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos );
 
-  /****************************************************************************/
-  /* Get PI vector (occurrences of every nucleotide before current position). */
-  /* Usefull for backward extension.					      */
-  /****************************************************************************/
+  // Return PI vector (occurrences of every nucleotide before current position).
   vector< NucleoCounter >& get_Pi ( );
 
-  /*************************/
-  /* Get C (count) vector. */
-  /*************************/
+  // Return C (count)
   vector< NucleoCounter >* get_C ( );
 
+  // Reset BWT
   void reset ( );
 
- private:
+private:
   // no need of copy ctor nor assignment operator
   BWTReader ( ) { };
   BWTReader ( const BWTReader& other )

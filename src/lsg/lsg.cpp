@@ -22,21 +22,21 @@ using std::string;
 using std::deque;
 using std::stringstream;
 
-int			TAU    		=0;
-int			CYCNUM 		=0;
+int       TAU         =0;
+int       CYCNUM      =0;
 
 void show_usage(){
-    std::cerr << "Usage: lsg -B <BWTFilenamePrefix> ";
-    std::cerr << "-G <gsaFilename> ";
-    std::cerr << "-T <TAU> ";
-    std::cerr << "-C <CycNum> ";
-    std::cerr << std::endl;
-    std::cerr << std::endl << "Options:" << std::endl;
-    std::cerr << "\t-B, --BWT \t <BWTFilenamePrefix>" << std::endl;
-    std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
-    std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
-    std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
-    std::cerr << std::endl;
+  std::cerr << "Usage: lsg -B <BWTFilenamePrefix> ";
+  std::cerr << "-G <gsaFilename> ";
+  std::cerr << "-T <TAU> ";
+  std::cerr << "-C <CycNum> ";
+  std::cerr << std::endl;
+  std::cerr << std::endl << "Options:" << std::endl;
+  std::cerr << "\t-B, --BWT \t <BWTFilenamePrefix>" << std::endl;
+  std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
+  std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
+  std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
+  std::cerr << std::endl;
 }
 
 /****************/
@@ -44,46 +44,46 @@ void show_usage(){
 /****************/
 int main ( int argc, char** argv )
 {
-    if(argc < 6){
-        show_usage();
-        return 1;
-    }
+  if(argc < 6){
+    show_usage();
+    return 1;
+  }
 
-    string bwt_pre = "";
-    string gsaInputFileName = "";
+  string bwt_pre = "";
+  string gsaInputFileName = "";
 
-    for (int i = 1; i < argc; i++) {
-        if (i + 1 != argc){
-            if (string(argv[i]) == "--BWT" || string(argv[i]) == "-B") {
-	      bwt_pre = string(argv[++i]);
-            } else if (string(argv[i]) == "--GSA" || string(argv[i]) == "-G") {
-	      gsaInputFileName = string(argv[++i]);
-	    } else if (string(argv[i]) == "--TAU" || string(argv[i]) == "-T") {
-	      stringstream convert(string(argv[++i]));
-	      if( !( convert >> TAU ) ) {
-		std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (TAU)." << std::endl;
-		std::cerr << "Aborting.." << std::endl;
-		std::exit( -1 );
-	      }
-	    } else if (string(argv[i]) == "--CycNum" || string(argv[i]) == "-C") {
-	      stringstream convert(string(argv[++i]));
-	      if( !( convert >> CYCNUM ) ) {
-		std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (CYCNUM)." << std::endl;
-		std::cerr << "Aborting.." << std::endl;
-		std::exit( -1 );
-	      }
-	    } else {
-	      std::cerr << "Invalid arguments, please try again.\n";
-	      return 1;
-	    }
-	}
-    }
-    
-    if ( bwt_pre == "" || gsaInputFileName == "") {
-        std::cerr << "Missing argument(s)." << std::endl;
-        show_usage();
+  for (int i = 1; i < argc; i++) {
+    if (i + 1 != argc){
+      if (string(argv[i]) == "--BWT" || string(argv[i]) == "-B") {
+        bwt_pre = string(argv[++i]);
+      } else if (string(argv[i]) == "--GSA" || string(argv[i]) == "-G") {
+        gsaInputFileName = string(argv[++i]);
+      } else if (string(argv[i]) == "--TAU" || string(argv[i]) == "-T") {
+        stringstream convert(string(argv[++i]));
+        if( !( convert >> TAU ) ) {
+          std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (TAU)." << std::endl;
+          std::cerr << "Aborting.." << std::endl;
+          std::exit( -1 );
+        }
+      } else if (string(argv[i]) == "--CycNum" || string(argv[i]) == "-C") {
+        stringstream convert(string(argv[++i]));
+        if( !( convert >> CYCNUM ) ) {
+          std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (CYCNUM)." << std::endl;
+          std::cerr << "Aborting.." << std::endl;
+          std::exit( -1 );
+        }
+      } else {
+        std::cerr << "Invalid arguments, please try again.\n";
         return 1;
+      }
     }
+  }
+
+  if ( bwt_pre == "" || gsaInputFileName == "") {
+    std::cerr << "Missing argument(s)." << std::endl;
+    show_usage();
+    return 1;
+  }
   vector< string > BWTInputFilenames;
   vector< string > qIntFilenames;
   vector< string > baseqIntFilenames;
@@ -112,7 +112,7 @@ int main ( int argc, char** argv )
   std::cerr.flush( );
 
   vector< NucleoCounter >* c = br.get_C( );
- 
+
   std::cerr << "done." << std::endl;
   std::cerr << std::endl << "Vector C" << std::endl;
   std::cerr << "Nucl\t| C(x) " << std::endl;
@@ -120,7 +120,7 @@ int main ( int argc, char** argv )
   for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
     {
       std::cerr << ntoc( (Nucleotide) nucl ) << "\t| " << c->at( nucl )
-		<< std::endl;
+                << std::endl;
     }
 
   std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << " -> ";
@@ -133,7 +133,7 @@ int main ( int argc, char** argv )
 
   std::cerr.flush();
   qmgr.swap_files();
-  
+
   build_tau_intervals( br, qmgr, gsardr, *c, TAU);
 
   for( int i( 0 ); i < CYCNUM; ++i )
@@ -168,7 +168,7 @@ int main ( int argc, char** argv )
   //     // std::ifstream* newLT = ext_sort( P_FILE );
   //     // remove(P_FILE.c_str());
   //     // std::ifstream* newLT = new std::ifstream( MERGED_FILES.c_str(), std::ios::binary );
-      
+
   //     std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
   //     std::cerr << "Right search step #" << i+1 << std::endl;
   //     search_step_right( revbr, revimgr, *rev_c, prefix_interval );

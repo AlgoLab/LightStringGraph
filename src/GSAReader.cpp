@@ -33,10 +33,9 @@ void GSAReader::get_seq_at_pos( BWTPExtVect& positions, SeqNExtVect& indexes )
   for( size_t p( 0 ); p < positions.size(); ++p )
     {
       if( move_to(positions[p]) )
-	indexes.push_back(_lastGSA.numSeq);
+        indexes.push_back(_lastGSA.numSeq);
     }
 }
-
 
 bool GSAReader::move_to( const BWTPosition& p )
 {
@@ -44,9 +43,9 @@ bool GSAReader::move_to( const BWTPosition& p )
     {
 #ifdef DEBUG_VERBOSE
       std::cerr << "In GSAReader::move_to: " << std::endl
-		<< "ERROR: Can't reach position " << p
-		<< " (can't move backward)." << std::endl
-		<< "Current Position is " << _currentPosition << std::endl;
+                << "ERROR: Can't reach position " << p
+                << " (can't move backward)." << std::endl
+                << "Current Position is " << _currentPosition << std::endl;
 #endif
       return false;
     }
@@ -54,8 +53,8 @@ bool GSAReader::move_to( const BWTPosition& p )
     {
 #ifdef DEBUG_VERBOSE
       std::cerr << "In GSAReader::move_to: " << std::endl
-		<< "ERROR: Can't move to " << p
-		<< "_maxPosition is " << _maxPosition << std::endl;
+                << "ERROR: Can't move to " << p
+                << "_maxPosition is " << _maxPosition << std::endl;
 #endif
       return false;
     }
@@ -65,7 +64,7 @@ bool GSAReader::move_to( const BWTPosition& p )
       _inputFile >> _lastGSA;
       _currentPosition = p;
     }
-  
+
   return true;
 }
 

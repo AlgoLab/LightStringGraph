@@ -1,3 +1,5 @@
+// -*- c++ -*-
+
 #ifndef PARTIAL_BWTREADER_H
 #define PARTIAL_BWTREADER_H
 
@@ -12,53 +14,40 @@
 using std::vector;
 using std::string;
 
-/************************************************/
-/* Class that handles a single portion of BWT.  */
-/************************************************/
-
+// Class that handles a single portion of BWT.
 
 class partialBWTReader
 {
 private:
-  std::ifstream _fileIn; // File from which we want to read;
-  char* _buffer; // Current buffer
-  BWTPosition _start; // Buffer start position in BWT
-  BWTPosition _position; // Position reached within the buffer
-  BWTPosition _bufferlen; // Number of char read in the last "read"
-			  // call, used while moving inside the buffer
-  vector< NucleoCounter > _occurrencesBeforeStart; // PI vector
+  std::ifstream             _fileIn;                  // File from which we want to read;
+  char*                     _buffer;                  // Current buffer
+  BWTPosition               _start;                   // Buffer start position in BWT
+  BWTPosition               _position;                // Position reached within the buffer
+  BWTPosition               _bufferlen;               // Number of char read in the last "read"
+                                                      // call, used while moving inside the buffer
+  vector< NucleoCounter >   _occurrencesBeforeStart;  // PI vector
 
 public:
-  /****************/
-  /* Constructors */
-  /****************/
+  // Constructors
   partialBWTReader ( string inputFilename );
   partialBWTReader ( string inputFilename, BWTPosition start, vector< NucleoCounter >& occurrencesBeforeStart );
 
-  /**************/
-  /* Destructor */
-  /**************/
+  // Destructor
   ~partialBWTReader ( );
 
-
-  /********************************************/
-  /* Get occurrences before current position  */
-  /********************************************/
+  // Get occurrences before current position
   vector< NucleoCounter >& get_Pi( );
 
-  /********************************/
-  /* Get absolute position in BWT */
-  /********************************/
+  // Get absolute position in BWT
   BWTPosition get_position ( ) const;
 
-  /*****************************************************************************************/
-  /* Move to position p in this BWT and update nucleotide occurrences accordingly. 	   */
-  /* Return value:									   */
-  /* - true if p can be reached							           */
-  /* - false otherwise                                                                     */
-  /*****************************************************************************************/
+  // Move to position p in this BWT and update nucleotide occurrences accordingly.
+  // Return value:
+  // - true if p can be reached
+  // - false otherwise
   bool move_to ( BWTPosition & p );
 
+  // Return nucleotide in the current position
   char get_current_nucleotide();
 
 private:
