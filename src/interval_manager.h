@@ -52,7 +52,10 @@ public:
             temp.close();
           }
         else
-          std::cerr << *it << " does exists" << std::endl;
+          {
+            std::cerr << *it << " does exists. This shouldn't happen and the program "
+                      << "will probably give erroneous results." << std::endl;
+          }
         t.close();
       }
 

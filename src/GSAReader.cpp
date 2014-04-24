@@ -14,9 +14,9 @@ GSAReader::~GSAReader( )
   _inputFile.close( );
 }
 
-void GSAReader::get_seq_sent( int length, SeqNExtVect& rsuff )
+void GSAReader::get_seq_sent( int length, SeqNExtVect& rsuff, BWTPosition end )
 {
-  while( (_lastGSA.sa == (SequenceLength) length) )
+  while( (_lastGSA.sa == (SequenceLength) length) && _currentPosition < end )
     {
       rsuff.push_back(_lastGSA.numSeq);
       move_to( _currentPosition +1 );
@@ -28,9 +28,9 @@ BWTPosition GSAReader::get_position( )
   return _currentPosition;
 }
 
-void GSAReader::get_seq_at_pos( BWTPExtVect& positions, SeqNExtVect& indexes )
+void GSAReader::get_seq_at_pos( BWTPExtVect& positions, SeqNExtVect& indexes, BWTPosition end )
 {
-  for( size_t p( 0 ); p < positions.size(); ++p )
+  for( size_t p( 0 ); p < positions.size() && positions[p] < end; ++p )
     {
       if( move_to(positions[p]) )
         indexes.push_back(_lastGSA.numSeq);

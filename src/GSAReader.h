@@ -44,12 +44,13 @@ public:
   GSAEntry get_v( );
 
   // Gets reads index of contiguous suffixes which length is "length" starting
-  // from _currentPosition.
+  // from _currentPosition up to end.
   // _currentPosition and _inputFile will be modified!
-  void get_seq_sent( int length, SeqNExtVect& rsuff );
+  void get_seq_sent( int length, SeqNExtVect& rsuff, BWTPosition end );
 
   // Gets positions of BASE_$ occurrences in BWT from _currentPosition to position
-  void get_seq_at_pos( BWTPExtVect& position, SeqNExtVect& indexes );
+  // Positions that exceed end will not be stored.
+  void get_seq_at_pos( BWTPExtVect& position, SeqNExtVect& indexes, BWTPosition end);
 
   // Get _currentPosition
   BWTPosition get_position( );

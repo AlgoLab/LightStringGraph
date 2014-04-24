@@ -86,6 +86,7 @@ void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
         {
           std::cerr << "ERROR IN: search.cpp:left_step" << std::endl;
           std::cerr << "Can't move to " << begin << std::endl;
+          std::cerr << "Current position is " << grdr.get_position() << std::endl;
           std::cerr << "Aborting..." << std::endl;
           std::exit(-1);
         }
@@ -101,9 +102,8 @@ void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
           // Output edges if they exists
           if(rprefixpos.size() > 0)
             {
-
-              grdr.get_seq_sent( iteration , rsuff );
-              grdr.get_seq_at_pos( rprefixpos, rpref );
+              grdr.get_seq_sent( iteration , rsuff, end );
+              grdr.get_seq_at_pos( rprefixpos, rpref, end );
 
               size_t rsize = rsuff.size();
               size_t psize = rpref.size();

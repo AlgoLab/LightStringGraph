@@ -50,7 +50,7 @@ STXXLLIB=
 STXXLINC=
 endif
 
-CFLAGS	= -g -Wall -DDEBUG ${DEFINES} -O2 -march=native -Wno-deprecated -std=gnu++0x -I. -fopenmp
+CFLAGS	= -g -Wall -DDEBUG -DDEBUG_VERBOSE ${DEFINES} -O2 -march=native -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) -fopenmp
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 
@@ -80,19 +80,19 @@ ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) ${STXXLINC} \
 	-o $@ \
-	-c $< -I$(SRC_DIR)
+	-c $<
 
 lsg: $(LSG_DEP)
 	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
-	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR)  ${STXXLLIB}
+	-o $(BIN_DIR)$@	$^ $(LIBS) ${STXXLLIB}
 
 bgsa: $(BGSA_DEP)
 	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
-	-o $(BIN_DIR)$@	$^ $(LIBS) -I$(SRC_DIR) ${STXXLLIB}
+	-o $(BIN_DIR)$@	$^ $(LIBS) ${STXXLLIB}
 
 clean:
 	@echo "Cleaning..."
