@@ -20,6 +20,9 @@ using std::vector;
 // Position on a BWT
 typedef uint64_t BWTPosition;
 
+// Possible value of LCP
+typedef uint32_t LCPValue;
+
 // Edge Length
 typedef unsigned int EdgeLength; // should be enough for short reads
 
