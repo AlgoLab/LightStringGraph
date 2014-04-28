@@ -46,4 +46,19 @@ ifstream& operator>>( ifstream&, GSAEntry& );
 // Return a string representing the current tim
 std::string now( const char* format );
 
+#ifdef DEBUG
+#define DEBUG_LOG(s)                                        \
+  std::cerr << "DBG:" << __FILE__ << "(" << __LINE__ << ")" \
+  << " " << s << std::endl;
+#else
+#define DEBUG_LOG(s) ;
+#endif
+
+#ifdef DEBUG_VERBOSE
+#define DEBUG_LOG_VERBOSE(s)                                \
+  DEBUG_LOG(s)
+#else
+#define DEBUG_LOG_VERBOSE(s) ;
+#endif
+
 #endif

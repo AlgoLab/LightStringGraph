@@ -12,13 +12,12 @@ LCPReader::LCPReader(std::vector< std::string >& filenamesIN)
       std::exit(-1);
     }
 
-#ifdef DEBUG_VERBOSE
-  std::cerr << "Initializing LCPReader on files :" << std::endl;
+  DEBUG_LOG_VERBOSE("Initializing LCPReader on files :");
   for(std::vector<std::string>::iterator it = _filenamesIN.begin();
       it != _filenamesIN.end(); ++it)
-    std::cerr << *it << std::endl;
-#endif
-
+    {
+      DEBUG_LOG_VERBOSE(*it);
+    }
   _currentLCP    = new partialLCPReader(_filenamesIN[0]);
   _nextLCPIndex =1;
 }
@@ -39,26 +38,20 @@ bool LCPReader::next()
   if(_currentLCP->next())
     return true;
 
-#ifdef DEBUG_VERBOSE
-  std::cerr << "Can't move to next position, loading next batch" << std::endl;
-#endif
+  
+  DEBUG_LOG_VERBOSE("Can't move to next position, loading next batch");
 
   // End of _currentLCP
   if(_nextLCPIndex >= _filenamesIN.size())
     {
-#ifdef DEBUG_VERBOSE
-      std::cerr << "In LCPReader::next:" << std::endl
-                << "ERROR: Can't reach position " << _currentLCP->get_position() + 1
-                << "because the LCP size is " << _currentLCP->get_position()
-                << std::endl;
-#endif
+      DEBUG_LOG_VERBOSE("ERROR: Can't reach position " << _currentLCP->get_position() + 1 \
+                        << "because the LCP size is " << _currentLCP->get_position());
       return false;
     }
-#ifdef DEBUG_VERBOSE
-  std::cerr << "LCP trying to move to position " << _currentLCP->get_position() +1
-            << " that is outside the current file." << std::endl
-            << "Open LCP file: " << _filenamesIN[_nextLCPIndex] << std::endl;
-#endif
+  DEBUG_LOG_VERBOSE( "LCP trying to move to position " << _currentLCP->get_position() +1  \
+                     << " that is outside the current file.");
+  DEBUG_LOG_VERBOSE("Open LCP file: " << _filenamesIN[_nextLCPIndex]);
+
   partialLCPReader* nextLCP = new partialLCPReader( _filenamesIN[_nextLCPIndex],
                                                     _currentLCP->get_position() );
   ++_nextLCPIndex;

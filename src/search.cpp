@@ -54,10 +54,9 @@ void build_tau_intervals( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
       b.reset( );
       grdr.reset( );
       qmgr.swap_files( );
-#ifdef DEBUG
+      
       std::cerr << "--> Generated " << nwintc << " new intervals." << std::endl;
       std::cerr << "--> Rejected " << rejintc << " intervals (string is not suffix)." << std::endl;
-#endif
     }
 }
 
@@ -153,12 +152,10 @@ void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
           ++notsuffc;
         }
     }
-#ifdef DEBUG
   std::cerr << "--> Generated " << nwintc << " new intervals" << std::endl;
   std::cerr << "--> Rejected " << rejintc << " unique backward extensions" << std::endl;
   std::cerr << "--> Rejected " << notsuffc << " intervals (pattern is not suffix)" << std::endl;
   std::cerr << "--> Produced " << nwedgc << " new edges" << std::endl;
-#endif
 }
 
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )

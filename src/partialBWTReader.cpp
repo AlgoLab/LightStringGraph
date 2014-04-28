@@ -93,10 +93,9 @@ bool partialBWTReader::move_to ( BWTPosition & p )
     }
   if( _start + _position  < p )
     {
-#ifdef DEBUG_VERBOSE
-      std::cerr << "ERROR: asked to reach position " << p << " but reached position "
-                << _start + _position << " instead." << std::endl;
-#endif
+      DEBUG_LOG_VERBOSE("ERROR: asked to reach position " << p << " but reached position " \
+                        << _start + _position << " instead.");
+
       return false;
     }
   return true;

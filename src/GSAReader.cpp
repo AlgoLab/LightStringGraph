@@ -41,21 +41,16 @@ bool GSAReader::move_to( const BWTPosition& p )
 {
   if(_currentPosition > p )
     {
-#ifdef DEBUG_VERBOSE
-      std::cerr << "In GSAReader::move_to: " << std::endl
-                << "ERROR: Can't reach position " << p
-                << " (can't move backward)." << std::endl
-                << "Current Position is " << _currentPosition << std::endl;
-#endif
+      DEBUG_LOG_VERBOSE("ERROR: Can't reach position " << p << " (can't move backward).");
+      DEBUG_LOG_VERBOSE("Current Position is " << _currentPosition);
+
       return false;
     }
   else if( p > _maxPosition )
     {
-#ifdef DEBUG_VERBOSE
-      std::cerr << "In GSAReader::move_to: " << std::endl
-                << "ERROR: Can't move to " << p
-                << "_maxPosition is " << _maxPosition << std::endl;
-#endif
+      DEBUG_LOG_VERBOSE("ERROR: Can't move to " << p);
+      DEBUG_LOG_VERBOSE(" _maxPosition is " << _maxPosition);
+
       return false;
     }
   else if( _currentPosition < p )
