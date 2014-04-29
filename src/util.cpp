@@ -45,21 +45,27 @@ Nucleotide cton ( char c )
       ret = BASE_$;
       break;
     case 'A':
+    case 'a':
       ret = BASE_A;
       break;
     case 'C':
+    case 'c':
       ret = BASE_C;
       break;
     case 'G':
+    case 'g':
       ret = BASE_G;
       break;
     case 'T':
+    case 't':
       ret = BASE_T;
       break;
     case 'N':
+    case 'n':
       ret = BASE_N;
       break;
     case 'Z':
+    case 'z':
       ret = BASE_Z;
       break;
     default:
