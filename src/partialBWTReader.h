@@ -45,7 +45,7 @@ public:
   // Return value:
   // - true if p can be reached
   // - false otherwise
-  bool move_to ( BWTPosition & p );
+  bool move_to ( const BWTPosition & p );
 
   // Return nucleotide in the current position
   char get_current_nucleotide();

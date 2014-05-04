@@ -54,7 +54,7 @@ bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
 }
 
 
-bool BWTReader::move_to ( BWTPosition & p )
+bool BWTReader::move_to ( const BWTPosition & p )
 {
   while( !_currentBWT->move_to( p ) )
     {

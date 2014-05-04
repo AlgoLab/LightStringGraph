@@ -40,7 +40,7 @@ public:
   // Return value:
   // - true if p can be reached
   // - false otherwise
-  bool move_to ( BWTPosition& p );
+  bool move_to ( const BWTPosition& p );
 
   // Move to position p in this BWT, update nucleotide occurrences accordingly, and save
   // indexes of the occurrences of BASE_$ in prefixpos.

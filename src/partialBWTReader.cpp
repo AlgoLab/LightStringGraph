@@ -66,7 +66,7 @@ BWTPosition partialBWTReader::get_position ( ) const
   return (_start + _position);
 }
 
-bool partialBWTReader::move_to ( BWTPosition & p )
+bool partialBWTReader::move_to ( const BWTPosition & p )
 {
   if( p < _start + _position )
     {
