@@ -37,7 +37,7 @@ public:
   // Return true if position is reached, false otherwise
   bool move_to( const BWTPosition& );
 
-  // Reset GSAReade
+  // Reset GSAReader
   void reset( );
 
   // Get last read GSAEntry

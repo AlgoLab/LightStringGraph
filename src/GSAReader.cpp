@@ -7,6 +7,7 @@ GSAReader::GSAReader( const string& filename )
   _inputFile.seekg( 0, std::ios_base::end );
   _maxPosition = _inputFile.tellg() / sizeof( GSAEntry );
   _inputFile.seekg( 0, std::ios_base::beg );
+  _inputFile >> _lastGSA;
 }
 
 GSAReader::~GSAReader( )
@@ -67,6 +68,7 @@ void GSAReader::reset( )
 {
   _inputFile.clear( );
   _inputFile.seekg( 0, _inputFile.beg );
+  _inputFile >> _lastGSA;
   _currentPosition = 0;
 }
 
