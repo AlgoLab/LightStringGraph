@@ -73,6 +73,7 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)q_interval.o \
 	$(OBJ_DIR)lsg/lsg.o
 
+.PHONY: all
 all: lsg bgsa
 
 ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
@@ -82,17 +83,25 @@ ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	-o $@ \
 	-c $<
 
-lsg: $(LSG_DEP)
-	@echo '* Linking $@'
-	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) \
-	-o $(BIN_DIR)$@	$^ $(LIBS) ${STXXLLIB}
+.PHONY: lsg
+lsg: $(BIN_DIR)lsg
+	@echo '* $@ OK!'
 
-bgsa: $(BGSA_DEP)
+$(BIN_DIR)lsg: $(LSG_DEP)
 	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
-	-o $(BIN_DIR)$@	$^ $(LIBS) ${STXXLLIB}
+	-o $@ $^ $(LIBS) ${STXXLLIB}
+
+.PHONY: bgsa
+bgsa: $(BIN_DIR)bgsa
+	@echo '* $@ OK!'
+
+$(BIN_DIR)bgsa: $(BGSA_DEP)
+	@echo '* Linking $@'
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) \
+	-o $@ $^ $(LIBS) ${STXXLLIB}
 
 clean:
 	@echo "Cleaning..."
