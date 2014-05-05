@@ -32,7 +32,7 @@ void show_usage(){
   std::cerr << "-C <CycNum> ";
   std::cerr << std::endl;
   std::cerr << std::endl << "Options:" << std::endl;
-  std::cerr << "\t-B, --BWT \t <BWTFilenamePrefix>" << std::endl;
+  std::cerr << "\t-B, --basename \t <prefix>" << std::endl;
   std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
   std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
   std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
@@ -49,13 +49,13 @@ int main ( int argc, char** argv )
     return 1;
   }
 
-  string bwt_pre = "";
+  string basename = "";
   string gsaInputFileName = "";
 
   for (int i = 1; i < argc; i++) {
     if (i + 1 != argc){
-      if (string(argv[i]) == "--BWT" || string(argv[i]) == "-B") {
-        bwt_pre = string(argv[++i]);
+      if (string(argv[i]) == "--basename" || string(argv[i]) == "-B") {
+        basename = string(argv[++i]);
       } else if (string(argv[i]) == "--GSA" || string(argv[i]) == "-G") {
         gsaInputFileName = string(argv[++i]);
       } else if (string(argv[i]) == "--TAU" || string(argv[i]) == "-T") {
@@ -79,12 +79,13 @@ int main ( int argc, char** argv )
     }
   }
 
-  if ( bwt_pre == "" || gsaInputFileName == "") {
+  if ( basename == "" || gsaInputFileName == "") {
     std::cerr << "Missing argument(s)." << std::endl;
     show_usage();
     return 1;
   }
   vector< string > BWTInputFilenames;
+  vector< string > LCPInputFilenames;
   vector< string > qIntFilenames;
   vector< string > baseqIntFilenames;
 
@@ -93,12 +94,18 @@ int main ( int argc, char** argv )
   // create filenames and add them to the previous vectors
   for ( int i( BASE_$ ); i < ALPHABET_SIZE; ++i )
     {
-      std::ostringstream partialBWTname, qIntFilename, baseqIntFilename;
-      partialBWTname << bwt_pre << i;
+      std::ostringstream \
+		  partialBWTname,
+		  partialLCPname,
+		  qIntFilename,
+		  baseqIntFilename;
+      partialBWTname << basename << "-B0" << i;
+      partialLCPname << basename << "-L0" << i;
       qIntFilename << ".QINT-" << i;
       baseqIntFilename << ".bQ-" << i;
 
       BWTInputFilenames.push_back( partialBWTname.str( ) );
+      LCPInputFilenames.push_back( partialLCPname.str( ) );
       qIntFilenames.push_back( qIntFilename.str( ) );
       baseqIntFilenames.push_back( baseqIntFilename.str( ) );
     }
@@ -123,7 +130,15 @@ int main ( int argc, char** argv )
                 << std::endl;
     }
 
-  std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << " -> ";
+  std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
+
+  LCPIterator lcpit( LCPInputFilenames );
+  GSAIterator gsait( gsaInputFileName );
+
+  vector< QIntervalManager > qmgrs;
+  build_basic_arc_intervals(br, lcpit, gsait, 4, TAU, *c, qmgrs);
+  return -1;
+
   std::cerr << "Building base intervals (SEED length 1)" << std::endl;
   for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
     {

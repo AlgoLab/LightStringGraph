@@ -13,6 +13,9 @@
 
 #include "BWTReader.h"
 #include "GSAReader.h"
+#include "GSAIterator.h"
+#include "LCPReader.h"
+#include "LCPIterator.h"
 #include "joined_q_int_manager.h"
 #include "joined_q_interval.h"
 #include "interval_manager.h"
@@ -36,6 +39,20 @@ void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
                 vector< NucleoCounter >& C, int iteration );
 // Count the occurrences of characters lexicographically smaller than base.
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
+
+
+// Build all the basic arc intervals of length t > \tau with a single pass
+// over the LCP file.
+// Input: BWT, LCP, GSA, \tau
+// Output: basic arc intervals grouped by starting symbols $\sigma$ and
+//    seed length $l$ (via $max{l}$ "QIntervalManager"s)
+void build_basic_arc_intervals( BWTReader& bwt,
+										  LCPIterator& lcp,
+										  GSAIterator& gsa,
+										  const SequenceLength& read_length,
+										  const SequenceLength& tau,
+										  const vector< NucleoCounter >& C,
+										  vector< QIntervalManager >& qmgr);
 
 // Legacy. Don't you dare using it.
 // bool int_overlap( const QInterval& a, const QInterval& b );

@@ -63,7 +63,11 @@ BGSA_DEP= $(OBJ_DIR)partialBWTReader.o \
 	$(OBJ_DIR)bgsa/bgsa.o
 
 LSG_DEP= $(OBJ_DIR)BWTReader.o \
+	$(OBJ_DIR)partialLCPReader.o \
+	$(OBJ_DIR)LCPReader.o \
+	$(OBJ_DIR)LCPIterator.o \
 	$(OBJ_DIR)GSAReader.o \
+	$(OBJ_DIR)GSAIterator.o \
 	$(OBJ_DIR)joined_q_interval.o \
 	$(OBJ_DIR)search.o \
 	$(OBJ_DIR)ext_sort.o \

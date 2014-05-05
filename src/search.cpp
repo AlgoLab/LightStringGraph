@@ -1,5 +1,9 @@
 #include "search.h"
 
+#include <stack>
+#include <vector>
+#include <ostream>
+
 void build_tau_intervals( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
                           vector< NucleoCounter >& C, int T )
 {
@@ -561,3 +565,115 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 //   return ( ( b.get_begin( ) > a.get_begin( ) && b.get_begin( ) < a.get_end( ) ) ||
 //            ( a.get_begin( ) > b.get_begin( ) && a.get_begin( ) < b.get_end( ) ) );
 // }
+
+#define _LOG_RECORD											\
+  DEBUG_LOG("pos: " << p									\
+            << "  c_lcp: " << lcur											\
+				<< "  n_lcp: " << *lcp											\
+				<< "  gsa: (" << (*gsa).sa << ","							\
+				              << (*gsa).numSeq << ")"						\
+				)
+
+static void next_record(BWTReader& bwt,
+								LCPIterator& lcp,
+								GSAIterator& gsa,
+								BWTPosition& p,
+								LCPValue& lcur,
+								LCPValue& lnext
+								) {
+  ++p;
+  lcur= *lcp;
+  ++lcp;
+  lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
+  ++gsa;
+  _LOG_RECORD;
+}
+
+struct stack_e_elem_t {
+  SequenceNumber numSeq;
+  LCPValue k;
+  size_t idx_on_stack_$;
+
+  explicit stack_e_elem_t(const SequenceNumber numSeq_,
+								  const LCPValue k_,
+								  const size_t idx_on_stack_$_)
+		:numSeq(numSeq_), k(k_), idx_on_stack_$(idx_on_stack_$_)
+  {
+  }
+
+};
+
+std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
+  os << "(" << el.numSeq << ", " << el.k << ", " << el.idx_on_stack_$ << ")";
+  return os;
+}
+
+
+typedef SequenceNumber stack_$_elem_t;
+
+void build_basic_arc_intervals( BWTReader& bwt,
+										  LCPIterator& lcp,
+										  GSAIterator& gsa,
+										  const SequenceLength& read_length,
+										  const SequenceLength& tau,
+										  const vector< NucleoCounter >& C,
+										  vector< QIntervalManager >& qmgr)
+{
+  typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
+  typedef std::vector<stack_$_elem_t> stack_$_t;
+
+  stack_e_t stack_e;
+  stack_$_t stack_$;
+
+  BWTPosition p= 0;  // current position (on LCP/BWT/...)
+
+  LCPValue lcur= *lcp;
+  ++lcp;
+  LCPValue lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
+
+  _LOG_RECORD;
+
+  while (lcp != LCPIterator::end()) {
+	 DEBUG_LOG("Starting again...");
+
+	 if ((lcur<lnext) && (lnext >= tau)) {
+		DEBUG_LOG("Opening a " << lnext << "-superblock.");
+		while (gsa != GSAIterator::end() && (*gsa).sa == lnext) {
+		  DEBUG_LOG("A " << lnext << "-long suffix of read " << (*gsa).numSeq
+						<< " has been found.");
+		  stack_e.push(stack_e_elem_t((*gsa).numSeq, lnext, stack_$.size()));
+		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
+		  next_record(bwt, lcp, gsa, p, lcur, lnext);
+		}
+	 }
+	 if (((*gsa).sa == read_length) && (!stack_e.empty())) {
+		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
+					 << stack_e.top().k << "-superblock.");
+		stack_$.push_back(stack_$_elem_t((*gsa).numSeq));
+		DEBUG_LOG("Added element " << stack_$.back() << " to stack_$(" << stack_$.size() << ").");
+	 }
+	 if ((lnext<lcur) && (lcur >= tau)) {
+		LCPValue mink= std::max(lnext+1, tau);
+		DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
+		while(stack_e.top().k >= mink) {
+		  DEBUG_LOG("Adding a basic_arc_interval from read " << stack_e.top().numSeq << "...");
+		  stack_$_t::const_reverse_iterator end= stack_$.rend()-stack_e.top().idx_on_stack_$;
+		  for (stack_$_t::const_reverse_iterator it= stack_$.rbegin();
+				 it != end;
+				 ++it) {
+			 DEBUG_LOG("   ...to read " << *it);
+		  }
+		  stack_e.pop();
+		}
+		if (stack_e.empty()) {
+		  DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
+		  stack_$.clear();
+		}
+		next_record(bwt, lcp, gsa, p, lcur, lnext);
+	 } else {
+		next_record(bwt, lcp, gsa, p, lcur, lnext);
+	 }
+  }
+}
+
+#undef _LOG_RECORD
