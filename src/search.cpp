@@ -568,6 +568,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 
 #define _LOG_RECORD											\
   DEBUG_LOG("pos: " << p									\
+				<< "  sigma: "	<< ntoc((Nucleotide)Ci)						\
             << "  c_lcp: " << lcur											\
 				<< "  n_lcp: " << lnext											\
 				<< "  gsa: (" << (*gsa).sa << ","							\
@@ -579,7 +580,9 @@ static void next_record(BWTReader& bwt,
 								GSAIterator& gsa,
 								BWTPosition& p,
 								LCPValue& lcur,
-								LCPValue& lnext
+								LCPValue& lnext,
+								const vector< NucleoCounter >& C,
+								vector< NucleoCounter >::size_type& Ci
 								) {
   ++p;
   ++gsa;
@@ -588,25 +591,28 @@ static void next_record(BWTReader& bwt,
   lcur= *lcp;
   ++lcp;
   lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
+  if ((Ci + 1 < C.size()) && (p >= C[Ci+1])) ++Ci;
   _LOG_RECORD;
 }
 
 struct stack_e_elem_t {
-  SequenceNumber numSeq;
+  BWTPosition b;
+  BWTPosition e;
   LCPValue k;
   size_t idx_on_stack_$;
 
-  explicit stack_e_elem_t(const SequenceNumber numSeq_,
+  explicit stack_e_elem_t(const BWTPosition b_,
+								  const BWTPosition e_,
 								  const LCPValue k_,
 								  const size_t idx_on_stack_$_)
-		:numSeq(numSeq_), k(k_), idx_on_stack_$(idx_on_stack_$_)
+		:b(b_), e(e_), k(k_), idx_on_stack_$(idx_on_stack_$_)
   {
   }
 
 };
 
 std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
-  os << "(" << el.numSeq << ", " << el.k << ", " << el.idx_on_stack_$ << ")";
+  os << "( [" << el.b << ", " << el.e << "), " << el.k << ", " << el.idx_on_stack_$ << ")";
   return os;
 }
 
@@ -633,47 +639,56 @@ void build_basic_arc_intervals( BWTReader& bwt,
   ++lcp;
   LCPValue lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
 
+  vector< NucleoCounter >::size_type Ci= 0;
+
   _LOG_RECORD;
 
-  while (lcp != LCPIterator::end()) {
-	 DEBUG_LOG("Starting again...");
+  while (gsa != GSAIterator::end()) {
 
 	 if ((lcur<lnext) && (lnext >= tau)) {
 		DEBUG_LOG("Opening a " << lnext << "-superblock.");
-		while (gsa != GSAIterator::end() && (*gsa).sa == lnext) {
+		const BWTPosition b= p;
+		const LCPValue suff_len= lnext;
+		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len) {
 		  DEBUG_LOG("A " << lnext << "-long suffix of read " << (*gsa).numSeq
 						<< " has been found.");
-		  stack_e.push(stack_e_elem_t((*gsa).numSeq, lnext, stack_$.size()));
+		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci);
+		}
+		const BWTPosition e= p;
+		if (b < e) {
+		  stack_e.push(stack_e_elem_t(b, e, suff_len, stack_$.size()));
 		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
-		  next_record(bwt, lcp, gsa, p, lcur, lnext);
 		}
-	 }
-	 if (((*gsa).sa == read_length) && (!stack_e.empty())) {
-		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
-					 << stack_e.top().k << "-superblock.");
-		stack_$.push_back(stack_$_elem_t((*gsa).numSeq));
-		DEBUG_LOG("Added element " << stack_$.back() << " to stack_$(" << stack_$.size() << ").");
-	 }
-	 if ((lnext<lcur) && (lcur >= tau)) {
-		LCPValue mink= std::max(lnext+1, tau);
-		DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
-		while(stack_e.top().k >= mink) {
-		  DEBUG_LOG("Adding a basic_arc_interval from read " << stack_e.top().numSeq << "...");
-		  stack_$_t::const_reverse_iterator end= stack_$.rend()-stack_e.top().idx_on_stack_$;
-		  for (stack_$_t::const_reverse_iterator it= stack_$.rbegin();
-				 it != end;
-				 ++it) {
-			 DEBUG_LOG("   ...to read " << *it);
-		  }
-		  stack_e.pop();
-		}
-		if (stack_e.empty()) {
-		  DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
-		  stack_$.clear();
-		}
-		next_record(bwt, lcp, gsa, p, lcur, lnext);
 	 } else {
-		next_record(bwt, lcp, gsa, p, lcur, lnext);
+		if (((*gsa).sa == read_length) && (!stack_e.empty())) {
+		  DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
+						<< stack_e.top().k << "-superblock.");
+		  stack_$.push_back(stack_$_elem_t((*gsa).numSeq));
+		  DEBUG_LOG("Added element " << stack_$.back() << " to stack_$(" << stack_$.size() << ").");
+		}
+		if ((lnext<lcur) && (lcur >= tau)) {
+		  LCPValue mink= std::max(lnext+1, tau);
+		  DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
+		  while(stack_e.top().k >= mink) {
+			 DEBUG_LOG("Adding a basic_arc_interval from interval [" << stack_e.top().b << ", " << stack_e.top().e << ")...");
+			 stack_$_t::const_reverse_iterator end= stack_$.rend()-stack_e.top().idx_on_stack_$;
+			 for (stack_$_t::const_reverse_iterator it= stack_$.rbegin();
+					it != end;
+					++it) {
+				DEBUG_LOG("   ...to read " << *it);
+// FIXME: Add the basic_arc_interval ( [stack_e.top().b, stack_e.top().e), stack_e.top().k, *it)
+// to the interval manager with sigma=Ci and Length=stack_e.top().k
+			 }
+			 stack_e.pop();
+		  }
+		  if (stack_e.empty()) {
+			 DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
+			 stack_$.clear();
+		  }
+		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci);
+		} else {
+		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci);
+		}
 	 }
   }
 }
