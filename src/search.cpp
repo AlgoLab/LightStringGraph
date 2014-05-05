@@ -569,7 +569,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 #define _LOG_RECORD											\
   DEBUG_LOG("pos: " << p									\
             << "  c_lcp: " << lcur											\
-				<< "  n_lcp: " << *lcp											\
+				<< "  n_lcp: " << lnext											\
 				<< "  gsa: (" << (*gsa).sa << ","							\
 				              << (*gsa).numSeq << ")"						\
 				)
@@ -582,10 +582,12 @@ static void next_record(BWTReader& bwt,
 								LCPValue& lnext
 								) {
   ++p;
+  ++gsa;
+  if (gsa==GSAIterator::end())
+	 return;
   lcur= *lcp;
   ++lcp;
   lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
-  ++gsa;
   _LOG_RECORD;
 }
 
