@@ -10,6 +10,9 @@
 
 #include "BWTReader.h"
 #include "GSAReader.h"
+#include "BWTIterator.h"
+#include "GSAIterator.h"
+#include "LCPIterator.h"
 #include "joined_q_interval.h"
 #include "util.h"
 #include "types.h"
@@ -132,11 +135,12 @@ int main ( int argc, char** argv )
 
   std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
 
+  BWTIterator bwtit( BWTInputFilenames );
   LCPIterator lcpit( LCPInputFilenames );
   GSAIterator gsait( gsaInputFileName );
 
   vector< QIntervalManager > qmgrs;
-  build_basic_arc_intervals(br, lcpit, gsait, 4, TAU, *c, qmgrs);
+  build_basic_arc_intervals(bwtit, lcpit, gsait, 0, TAU, *c, qmgrs);
   return -1;
 
   std::cerr << "Building base intervals (SEED length 1)" << std::endl;

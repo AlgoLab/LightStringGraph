@@ -13,8 +13,9 @@
 
 #include "BWTReader.h"
 #include "GSAReader.h"
-#include "GSAIterator.h"
 #include "LCPReader.h"
+#include "BWTIterator.h"
+#include "GSAIterator.h"
 #include "LCPIterator.h"
 #include "joined_q_int_manager.h"
 #include "joined_q_interval.h"
@@ -46,7 +47,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
 // Input: BWT, LCP, GSA, \tau
 // Output: basic arc intervals grouped by starting symbols $\sigma$ and
 //    seed length $l$ (via $max{l}$ "QIntervalManager"s)
-void build_basic_arc_intervals( BWTReader& bwt,
+void build_basic_arc_intervals( BWTIterator& bwt,
 										  LCPIterator& lcp,
 										  GSAIterator& gsa,
 										  const SequenceLength& read_length,

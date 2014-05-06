@@ -571,11 +571,13 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 				<< "  sigma: "	<< ntoc((Nucleotide)Ci)						\
             << "  c_lcp: " << lcur											\
 				<< "  n_lcp: " << lnext											\
+				<< "  bwt: " << (use_bwt?*bwt:'.')							\
 				<< "  gsa: (" << (*gsa).sa << ","							\
 				              << (*gsa).numSeq << ")"						\
 				)
 
-static void next_record(BWTReader& bwt,
+
+static void next_record(BWTIterator& bwt,
 								LCPIterator& lcp,
 								GSAIterator& gsa,
 								BWTPosition& p,
@@ -583,16 +585,24 @@ static void next_record(BWTReader& bwt,
 								LCPValue& lnext,
 								const vector< NucleoCounter >& C,
 								vector< NucleoCounter >::size_type& Ci,
-								bool& record_moved
+								bool& record_moved,
+								const bool use_bwt
 								) {
-  ++p;
-  ++gsa;
+  ++p;    // Position
+  ++gsa;  // Generalized Suffix Array
   if (gsa==GSAIterator::end())
 	 return;
+  if (use_bwt) ++bwt;  // BWT (if used)
+
+  // LCP (current and next)
   lcur= *lcp;
   ++lcp;
   lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
+
+  // starting symbol
   while ((Ci + 1 < C.size()) && (p >= C[Ci+1])) ++Ci;
+
+  // mark as moved and print to log
   record_moved= true;
   _LOG_RECORD;
 }
@@ -621,7 +631,7 @@ std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
 
 typedef SequenceNumber stack_$_elem_t;
 
-void build_basic_arc_intervals( BWTReader& bwt,
+void build_basic_arc_intervals( BWTIterator& bwt,
 										  LCPIterator& lcp,
 										  GSAIterator& gsa,
 										  const SequenceLength& read_length,
@@ -631,6 +641,8 @@ void build_basic_arc_intervals( BWTReader& bwt,
 {
   typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
   typedef std::stack<stack_$_elem_t, std::vector<stack_$_elem_t> > stack_$_t;
+
+  const bool use_bwt= (read_length == 0);
 
   stack_e_t stack_e;
   stack_$_t stack_$;
@@ -656,7 +668,7 @@ void build_basic_arc_intervals( BWTReader& bwt,
 		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len) {
 		  DEBUG_LOG("A " << lnext << "-long suffix of read " << (*gsa).numSeq
 						<< " has been found.");
-		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved);
+		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved, use_bwt);
 		}
 		const BWTPosition e= p;
 		if (b < e) {
@@ -666,7 +678,10 @@ void build_basic_arc_intervals( BWTReader& bwt,
 	 }
 
 // Found a new prefix
-	 if (((*gsa).sa == read_length) && (!stack_e.empty())) {
+	 if ((!stack_e.empty()) &&         // some supeblock is active AND
+		  ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
+			((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
+		  ) {
 		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
 					 << stack_e.top().k << "-superblock.");
 		stack_$.push(stack_$_elem_t((*gsa).numSeq));
@@ -692,12 +707,11 @@ void build_basic_arc_intervals( BWTReader& bwt,
 		//   DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
 		//   stack_$.clear();
 		// }
-		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved);
 	 }
 
 
 	 if (!record_moved) {
-		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved);
+		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved, use_bwt);
 	 }
   }
 }
