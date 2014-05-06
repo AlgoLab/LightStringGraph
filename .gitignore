@@ -21,3 +21,6 @@ data/
 stxxl.*
 script/
 lib/
+
+# Emacs files
+*\~
