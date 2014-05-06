@@ -26,24 +26,21 @@ using std::string;
 using std::deque;
 using std::stringstream;
 
-int       TAU         =0;
-int       CYCNUM      =0;
 
 void show_usage(){
-  std::cerr << "Usage: lsg -B <BWTFilenamePrefix> ";
-  std::cerr << "-G <gsaFilename> ";
-  std::cerr << "-T <TAU> ";
-  std::cerr << "-C <CycNum> ";
-  // TODO: Manage reads with variable lengths and delete this
-  std::cerr << "-l <readsLenght> ";
+  std::cerr << "Usage: lsg ";
+  std::cerr << "-B <basename> ";
+  std::cerr << "[-G <GSAFilename>] ";
+  std::cerr << "[-T <TAU>] ";
+  std::cerr << "[-C <CycNum>] ";
+  std::cerr << "[-l <readLenght>]";
   std::cerr << std::endl;
   std::cerr << std::endl << "Options:" << std::endl;
-  std::cerr << "\t-B, --basename \t <prefix>" << std::endl;
-  std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
-  std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
-  std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
-  // TODO: Manage reads with variable lengths and delete this
-  std::cerr << "\t-l, --reads-length \t <readsLength>" << std::endl;
+  std::cerr << "\t-B, --basename    <basename>     # (required)" << std::endl;
+  std::cerr << "\t-G, --GSA         <GSAFilename>  # (default: '<basename>.pairSA')" << std::endl;
+  std::cerr << "\t-T, --TAU         <TAU>          # (default: 0)" << std::endl;
+  std::cerr << "\t-C, --CycNum      <CycNum>       # (default: 0)" << std::endl;
+  std::cerr << "\t-l, --read-length <readLength>   # 0 if unknown or not fixed (default: 0)" << std::endl;
   std::cerr << std::endl;
 }
 
@@ -52,7 +49,7 @@ void show_usage(){
 /****************/
 int main ( int argc, char** argv )
 {
-  if(argc < 6){
+  if(argc < 3){
     show_usage();
     return 1;
   }
@@ -60,7 +57,11 @@ int main ( int argc, char** argv )
   string basename = "";
   string gsaInputFileName = "";
 
-  SequenceLength readsLen;
+  SequenceLength readLen= 0;  // If readLen==0, then the program does not
+										// assume that all reads have the same length
+
+  SequenceLength TAU= 0;
+  int CYCNUM= 0;
 
   for (int i = 1; i < argc; i++) {
     if (i + 1 != argc){
@@ -82,10 +83,10 @@ int main ( int argc, char** argv )
           std::cerr << "Aborting.." << std::endl;
           std::exit( -1 );
         }
-      } else if (string(argv[i]) == "--reads-length" || string(argv[i]) == "-l") {
+      } else if (string(argv[i]) == "--read-length" || string(argv[i]) == "-l") {
         stringstream convert(string(argv[++i]));
-        if( !( convert >> readsLen ) ) {
-          std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (readsLen)." << std::endl;
+        if( !( convert >> readLen ) ) {
+          std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (readLen)." << std::endl;
           std::cerr << "Aborting.." << std::endl;
           std::exit( -1 );
         }
@@ -96,10 +97,13 @@ int main ( int argc, char** argv )
     }
   }
 
-  if ( basename == "" || gsaInputFileName == "") {
+  if ( basename == "" ) {
     std::cerr << "Missing argument(s)." << std::endl;
     show_usage();
     return 1;
+  }
+  if (gsaInputFileName == "") {
+	 gsaInputFileName= basename+".pairSA";
   }
   vector< string > BWTInputFilenames;
   vector< string > LCPInputFilenames;
@@ -181,7 +185,7 @@ int main ( int argc, char** argv )
   vector< SameLengthArcIntervalManager > qmgrs;
   PrefixManager pref_mgr("prefixes.bin");
 
-  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readsLen, TAU, *c, qmgrs);
+  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, qmgrs);
   return -1;
 
   // std::cerr << "Building base intervals (SEED length 1)" << std::endl;
