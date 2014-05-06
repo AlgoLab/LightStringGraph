@@ -24,6 +24,9 @@
 #include "edge_joined_interval.h"
 #include "types.h"
 #include "util.h"
+#include "arcInterval.h"
+#include "extend_symbol_pile.h"
+#include "edgeLabelIntervalManager.h"
 
 using std::vector;
 using std::deque;
@@ -55,7 +58,19 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 										  const SequenceLength& read_length,
 										  const SequenceLength& tau,
 										  const vector< NucleoCounter >& C,
-										  vector< QIntervalManager >& qmgr);
+										  vector< SameLengthArcIntervalManager >& qmgr);
+
+// Extend arc intervals and save extension symbols to an ExtensionSymbolPile
+void extend_arc_intervals( const int length,
+                           const vector< NucleoCounter >& C,
+                           BWTReader& br,
+                           GSAIterator& gsait,
+                           SameLengthArcIntervalManager& qmgr,
+                           SameLengthArcIntervalManager& newqmgr,
+                           ExtendSymbolPile extsim_p,
+                           EdgeLabelIntervalManager& arcmgr);
+
+bool equalFirstInterval( const QInterval&, const QInterval& );
 
 // Legacy. Don't you dare using it.
 // bool int_overlap( const QInterval& a, const QInterval& b );

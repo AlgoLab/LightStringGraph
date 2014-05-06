@@ -19,6 +19,7 @@
 #include "search.h"
 #include "edge_joined_interval.h"
 #include "ext_sort.h"
+#include "extend_symbol_pile.h"
 
 using std::vector;
 using std::string;
@@ -104,7 +105,16 @@ int main ( int argc, char** argv )
   vector< string > LCPInputFilenames;
   vector< string > qIntFilenames;
   vector< string > baseqIntFilenames;
+  vector< vector< string > > edgeIntFilenames;
+  vector< string > extendSymbolFilenames;
 
+  for( SequenceLength i( 0 ); i < readsLen; ++i )
+    {
+      edgeIntFilenames.push_back( vector< string >( ) );
+      std::ostringstream extsymfn;
+      extsymfn << ".extsym" << i;
+      extendSymbolFilenames.push_back(extsymfn.str());
+    }
   GSAReader gsardr( gsaInputFileName );
 
   // create filenames and add them to the previous vectors
@@ -114,11 +124,19 @@ int main ( int argc, char** argv )
 		  partialBWTname,
 		  partialLCPname,
 		  qIntFilename,
-		  baseqIntFilename;
+      baseqIntFilename;
+      std::stringstream edgeIntFilename;
       partialBWTname << basename << "-B0" << i;
       partialLCPname << basename << "-L0" << i;
       qIntFilename << ".QINT-" << i;
       baseqIntFilename << ".bQ-" << i;
+      for(SequenceLength j( 0 ); j <= readsLen; ++j)
+        {
+          edgeIntFilename << ".arc-" << i << "-" << j;
+          edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
+          edgeIntFilename.str(string(""));
+          edgeIntFilename.clear();
+        }
 
       BWTInputFilenames.push_back( partialBWTname.str( ) );
       LCPInputFilenames.push_back( partialLCPname.str( ) );
@@ -127,9 +145,17 @@ int main ( int argc, char** argv )
     }
 
   //  JoinedQIntervalManager imgr( qIntFilenames );
-  QIntervalManager qmgr( baseqIntFilenames );
+  //  QIntervalManager qmgr( baseqIntFilenames );
+
+  DEBUG_LOG( "edgeIntFilenames sizes" );
+  for(size_t i(0); i < edgeIntFilenames.size(); ++i)
+    {
+      DEBUG_LOG( i << " : " << edgeIntFilenames[i].size() );
+    }
 
   BWTReader br( BWTInputFilenames );
+  SameLengthArcIntervalManager qmgr( baseqIntFilenames );
+  EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
 
   std::cerr << "Building vector C..";
   std::cerr.flush( );
@@ -152,32 +178,44 @@ int main ( int argc, char** argv )
   LCPIterator lcpit( LCPInputFilenames );
   GSAIterator gsait( gsaInputFileName );
 
-  vector< QIntervalManager > qmgrs;
+  vector< SameLengthArcIntervalManager > qmgrs;
   PrefixManager pref_mgr("prefixes.bin");
 
   build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readsLen, TAU, *c, qmgrs);
   return -1;
 
-  std::cerr << "Building base intervals (SEED length 1)" << std::endl;
-  for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
-    {
-      QInterval qint( c->at( nucl ), c->at( nucl +1 ) );
-      qmgr.add_interval( qint, (Nucleotide) nucl );
-    }
+  // std::cerr << "Building base intervals (SEED length 1)" << std::endl;
+  // for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
+  //   {
+  //     QInterval qint( c->at( nucl ), c->at( nucl +1 ) );
+  //     qmgr.add_interval( qint, (Nucleotide) nucl );
+  //   }
+
+  // build_tau_intervals( br, qmgr, gsardr, *c, TAU);
 
   std::cerr.flush();
   qmgr.swap_files();
 
-  build_tau_intervals( br, qmgr, gsardr, *c, TAU);
-
   for( int i( 0 ); i < CYCNUM; ++i )
     {
+      LCPIterator lcpit( LCPInputFilenames );
+      GSAIterator gsait( gsaInputFileName );
+
+      ExtendSymbolPile extsim_p(extendSymbolFilenames);
+
       std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
-      std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
-      left_step( br, qmgr, gsardr, *c, i + TAU);
+      // std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
+      // left_step( br, qmgr, gsardr, *c, i + TAU);
+      std::cerr << "--> Extend-Arc-Intervals - " << i+1 << "/" << CYCNUM << std::endl;
+      extend_arc_intervals(i+1, *c, br, gsait, qmgr, qmgrs[i], extsim_p, edgemgr);
+
+      extsim_p.switch_mode( );
+
       br.reset();
       gsardr.reset();
       qmgr.swap_files();
+
+      extsim_p.switch_mode( );
     }
 
   // temporary

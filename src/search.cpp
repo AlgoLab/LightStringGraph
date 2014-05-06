@@ -524,6 +524,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 
 //   // std::cerr << "--> Sorting RT" << std::endl;
 //   // std::sort( edges_to_test->begin( ), edges_to_test->end( ), CompareEdgeIntervalReverse );
+
 // #ifdef DEBUG
 //   std::cerr << "--> Generated " << nwintc << " new intervals on BWT'" << std::endl;
 //   std::cerr << "--> Merged " << mrgintc << " intervals from lt and from interval manager" << std::endl;
@@ -636,7 +637,7 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 										  const SequenceLength& read_length,
 										  const SequenceLength& tau,
 										  const vector< NucleoCounter >& C,
-										  vector< QIntervalManager >& qmgr)
+										  vector< SameLengthArcIntervalManager >& qmgr)
 {
   typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
 
@@ -710,3 +711,107 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 }
 
 #undef _LOG_RECORD
+
+bool equalFirstInterval( const QInterval& a, const QInterval& b )
+{
+  return (a.get_begin() == b.get_begin() &&
+          a.get_end() == b.get_end() );
+}
+
+void extend_arc_intervals( const int length,
+                           const vector< NucleoCounter >& C,
+                           BWTReader& br,
+                           GSAIterator& gsait,
+                           SameLengthArcIntervalManager& qmgr,
+                           SameLengthArcIntervalManager& newqmgr,
+                           ExtendSymbolPile extsim_p,
+                           EdgeLabelIntervalManager& edlblmgr)
+{
+  unsigned long int nwintc =0; // New intervals
+  unsigned long int nwltc  =0; // New left terminated intervals
+  unsigned long int mrgintc=0; // Merged intervals
+
+  ArcInterval *qint, *newqint;
+  qint = qmgr.get_next_interval( );
+  newqint = newqmgr.get_next_interval( );
+
+  QInterval lastInterval(0,0);
+
+  vector< NucleoCounter > PI;
+  vector< NucleoCounter > pi;
+
+  SeedInterval PrefixInterval;
+
+  while((qint != NULL) || (newqint != NULL))
+    {
+      // if(qint != NULL && newqint != NULL && equalFirstInterval(qint->get_q_interval(), newqint->get_q_interval()))
+      //   {
+      //     DEBUG_LOG_VERBOSE( "Merged intervals" );
+      //     ++mrgintc;
+      //     qint->add_seed(newqint->get_seeds( ));
+      //     newqint = newqmgr.get_next_interval( );
+      //   }
+
+      ArcInterval* currentInterval;
+      vector< Nucleotide > extendsymbols;
+
+      if(newqint == NULL ||
+         qint->get_q_interval().get_begin() < newqint->get_q_interval().get_begin())
+        currentInterval = qint;
+      else
+        currentInterval = newqint;
+
+      if(currentInterval->get_q_interval() != lastInterval)
+        {
+          // New qinterval
+          lastInterval = currentInterval->get_q_interval();
+          PrefixInterval.clear();
+          br.move_to( currentInterval->get_q_interval().get_begin() );
+          PI = br.get_Pi();
+
+          while(gsait.get_position() < currentInterval->get_q_interval().get_begin())
+            {
+              ++gsait;
+            }
+          for(BWTPosition currentPosition=currentInterval->get_q_interval().get_begin();
+              currentPosition < currentInterval->get_q_interval().get_end();
+              ++currentPosition)
+            {
+              br.move_to(currentPosition);
+              ++gsait;
+              if(br.get_current_nucleotide() == BASE_$)
+                {
+                  PrefixInterval.add((*gsait).numSeq);
+                }
+            }
+        }
+      if(PrefixInterval.size() != 0)
+        {
+          // TODO: Output Prefix and Suffix
+          ++nwltc;
+          extendsymbols.push_back( BASE_$ );
+        }
+      for(int base(BASE_A); base < ALPHABET_SIZE; ++base)
+        {
+          BWTPosition new_begin = C[ base ] + PI[ base ];
+          BWTPosition new_end   = C[ base ] + PI[ base ] + pi[ base ];
+          if(new_end > new_begin)
+            {
+              ++nwintc;
+              extendsymbols.push_back( (Nucleotide) base );
+              QInterval new_q_interval(new_begin, new_end);
+              ArcInterval new_arc_interval(new_q_interval,
+                                           currentInterval->get_edge_length() +1,
+                                           currentInterval->get_seeds());
+              qmgr.add_interval(new_arc_interval, (Nucleotide)base);
+            }
+        }
+      if(extendsymbols.size() > 0)
+        {
+          extsim_p.add_extend_symbol(extendsymbols, currentInterval->get_edge_length());
+        }
+    }
+  std::cerr << "--> Merged " << mrgintc << " new intervals in old intervals" << std::endl;
+  std::cerr << "--> Generated " << nwintc << " new intervals" << std::endl;
+  std::cerr << "--> Produced " << nwltc << " new edges (still not labeled)" << std::endl;
+}

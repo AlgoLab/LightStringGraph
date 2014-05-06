@@ -15,6 +15,7 @@
 #include "edge_joined_interval.h"
 #include "joined_q_interval.h"
 #include "q_interval.h"
+#include "arcInterval.h"
 
 using std::ofstream;
 using std::ifstream;
@@ -45,6 +46,13 @@ ifstream& operator>>( ifstream&, QInterval* );
 
 ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
+
+ofstream& operator<<( ofstream&, const ArcInterval& );
+ifstream& operator>>( ifstream&, ArcInterval* );
+//ifstream& operator>>( ifstream&, ArcInterval** );
+
+ofstream& operator<<( ofstream&, const SeedInterval& );
+ifstream& operator>>( ifstream&, SeedInterval& );
 
 // Return a string representing the current tim
 std::string now( const char* format );

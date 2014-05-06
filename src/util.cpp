@@ -286,12 +286,50 @@ ifstream& operator>>( ifstream& in, GSAEntry& g )
   return in;
 }
 
+ofstream& operator<<( ofstream& out, const ArcInterval& a )
+{
+  out << a.get_q_interval();
+  EdgeLength l = a.get_edge_length();
+  out.write( (char *) &l, sizeof( EdgeLength ) );
+  out << a.get_seeds();
+  out.flush( );
+
+  return out;
+}
+
+ifstream& operator>>( ifstream& in, ArcInterval* a )
+{
+  BWTPosition begin=0, end=0;
+  EdgeLength len=0;
+  SeedInterval s;
+  in.read( (char *) &begin, sizeof( BWTPosition ) );
+  if(in.gcount() == 0) { a = NULL; return in; }
+  in.read( (char *) &end, sizeof( BWTPosition ) );
+  if(in.gcount() == 0) { a = NULL; return in; }
+  in.read( (char *) &len, sizeof( EdgeLength ) );
+  if(in.gcount() == 0) { a = NULL; return in; }
+  in >> s;
+  QInterval q( begin, end );
+  a = new ArcInterval( q, len, s );
+  return in;
+}
+
 std::string now( const char* format = "%c" )
 {
   std::time_t t = std::time(0) ;
   char cstr[128] ;
   std::strftime( cstr, sizeof(cstr), format, std::localtime(&t) ) ;
   return cstr ;
+}
+
+ofstream& operator<<( ofstream& out, const SeedInterval& s )
+{
+  return out;
+}
+
+ifstream& operator>>( ifstream& in, SeedInterval& s )
+{
+  return in;
 }
 
 // LEGACY
