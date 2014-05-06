@@ -25,3 +25,25 @@ BWTPosition QInterval::get_end ( ) const
 {
   return _end;
 }
+
+bool QInterval::operator== (const QInterval& rhs ) const
+{
+  return (this->_begin == rhs._begin &&
+          this->_end == rhs._end);
+}
+
+bool QInterval::operator!= (const QInterval& rhs ) const
+{
+  return (! (*this == rhs));
+}
+
+QInterval& QInterval::operator= ( const QInterval& rhs )
+{
+  if(this != &rhs)
+    {
+      this->_begin = rhs._begin;
+      this->_end = rhs._end;
+    }
+
+  return *this;
+}

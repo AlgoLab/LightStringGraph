@@ -32,13 +32,20 @@ public:
   // Get the end position of the Q-interval
   BWTPosition get_end ( ) const;
 
+  // Equality operator
+  bool operator==(const QInterval& rhs ) const;
+
+  // Inequality operator
+  bool operator!=(const QInterval& rhs) const;
+
+  // Assignement operator
+  QInterval& operator= ( const QInterval& other );
+
 private:
   // no need of copy ctor nor assignment operator
   QInterval ( ) { };
   QInterval ( const QInterval& other )
   { };
-  QInterval& operator= ( const QInterval& other )
-  { return *this; };
 };
 
 #endif
