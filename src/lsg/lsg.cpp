@@ -112,7 +112,7 @@ int main ( int argc, char** argv )
   vector< vector< string > > edgeIntFilenames;
   vector< string > extendSymbolFilenames;
 
-  for( SequenceLength i( 0 ); i < readsLen; ++i )
+  for( SequenceLength i( 0 ); i < readLen; ++i )
     {
       edgeIntFilenames.push_back( vector< string >( ) );
       std::ostringstream extsymfn;
@@ -134,7 +134,7 @@ int main ( int argc, char** argv )
       partialLCPname << basename << "-L0" << i;
       qIntFilename << ".QINT-" << i;
       baseqIntFilename << ".bQ-" << i;
-      for(SequenceLength j( 0 ); j <= readsLen; ++j)
+      for(SequenceLength j( 0 ); j <= readLen; ++j)
         {
           edgeIntFilename << ".arc-" << i << "-" << j;
           edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
