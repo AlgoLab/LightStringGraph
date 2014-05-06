@@ -19,6 +19,9 @@ public:
   // Constructor
   QInterval ( const BWTPosition&, const BWTPosition& );
 
+  // Copy ctor
+  QInterval ( const QInterval& other );
+
   // Destructor
   ~QInterval ( );
 
@@ -44,8 +47,6 @@ public:
 private:
   // no need of copy ctor nor assignment operator
   QInterval ( ) { };
-  QInterval ( const QInterval& other )
-  { };
 };
 
 #endif

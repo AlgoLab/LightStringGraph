@@ -7,6 +7,12 @@ QInterval::QInterval ( const BWTPosition& begin,
   _end = end;
 }
 
+QInterval::QInterval ( const QInterval& other )
+{
+  _begin = other.get_begin( );
+  _end = other.get_end( );
+}
+
 QInterval::~QInterval ( )
 {
 }
