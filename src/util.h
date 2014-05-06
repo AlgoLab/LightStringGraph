@@ -28,6 +28,13 @@ char ntoc ( Nucleotide base );
 // convert char to nucleotide
 Nucleotide cton ( char c );
 
+template <typename T>
+std::string convert_to_string(const T& el) {
+  std::stringstream stream;
+  stream << el;
+  return stream.str();
+}
+
 // Legacy
 // Check if there is some irreducible edge between the reads pointed
 // by two Q-intervals

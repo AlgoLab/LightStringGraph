@@ -11,6 +11,8 @@
 #include <stxxl.h>
 #endif
 
+#include "types.h"
+#include "util.h"
 #include "BWTReader.h"
 #include "GSAReader.h"
 #include "LCPReader.h"
@@ -22,11 +24,10 @@
 #include "joined_q_interval.h"
 #include "interval_manager.h"
 #include "edge_joined_interval.h"
-#include "types.h"
-#include "util.h"
 #include "arcInterval.h"
 #include "extend_symbol_pile.h"
 #include "edgeLabelIntervalManager.h"
+#include "MultiIntervalManager.h"
 
 using std::vector;
 using std::deque;
@@ -58,7 +59,7 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 										  const SequenceLength& read_length,
 										  const SequenceLength& tau,
 										  const vector< NucleoCounter >& C,
-										  vector< SameLengthArcIntervalManager >& qmgr);
+										  BasicArcIntervalManager& baimgr);
 
 // Extend arc intervals and save extension symbols to an ExtensionSymbolPile
 void extend_arc_intervals( const int length,

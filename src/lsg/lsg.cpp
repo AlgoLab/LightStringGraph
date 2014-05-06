@@ -109,6 +109,7 @@ int main ( int argc, char** argv )
   vector< string > LCPInputFilenames;
   vector< string > qIntFilenames;
   vector< string > baseqIntFilenames;
+  vector< string > basicArcIntervalFilenames;
   vector< vector< string > > edgeIntFilenames;
   vector< string > extendSymbolFilenames;
 
@@ -128,10 +129,12 @@ int main ( int argc, char** argv )
 		  partialBWTname,
 		  partialLCPname,
 		  qIntFilename,
-      baseqIntFilename;
+		  baseqIntFilename,
+		  basicArcIntervalName;
       std::stringstream edgeIntFilename;
       partialBWTname << basename << "-B0" << i;
       partialLCPname << basename << "-L0" << i;
+      basicArcIntervalName << basename << ".lsg.bai.sigma_" << i;
       qIntFilename << ".QINT-" << i;
       baseqIntFilename << ".bQ-" << i;
       for(SequenceLength j( 0 ); j <= readLen; ++j)
@@ -146,6 +149,7 @@ int main ( int argc, char** argv )
       LCPInputFilenames.push_back( partialLCPname.str( ) );
       qIntFilenames.push_back( qIntFilename.str( ) );
       baseqIntFilenames.push_back( baseqIntFilename.str( ) );
+      basicArcIntervalFilenames.push_back( basicArcIntervalName.str() );
     }
 
   //  JoinedQIntervalManager imgr( qIntFilenames );
@@ -182,11 +186,14 @@ int main ( int argc, char** argv )
   LCPIterator lcpit( LCPInputFilenames );
   GSAIterator gsait( gsaInputFileName );
 
-  vector< SameLengthArcIntervalManager > qmgrs;
-  PrefixManager pref_mgr("prefixes.bin");
+  PrefixManager pref_mgr(basename + ".lsg.prefixes");
 
-  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, qmgrs);
+  BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-len_");
+
+  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
   return -1;
+
+  vector< SameLengthArcIntervalManager > qmgrs;
 
   // std::cerr << "Building base intervals (SEED length 1)" << std::endl;
   // for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)

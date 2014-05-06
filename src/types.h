@@ -18,6 +18,7 @@ using std::vector;
 #define QIntervalManager IntervalManager< QInterval >
 #define SameLengthArcIntervalManager IntervalManager< ArcInterval >
 #define SameLengthEdgeLabelIntervalManager IntervalManager< EdgeLabelInterval >
+#define BasicArcIntervalManager MultiIntervalManager<ArcInterval>
 
 // Position on a BWT
 typedef uint64_t BWTPosition;

@@ -631,13 +631,13 @@ std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
 
 
 void build_basic_arc_intervals( BWTIterator& bwt,
-										  LCPIterator& lcp,
-										  GSAIterator& gsa,
-										  PrefixManager& pref_mgr,
-										  const SequenceLength& read_length,
-										  const SequenceLength& tau,
-										  const vector< NucleoCounter >& C,
-										  vector< SameLengthArcIntervalManager >& qmgr)
+                                LCPIterator& lcp,
+                                GSAIterator& gsa,
+                                PrefixManager& pref_mgr,
+                                const SequenceLength& read_length,
+                                const SequenceLength& tau,
+                                const vector< NucleoCounter >& C,
+                                BasicArcIntervalManager& baimgr)
 {
   typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
 
@@ -696,8 +696,14 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 						  << "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
 						  << "[ " << stack_e.top().idx_on_pref_mgr << ", " << pref_mgr.size() << "), "
 						  << "0) to file "
-						  << "E^0( " << ntoc((Nucleotide)Ci) << ", " << stack_e.top().k << ").");
-// FIXME: Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k
+						  << "E^0( " << ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
+// Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k+1
+// (Note: '+1' is because '$' was not considered.)
+          baimgr[stack_e.top().k+1]. \
+            add_interval(ArcInterval(QInterval(stack_e.top().b, stack_e.top().e),
+                                     0,
+                                     SeedInterval(stack_e.top().idx_on_pref_mgr, pref_mgr.size())),
+                         (Nucleotide)Ci);
 		  }
 		  stack_e.pop();
 		}
@@ -708,6 +714,7 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved, use_bwt);
 	 }
   }
+  baimgr.swap_all_files();
 }
 
 #undef _LOG_RECORD
