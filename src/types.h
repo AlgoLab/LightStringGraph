@@ -17,6 +17,7 @@ using std::vector;
 // #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
 #define QIntervalManager IntervalManager< QInterval >
 #define SameLengthArcIntervalManager IntervalManager< ArcInterval >
+#define SameLengthEdgeLabelIntervalManager IntervalManager< EdgeLabelInterval >
 
 // Position on a BWT
 typedef uint64_t BWTPosition;

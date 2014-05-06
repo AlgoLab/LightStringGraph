@@ -79,6 +79,7 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)edgeLabelIntervalManager.o \
 	$(OBJ_DIR)extend_symbol_pile.o \
 	$(OBJ_DIR)seedInterval.o \
+	$(OBJ_DIR)edgeLabelInterval.o \
 	$(OBJ_DIR)lsg/lsg.o
 
 .PHONY: all
