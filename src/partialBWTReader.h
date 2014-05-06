@@ -48,7 +48,7 @@ public:
   bool move_to ( const BWTPosition & p );
 
   // Return nucleotide in the current position
-  char get_current_nucleotide();
+  char get_current_nucleotide() const;
 
 private:
   // no need of copy ctor nor assignment operator

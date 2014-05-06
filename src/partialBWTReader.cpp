@@ -50,7 +50,7 @@ vector< NucleoCounter >& partialBWTReader::get_Pi ( )
   return _occurrencesBeforeStart;
 }
 
-char partialBWTReader::get_current_nucleotide( )
+char partialBWTReader::get_current_nucleotide( ) const
 {
   return _buffer[_position];
 }

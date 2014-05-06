@@ -24,7 +24,7 @@ class BWTReader
 private:
   vector< string >    _filenamesIN;       // names of BWT sections
   unsigned short      _nextBWTFilename;   // index of next BWTFilename in _filenamesIoN
-  partialBWTReader*   _currentBWT;      // current BWT section
+  partialBWTReader*   _currentBWT;        // current BWT section
 
 public:
   // Constructor
@@ -57,6 +57,9 @@ public:
 
   // Reset BWT
   void reset ( );
+
+  // Get current nucleotide
+  Nucleotide get_current_nucleotide() const;
 
 private:
   // no need of copy ctor nor assignment operator

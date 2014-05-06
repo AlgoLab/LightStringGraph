@@ -122,3 +122,8 @@ void BWTReader::reset ( )
   DEBUG_LOG_VERBOSE("(RESET) Open BWT file: " << _filenamesIN[ 0 ]);
   _nextBWTFilename = 1;
 }
+
+Nucleotide BWTReader::get_current_nucleotide( ) const
+{
+  return cton(_currentBWT->get_current_nucleotide());
+}

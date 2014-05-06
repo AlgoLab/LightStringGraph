@@ -47,14 +47,14 @@ public:
         std::ifstream t((*it).c_str(), std::ios::binary);
         if(!t.good())
           {
-            std::cerr << *it << " does not exists" << std::endl;
+            DEBUG_LOG( *it << " does not exists" );
             std::ofstream temp ((*it).c_str(), std::ios::binary);
             temp.close();
           }
         else
           {
-            std::cerr << *it << " does exists. This shouldn't happen and the program "
-                      << "will probably give erroneous results." << std::endl;
+            DEBUG_LOG(*it << " does exists. This shouldn't happen and the program " \
+                      << "will probably give erroneous results." );
           }
         t.close();
       }
@@ -159,7 +159,7 @@ public:
   } // get_next_interval
 
   // Append i to outputfile[ n ]
-  bool add_interval ( interval_t& i, Nucleotide n )
+  bool add_interval ( const interval_t& i, const Nucleotide n )
   {
     if ( (unsigned int) n >= _outputFiles.size() )
       {
@@ -206,7 +206,7 @@ private:
 
     interval_t* i = NULL;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           ( ( _inputFile && ((*_inputFile) >> &i ) ) || ( _nextInputFile < _filenames.size( ) ) ) )
+           ( ( _inputFile && ((*_inputFile) >> i ) ) || ( _nextInputFile < _filenames.size( ) ) ) )
       {
         if( i == NULL )
           {
