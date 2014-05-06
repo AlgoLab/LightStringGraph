@@ -140,7 +140,9 @@ int main ( int argc, char** argv )
   GSAIterator gsait( gsaInputFileName );
 
   vector< QIntervalManager > qmgrs;
-  build_basic_arc_intervals(bwtit, lcpit, gsait, 0, TAU, *c, qmgrs);
+  PrefixManager pref_mgr("prefixes.bin");
+
+  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, 0, TAU, *c, qmgrs);
   return -1;
 
   std::cerr << "Building base intervals (SEED length 1)" << std::endl;

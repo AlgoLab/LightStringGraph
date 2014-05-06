@@ -17,6 +17,7 @@
 #include "BWTIterator.h"
 #include "GSAIterator.h"
 #include "LCPIterator.h"
+#include "PrefixManager.h"
 #include "joined_q_int_manager.h"
 #include "joined_q_interval.h"
 #include "interval_manager.h"
@@ -50,6 +51,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
 void build_basic_arc_intervals( BWTIterator& bwt,
 										  LCPIterator& lcp,
 										  GSAIterator& gsa,
+										  PrefixManager& pref_mgr,
 										  const SequenceLength& read_length,
 										  const SequenceLength& tau,
 										  const vector< NucleoCounter >& C,

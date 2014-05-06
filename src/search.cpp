@@ -611,41 +611,38 @@ struct stack_e_elem_t {
   BWTPosition b;
   BWTPosition e;
   LCPValue k;
-  size_t idx_on_stack_$;
+  size_t idx_on_pref_mgr;
 
   explicit stack_e_elem_t(const BWTPosition b_,
 								  const BWTPosition e_,
 								  const LCPValue k_,
-								  const size_t idx_on_stack_$_)
-		:b(b_), e(e_), k(k_), idx_on_stack_$(idx_on_stack_$_)
+								  const size_t idx_on_pref_mgr_)
+		:b(b_), e(e_), k(k_), idx_on_pref_mgr(idx_on_pref_mgr_)
   {
   }
 
 };
 
 std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
-  os << "( [" << el.b << ", " << el.e << "), " << el.k << ", " << el.idx_on_stack_$ << ")";
+  os << "( [" << el.b << ", " << el.e << "), " << el.k << ", " << el.idx_on_pref_mgr << ")";
   return os;
 }
 
 
-typedef SequenceNumber stack_$_elem_t;
-
 void build_basic_arc_intervals( BWTIterator& bwt,
 										  LCPIterator& lcp,
 										  GSAIterator& gsa,
+										  PrefixManager& pref_mgr,
 										  const SequenceLength& read_length,
 										  const SequenceLength& tau,
 										  const vector< NucleoCounter >& C,
 										  vector< QIntervalManager >& qmgr)
 {
   typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
-  typedef std::stack<stack_$_elem_t, std::vector<stack_$_elem_t> > stack_$_t;
 
   const bool use_bwt= (read_length == 0);
 
   stack_e_t stack_e;
-  stack_$_t stack_$;
 
   BWTPosition p= 0;  // current position (on LCP/BWT/...)
 
@@ -672,7 +669,7 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 		}
 		const BWTPosition e= p;
 		if (b < e) {
-		  stack_e.push(stack_e_elem_t(b, e, suff_len, stack_$.size()));
+		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.size()));
 		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
 		}
 	 }
@@ -684,8 +681,8 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 		  ) {
 		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
 					 << stack_e.top().k << "-superblock.");
-		stack_$.push(stack_$_elem_t((*gsa).numSeq));
-		DEBUG_LOG("Added element " << stack_$.top() << " to stack_$(" << stack_$.size() << ").");
+		pref_mgr.push(pref_mgr_elem_t((*gsa).numSeq));
+		DEBUG_LOG("Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
 	 }
 
 // Closing some superblocks
@@ -693,20 +690,16 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 		LCPValue mink= std::max(lnext+1, tau);
 		DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
 		while(!stack_e.empty() && stack_e.top().k >= mink) {
-		  if (stack_e.top().idx_on_stack_$ < stack_$.size()) {
+		  if (stack_e.top().idx_on_pref_mgr < pref_mgr.size()) {
 			 DEBUG_LOG("Adding the basic_arc_interval "
 						  << "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
-						  << stack_e.top().k << ", "
-						  << "[ " << stack_e.top().idx_on_stack_$ << ", " << stack_$.size() << ") ).");
+						  << "[ " << stack_e.top().idx_on_pref_mgr << ", " << pref_mgr.size() << "), "
+						  << "0) to file "
+						  << "E^0( " << ntoc((Nucleotide)Ci) << ", " << stack_e.top().k << ").");
 // FIXME: Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k
 		  }
 		  stack_e.pop();
 		}
-// XXX: stack_$ is never cleared since it is a file, actually.
-		// if (stack_e.empty()) {
-		//   DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
-		//   stack_$.clear();
-		// }
 	 }
 
 
