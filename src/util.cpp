@@ -259,6 +259,17 @@ ifstream& operator>>( ifstream& in, QInterval** i )
   return in;
 }
 
+ifstream& operator>>( ifstream& in, QInterval* i )
+{
+  BWTPosition begin =0, end=0;
+  in.read((char *) &begin, sizeof( BWTPosition ) );
+  if(in.gcount() == 0) { i = NULL; return in; }
+  in.read((char *) &end, sizeof( BWTPosition ) );
+  if(in.gcount() == 0) { i = NULL; return in; }
+  i = new QInterval( begin, end );
+  return in;
+}
+
 ofstream& operator<<( ofstream& out, const GSAEntry& g )
 {
   out.write( (char *) &g.sa, sizeof( SequenceLength ) );

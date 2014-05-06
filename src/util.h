@@ -34,6 +34,7 @@ Nucleotide cton ( char c );
 // Overloading various operato<< and operator>> ..
 ofstream& operator<<( ofstream&, const QInterval& );
 ifstream& operator>>( ifstream&, QInterval** );
+ifstream& operator>>( ifstream&, QInterval* );
 
 // ofstream& operator<<( ofstream&, const EdgeInterval& );
 // ifstream& operator>>( ifstream&, EdgeInterval* );
