@@ -33,12 +33,16 @@ void show_usage(){
   std::cerr << "-G <gsaFilename> ";
   std::cerr << "-T <TAU> ";
   std::cerr << "-C <CycNum> ";
+  // TODO: Manage reads with variable lengths and delete this
+  std::cerr << "-l <readsLenght> ";
   std::cerr << std::endl;
   std::cerr << std::endl << "Options:" << std::endl;
   std::cerr << "\t-B, --basename \t <prefix>" << std::endl;
   std::cerr << "\t-G, --GSA \t <gsaFilename>" << std::endl;
   std::cerr << "\t-T, --TAU \t <TAU>" << std::endl;
   std::cerr << "\t-C, --CycNum \t <CycNum>" << std::endl;
+  // TODO: Manage reads with variable lengths and delete this
+  std::cerr << "\t-l, --reads-length \t <readsLength>" << std::endl;
   std::cerr << std::endl;
 }
 
@@ -54,6 +58,8 @@ int main ( int argc, char** argv )
 
   string basename = "";
   string gsaInputFileName = "";
+
+  SequenceLength readsLen;
 
   for (int i = 1; i < argc; i++) {
     if (i + 1 != argc){
@@ -72,6 +78,13 @@ int main ( int argc, char** argv )
         stringstream convert(string(argv[++i]));
         if( !( convert >> CYCNUM ) ) {
           std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (CYCNUM)." << std::endl;
+          std::cerr << "Aborting.." << std::endl;
+          std::exit( -1 );
+        }
+      } else if (string(argv[i]) == "--reads-length" || string(argv[i]) == "-l") {
+        stringstream convert(string(argv[++i]));
+        if( !( convert >> readsLen ) ) {
+          std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (readsLen)." << std::endl;
           std::cerr << "Aborting.." << std::endl;
           std::exit( -1 );
         }
@@ -142,7 +155,7 @@ int main ( int argc, char** argv )
   vector< QIntervalManager > qmgrs;
   PrefixManager pref_mgr("prefixes.bin");
 
-  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, 0, TAU, *c, qmgrs);
+  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readsLen, TAU, *c, qmgrs);
   return -1;
 
   std::cerr << "Building base intervals (SEED length 1)" << std::endl;
