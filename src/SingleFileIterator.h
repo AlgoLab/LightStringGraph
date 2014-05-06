@@ -114,8 +114,11 @@ private:
   }
 
   void close() {
-	 if (_iterator != NULL)
+	 DEBUG_LOG_VERBOSE("Closing SingleFileIterator on file: " << _filename);
+	 if (_iterator != NULL) {
 		delete _iterator;
+		_iterator= NULL;
+	 }
 	 if (_file.is_open())
 		_file.close();
 	 _current_position= 0;
