@@ -137,7 +137,7 @@ int main ( int argc, char** argv )
       basicArcIntervalName << basename << ".lsg.bai.sigma_" << i;
       qIntFilename << ".QINT-" << i;
       baseqIntFilename << ".bQ-" << i;
-      for(SequenceLength j( 0 ); j <= readLen; ++j)
+      for(SequenceLength j( 0 ); j < readLen; ++j)
         {
           edgeIntFilename << ".arc-" << i << "-" << j;
           edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
