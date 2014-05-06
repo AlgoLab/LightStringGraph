@@ -591,7 +591,7 @@ static void next_record(BWTReader& bwt,
   lcur= *lcp;
   ++lcp;
   lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
-  if ((Ci + 1 < C.size()) && (p >= C[Ci+1])) ++Ci;
+  while ((Ci + 1 < C.size()) && (p >= C[Ci+1])) ++Ci;
   _LOG_RECORD;
 }
 
