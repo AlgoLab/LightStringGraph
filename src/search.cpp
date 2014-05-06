@@ -582,7 +582,8 @@ static void next_record(BWTReader& bwt,
 								LCPValue& lcur,
 								LCPValue& lnext,
 								const vector< NucleoCounter >& C,
-								vector< NucleoCounter >::size_type& Ci
+								vector< NucleoCounter >::size_type& Ci,
+								bool& record_moved
 								) {
   ++p;
   ++gsa;
@@ -592,6 +593,7 @@ static void next_record(BWTReader& bwt,
   ++lcp;
   lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
   while ((Ci + 1 < C.size()) && (p >= C[Ci+1])) ++Ci;
+  record_moved= true;
   _LOG_RECORD;
 }
 
@@ -628,7 +630,7 @@ void build_basic_arc_intervals( BWTReader& bwt,
 										  vector< QIntervalManager >& qmgr)
 {
   typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
-  typedef std::vector<stack_$_elem_t> stack_$_t;
+  typedef std::stack<stack_$_elem_t, std::vector<stack_$_elem_t> > stack_$_t;
 
   stack_e_t stack_e;
   stack_$_t stack_$;
@@ -644,7 +646,9 @@ void build_basic_arc_intervals( BWTReader& bwt,
   _LOG_RECORD;
 
   while (gsa != GSAIterator::end()) {
+	 bool record_moved= false;
 
+// Opening a superblock
 	 if ((lcur<lnext) && (lnext >= tau)) {
 		DEBUG_LOG("Opening a " << lnext << "-superblock.");
 		const BWTPosition b= p;
@@ -652,43 +656,48 @@ void build_basic_arc_intervals( BWTReader& bwt,
 		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len) {
 		  DEBUG_LOG("A " << lnext << "-long suffix of read " << (*gsa).numSeq
 						<< " has been found.");
-		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci);
+		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved);
 		}
 		const BWTPosition e= p;
 		if (b < e) {
 		  stack_e.push(stack_e_elem_t(b, e, suff_len, stack_$.size()));
 		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
 		}
-	 } else {
-		if (((*gsa).sa == read_length) && (!stack_e.empty())) {
-		  DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
-						<< stack_e.top().k << "-superblock.");
-		  stack_$.push_back(stack_$_elem_t((*gsa).numSeq));
-		  DEBUG_LOG("Added element " << stack_$.back() << " to stack_$(" << stack_$.size() << ").");
-		}
-		if ((lnext<lcur) && (lcur >= tau)) {
-		  LCPValue mink= std::max(lnext+1, tau);
-		  DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
-		  while(stack_e.top().k >= mink) {
-			 DEBUG_LOG("Adding a basic_arc_interval from interval [" << stack_e.top().b << ", " << stack_e.top().e << ")...");
-			 stack_$_t::const_reverse_iterator end= stack_$.rend()-stack_e.top().idx_on_stack_$;
-			 for (stack_$_t::const_reverse_iterator it= stack_$.rbegin();
-					it != end;
-					++it) {
-				DEBUG_LOG("   ...to read " << *it);
-// FIXME: Add the basic_arc_interval ( [stack_e.top().b, stack_e.top().e), stack_e.top().k, *it)
-// to the interval manager with sigma=Ci and Length=stack_e.top().k
-			 }
-			 stack_e.pop();
+	 }
+
+// Found a new prefix
+	 if (((*gsa).sa == read_length) && (!stack_e.empty())) {
+		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
+					 << stack_e.top().k << "-superblock.");
+		stack_$.push(stack_$_elem_t((*gsa).numSeq));
+		DEBUG_LOG("Added element " << stack_$.top() << " to stack_$(" << stack_$.size() << ").");
+	 }
+
+// Closing some superblocks
+	 if ((lnext<lcur) && (lcur >= tau)) {
+		LCPValue mink= std::max(lnext+1, tau);
+		DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
+		while(!stack_e.empty() && stack_e.top().k >= mink) {
+		  if (stack_e.top().idx_on_stack_$ < stack_$.size()) {
+			 DEBUG_LOG("Adding the basic_arc_interval "
+						  << "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
+						  << stack_e.top().k << ", "
+						  << "[ " << stack_e.top().idx_on_stack_$ << ", " << stack_$.size() << ") ).");
+// FIXME: Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k
 		  }
-		  if (stack_e.empty()) {
-			 DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
-			 stack_$.clear();
-		  }
-		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci);
-		} else {
-		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci);
+		  stack_e.pop();
 		}
+// XXX: stack_$ is never cleared since it is a file, actually.
+		// if (stack_e.empty()) {
+		//   DEBUG_LOG("Stack_e is empty ==> clearing stack_$.");
+		//   stack_$.clear();
+		// }
+		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved);
+	 }
+
+
+	 if (!record_moved) {
+		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved);
 	 }
   }
 }
