@@ -66,6 +66,12 @@ struct GSAEntry
 typedef std::vector< BWTPosition > BWTPExtVect;
 typedef std::vector< SequenceNumber > SeqNExtVect;
 
+
+// Other types
+
+typedef std::vector<SequenceNumber> ReadSet;
+
+
 // LEGACY
 // temporary
 // struct SGEdge

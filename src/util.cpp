@@ -247,18 +247,7 @@ ofstream& operator<<( ofstream& out, const QInterval& i )
   return out;
 }
 
-ifstream& operator>>( ifstream& in, QInterval** i )
-{
-  BWTPosition begin=0, end=0;
-  in.read( (char *) &begin, sizeof( BWTPosition ) );
-  if(in.gcount() == 0) { *i = NULL; return in; }
-  in.read( (char *) &end, sizeof( BWTPosition ) );
-  if(in.gcount() == 0) { *i = NULL; return in; }
-  *i = new QInterval( begin, end );
-  return in;
-}
-
-ifstream& operator>>( ifstream& in, QInterval* i )
+ifstream& operator>>( ifstream& in, QInterval*& i )
 {
   BWTPosition begin =0, end=0;
   in.read((char *) &begin, sizeof( BWTPosition ) );
@@ -287,29 +276,30 @@ ifstream& operator>>( ifstream& in, GSAEntry& g )
 
 ofstream& operator<<( ofstream& out, const ArcInterval& a )
 {
-  out << a.get_q_interval();
-  EdgeLength l = a.get_edge_length();
-  out.write( (char *) &l, sizeof( EdgeLength ) );
-  out << a.get_seeds();
-  out.flush( );
+  out << a.es_interval;
+  out.write( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ) );
+  out << a.seed_int;
 
   return out;
 }
 
-ifstream& operator>>( ifstream& in, ArcInterval* a )
+ifstream& operator>>( ifstream& in, ArcInterval*& a )
 {
-  BWTPosition begin=0, end=0;
-  EdgeLength len=0;
-  SeedInterval s;
-  in.read( (char *) &begin, sizeof( BWTPosition ) );
+  QInterval* es_int= NULL;
+  in >> es_int;
+  if(es_int == NULL) { a = NULL; return in; }
+
+  SequenceLength len=0;
+  in.read( reinterpret_cast<char *>(&len), sizeof( SequenceLength ) );
   if(in.gcount() == 0) { a = NULL; return in; }
-  in.read( (char *) &end, sizeof( BWTPosition ) );
-  if(in.gcount() == 0) { a = NULL; return in; }
-  in.read( (char *) &len, sizeof( EdgeLength ) );
-  if(in.gcount() == 0) { a = NULL; return in; }
+
+  SeedInterval* s= NULL;
   in >> s;
-  QInterval q( begin, end );
-  a = new ArcInterval( q, len, s );
+  if(s == NULL) { a = NULL; return in; }
+
+  a = new ArcInterval( *es_int, len, *s );
+  delete es_int;
+  delete s;
   return in;
 }
 
@@ -323,11 +313,19 @@ std::string now( const char* format = "%c" )
 
 ofstream& operator<<( ofstream& out, const SeedInterval& s )
 {
+  out.write( reinterpret_cast<const char*>(&s.begin), sizeof( SequenceNumber ) );
+  out.write( reinterpret_cast<const char*>(&s.end), sizeof( SequenceNumber ) );
   return out;
 }
 
-ifstream& operator>>( ifstream& in, SeedInterval& s )
+ifstream& operator>>( ifstream& in, SeedInterval*& s )
 {
+  SequenceNumber begin =0, end=0;
+  in.read(reinterpret_cast<char*>(&begin), sizeof( SequenceNumber ) );
+  if(in.gcount() == 0) { s = NULL; return in; }
+  in.read(reinterpret_cast<char*>(&end), sizeof( SequenceNumber ) );
+  if(in.gcount() == 0) { s = NULL; return in; }
+  s = new SeedInterval( begin, end );
   return in;
 }
 
@@ -338,7 +336,7 @@ ofstream& operator<<( ofstream& out, const EdgeLabelInterval& e )
   return out;
 }
 
-ifstream& operator>>( ifstream& in, EdgeLabelInterval* e )
+ifstream& operator>>( ifstream& in, EdgeLabelInterval*& e )
 {
   QInterval *label=NULL, *reverse=NULL;
   in >> label;

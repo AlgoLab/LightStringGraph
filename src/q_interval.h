@@ -3,7 +3,7 @@
 #ifndef Q_INTERVAL_H
 #define Q_INTERVAL_H
 
-#include <types.h>
+#include "types.h"
 
 /* Basic class that represent Q-Intervals. */
 

@@ -3,41 +3,38 @@
 #ifndef ARC_INTERVAL_H
 #define ARC_INTERVAL_H
 
-#include "q_interval.h"
 #include "types.h"
-#include "seedInterval.h"
+#include "q_interval.h"
 
-class ArcInterval
+struct SeedInterval
 {
-private:
-  QInterval     _interval;
-  EdgeLength    _len;
-  // TODO: Add something here
-  SeedInterval _seeds;
+  const SequenceNumber begin;
+  const SequenceNumber end;
 
-public:
+  SeedInterval(const SequenceNumber& begin_,
+					const SequenceNumber& end_)
+		:begin(begin_), end(end_)
+  {}
+
+  const size_t size() const {
+	 return end-begin;
+  }
+  
+};
+
+struct ArcInterval
+{
+  const QInterval es_interval;
+  const SequenceLength ext_len;
+  const SeedInterval seed_int;
+
   // Constructor
-  ArcInterval( const QInterval&, const EdgeLength&, const SeedInterval& seeds);
+  ArcInterval(const QInterval& es_interval_,
+				  const SequenceLength& ext_len_,
+				  const SeedInterval& seed_int_)
+		:es_interval(es_interval_), ext_len(ext_len_), seed_int(seed_int_)
+  {}
 
-  // Destructor
-  ~ArcInterval( );
-
-  // Get the QInterval
-  const QInterval& get_q_interval( ) const;
-
-  // Get the length of the linked LabelInterval
-  const EdgeLength& get_edge_length( ) const;
-
-  // Get the Seeds
-  const SeedInterval& get_seeds( ) const;
-
-  void add_seed(SeedInterval&);
-
-private:
-  ArcInterval( ) : _interval(0,0) { };
-  ArcInterval( const ArcInterval& other ) : _interval(0,0) { };
-  ArcInterval& operator=( const ArcInterval& other )
-  { return *this; };
 };
 
 #endif

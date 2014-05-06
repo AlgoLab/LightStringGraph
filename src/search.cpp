@@ -740,15 +740,15 @@ void extend_arc_intervals( const int length,
   vector< NucleoCounter > PI;
   vector< NucleoCounter > pi;
 
-  SeedInterval PrefixInterval;
+  ReadSet dst_reads;
 
   while((qint != NULL) || (newqint != NULL))
     {
-      // if(qint != NULL && newqint != NULL && equalFirstInterval(qint->get_q_interval(), newqint->get_q_interval()))
+      // if(qint != NULL && newqint != NULL && equalFirstInterval(qint->es_interval, newqint->es_interval))
       //   {
       //     DEBUG_LOG_VERBOSE( "Merged intervals" );
       //     ++mrgintc;
-      //     qint->add_seed(newqint->get_seeds( ));
+      //     qint->add_seed(newqint->seed_int);
       //     newqint = newqmgr.get_next_interval( );
       //   }
 
@@ -756,36 +756,36 @@ void extend_arc_intervals( const int length,
       vector< Nucleotide > extendsymbols;
 
       if(newqint == NULL ||
-         qint->get_q_interval().get_begin() < newqint->get_q_interval().get_begin())
+         qint->es_interval.get_begin() < newqint->es_interval.get_begin())
         currentInterval = qint;
       else
         currentInterval = newqint;
 
-      if(currentInterval->get_q_interval() != lastInterval)
+      if(currentInterval->es_interval != lastInterval)
         {
           // New qinterval
-          lastInterval = currentInterval->get_q_interval();
-          PrefixInterval.clear();
-          br.move_to( currentInterval->get_q_interval().get_begin() );
+          lastInterval = currentInterval->es_interval;
+          dst_reads.clear();
+          br.move_to( currentInterval->es_interval.get_begin() );
           PI = br.get_Pi();
 
-          while(gsait.get_position() < currentInterval->get_q_interval().get_begin())
+          while(gsait.get_position() < currentInterval->es_interval.get_begin())
             {
               ++gsait;
             }
-          for(BWTPosition currentPosition=currentInterval->get_q_interval().get_begin();
-              currentPosition < currentInterval->get_q_interval().get_end();
+          for(BWTPosition currentPosition=currentInterval->es_interval.get_begin();
+              currentPosition < currentInterval->es_interval.get_end();
               ++currentPosition)
             {
               br.move_to(currentPosition);
               ++gsait;
               if(br.get_current_nucleotide() == BASE_$)
                 {
-                  PrefixInterval.add((*gsait).numSeq);
+                  dst_reads.push_back((*gsait).numSeq);
                 }
             }
         }
-      if(PrefixInterval.size() != 0)
+      if(!dst_reads.empty())
         {
           // TODO: Output Prefix and Suffix
           ++nwltc;
@@ -801,14 +801,14 @@ void extend_arc_intervals( const int length,
               extendsymbols.push_back( (Nucleotide) base );
               QInterval new_q_interval(new_begin, new_end);
               ArcInterval new_arc_interval(new_q_interval,
-                                           currentInterval->get_edge_length() +1,
-                                           currentInterval->get_seeds());
+                                           currentInterval->ext_len +1,
+                                           currentInterval->seed_int);
               qmgr.add_interval(new_arc_interval, (Nucleotide)base);
             }
         }
       if(extendsymbols.size() > 0)
         {
-          extsim_p.add_extend_symbol(extendsymbols, currentInterval->get_edge_length());
+          extsim_p.add_extend_symbol(extendsymbols, currentInterval->ext_len);
         }
     }
   std::cerr << "--> Merged " << mrgintc << " new intervals in old intervals" << std::endl;

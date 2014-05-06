@@ -35,8 +35,7 @@ Nucleotide cton ( char c );
 
 // Overloading various operato<< and operator>> ..
 ofstream& operator<<( ofstream&, const QInterval& );
-ifstream& operator>>( ifstream&, QInterval** );
-ifstream& operator>>( ifstream&, QInterval* );
+ifstream& operator>>( ifstream&, QInterval*& );
 
 // ofstream& operator<<( ofstream&, const EdgeInterval& );
 // ifstream& operator>>( ifstream&, EdgeInterval* );
@@ -49,14 +48,13 @@ ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
 
 ofstream& operator<<( ofstream&, const ArcInterval& );
-ifstream& operator>>( ifstream&, ArcInterval* );
-//ifstream& operator>>( ifstream&, ArcInterval** );
+ifstream& operator>>( ifstream&, ArcInterval*& );
 
 ofstream& operator<<( ofstream&, const SeedInterval& );
-ifstream& operator>>( ifstream&, SeedInterval& );
+ifstream& operator>>( ifstream&, SeedInterval*& );
 
 ofstream& operator<<( ofstream&, const EdgeLabelInterval& );
-ifstream& operator>>( ifstream&, EdgeLabelInterval* );
+ifstream& operator>>( ifstream&, EdgeLabelInterval*& );
 
 // Return a string representing the current tim
 std::string now( const char* format );
