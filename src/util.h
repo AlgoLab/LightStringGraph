@@ -16,6 +16,7 @@
 #include "joined_q_interval.h"
 #include "q_interval.h"
 #include "arcInterval.h"
+#include "edgeLabelInterval.h"
 
 using std::ofstream;
 using std::ifstream;
@@ -53,6 +54,9 @@ ifstream& operator>>( ifstream&, ArcInterval* );
 
 ofstream& operator<<( ofstream&, const SeedInterval& );
 ifstream& operator>>( ifstream&, SeedInterval& );
+
+ofstream& operator<<( ofstream&, const EdgeLabelInterval& );
+ifstream& operator>>( ifstream&, EdgeLabelInterval* );
 
 // Return a string representing the current tim
 std::string now( const char* format );

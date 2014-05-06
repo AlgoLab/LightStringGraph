@@ -251,11 +251,10 @@ ifstream& operator>>( ifstream& in, QInterval** i )
 {
   BWTPosition begin=0, end=0;
   in.read( (char *) &begin, sizeof( BWTPosition ) );
+  if(in.gcount() == 0) { *i = NULL; return in; }
   in.read( (char *) &end, sizeof( BWTPosition ) );
-  if( begin != end )
-    *i = new QInterval( begin, end );
-  else
-    *i = NULL;
+  if(in.gcount() == 0) { *i = NULL; return in; }
+  *i = new QInterval( begin, end );
   return in;
 }
 
@@ -331,6 +330,35 @@ ifstream& operator>>( ifstream& in, SeedInterval& s )
 {
   return in;
 }
+
+ofstream& operator<<( ofstream& out, const EdgeLabelInterval& e )
+{
+  out << e.get_label( );
+  out << e.get_reverse_label( );
+  return out;
+}
+
+ifstream& operator>>( ifstream& in, EdgeLabelInterval* e )
+{
+  QInterval *label=NULL, *reverse=NULL;
+  in >> label;
+  if(!label) { e =NULL; return in; }
+  in >> reverse;
+  if(!reverse){ e = NULL; return in; }
+  e = new EdgeLabelInterval( *label, *reverse );
+  return in;
+}
+
+// ifstream& operator>>( ifstream& in, EdgeLabelInterval** e )
+// {
+//   QInterval *label=NULL, *reverse=NULL;
+//   in >> label;
+//   if(!label) { *e =NULL; return in; }
+//   in >> reverse;
+//   if(!reverse){ *e = NULL; return in; }
+//   *e = new EdgeLabelInterval( *label, *reverse );
+//   return in;
+// }
 
 // LEGACY
 // void checkIfIrreducible( SGraph& s, Precedencies& p, GSAEntry* prefixI, GSAEntry* suffixI, EdgeLength& len )
