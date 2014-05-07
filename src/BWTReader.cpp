@@ -24,6 +24,8 @@ BWTReader::BWTReader ( vector< string >& filenamesIN )
       _currentBWT = new partialBWTReader( _filenamesIN[ 0 ] );
       _nextBWTFilename = 1;
     }
+
+  _maxPosition =0; // Useless to compute right now, will be computed by get_C
 }
 
 BWTReader::~BWTReader ( )
@@ -34,6 +36,11 @@ BWTReader::~BWTReader ( )
 BWTPosition BWTReader::get_position ( ) const
 {
   return _currentBWT->get_position();
+}
+
+BWTPosition BWTReader::size( ) const
+{
+  return _maxPosition;
 }
 
 bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
@@ -110,6 +117,7 @@ vector< NucleoCounter >* BWTReader::get_C ( )
       C->push_back(acc);
     }
 
+  _maxPosition = _currentBWT->get_position( );
   // Get back to the first partial BWT
   reset ( );
   return C;

@@ -25,6 +25,7 @@ private:
   vector< string >    _filenamesIN;       // names of BWT sections
   unsigned short      _nextBWTFilename;   // index of next BWTFilename in _filenamesIoN
   partialBWTReader*   _currentBWT;        // current BWT section
+  BWTPosition         _maxPosition;       // MaxPosition of BWT
 
 public:
   // Constructor
@@ -35,6 +36,9 @@ public:
 
   // Returns current position
   BWTPosition get_position ( ) const;
+
+  // Returns max position
+  BWTPosition size( ) const;
 
   // Move to position p in this BWT and update nucleotide occurrences accordingly.
   // Return value:
