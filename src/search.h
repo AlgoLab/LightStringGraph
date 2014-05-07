@@ -71,6 +71,8 @@ void extend_arc_intervals( const int length,
                            ExtendSymbolPile extsim_p,
                            EdgeLabelIntervalManager& arcmgr);
 
+void extend_arc_labels( );
+
 bool equalFirstInterval( const QInterval&, const QInterval& );
 
 // Legacy. Don't you dare using it.

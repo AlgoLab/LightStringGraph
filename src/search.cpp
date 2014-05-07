@@ -842,3 +842,8 @@ void extend_arc_intervals( const int length,
   std::cerr << "--> Generated " << nwintc << " new intervals" << std::endl;
   std::cerr << "--> Produced " << nwltc << " new edges (still not labeled)" << std::endl;
 }
+
+void extend_arc_labels( )
+{
+
+}
