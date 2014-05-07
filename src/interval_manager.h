@@ -137,9 +137,7 @@ public:
             std::exit( -1 );
           }
         remove( nextfile.str().c_str() );
-#ifdef DEBUG_VERBOSE
-        std::cerr << "Renamed file " << nextfile.str() << " to " << *it << std::endl;
-#endif
+        DEBUG_LOG_VERBOSE( "Renamed file " << nextfile.str() << " to " << *it);
       }
     _init_new_outputfiles( );
     _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
