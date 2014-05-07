@@ -759,14 +759,18 @@ void extend_arc_intervals( const int length,
       //     newqint = newqmgr.get_next_interval( );
       //   }
 
-      ArcInterval* currentInterval;
+      ArcInterval         *currentInterval;
+      bool                 is_new_interval = false;
       vector< Nucleotide > extendsymbols;
 
       if(newqint == NULL ||
          qint->es_interval.get_begin() < newqint->es_interval.get_begin())
         currentInterval = qint;
       else
-        currentInterval = newqint;
+        {
+          currentInterval = newqint;
+          is_new_interval = true;
+        }
 
       if(currentInterval->es_interval != lastInterval)
         {
@@ -806,6 +810,16 @@ void extend_arc_intervals( const int length,
             {
               ++nwintc;
               extendsymbols.push_back( (Nucleotide) base );
+              if(is_new_interval)
+                {
+                  // Add intervals of lenght 0 in a meaninfull way
+                  QInterval whole_bwt(0, br.size( ));
+                  EdgeLabelInterval void_interval(whole_bwt, whole_bwt);
+                  // BASE_A acts as a void base if we add every possible intervals to that file
+                  edlblmgr.add_edge_interval( void_interval, 0, BASE_A );
+                  // Add the interval only once
+                  is_new_interval = false;
+                }
               QInterval new_q_interval(new_begin, new_end);
               ArcInterval new_arc_interval(new_q_interval,
                                            currentInterval->ext_len +1,
