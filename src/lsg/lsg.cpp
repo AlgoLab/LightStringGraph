@@ -187,10 +187,13 @@ int main ( int argc, char** argv )
 
   BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-len_");
 
-  build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
+  SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
 
   // TODO: REMBER TO MOVE THIS TO THE END
   delete c;
+
+  std::cout << "MAX LEN IS " << max_len << std::endl;
+
   return -1;
 
   vector< SameLengthArcIntervalManager > qmgrs;

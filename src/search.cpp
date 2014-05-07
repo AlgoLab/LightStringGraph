@@ -630,14 +630,14 @@ std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
 }
 
 
-void build_basic_arc_intervals( BWTIterator& bwt,
-                                LCPIterator& lcp,
-                                GSAIterator& gsa,
-                                PrefixManager& pref_mgr,
-                                const SequenceLength& read_length,
-                                const SequenceLength& tau,
-                                const vector< NucleoCounter >& C,
-                                BasicArcIntervalManager& baimgr)
+SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
+                                          LCPIterator& lcp,
+                                          GSAIterator& gsa,
+                                          PrefixManager& pref_mgr,
+                                          const SequenceLength& read_length,
+                                          const SequenceLength& tau,
+                                          const vector< NucleoCounter >& C,
+                                          BasicArcIntervalManager& baimgr)
 {
   typedef std::stack<stack_e_elem_t, std::vector<stack_e_elem_t> > stack_e_t;
 
@@ -653,10 +653,14 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 
   vector< NucleoCounter >::size_type Ci= 0;
 
+  SequenceLength max_len = 0; // Max length found
+
   _LOG_RECORD;
 
   while (gsa != GSAIterator::end()) {
 	 bool record_moved= false;
+   if((*gsa).sa > max_len)
+     max_len = (*gsa).sa;
 
 // Opening a superblock
 	 if ((lcur<lnext) && (lnext >= tau)) {
@@ -715,6 +719,8 @@ void build_basic_arc_intervals( BWTIterator& bwt,
 	 }
   }
   baimgr.swap_all_files();
+
+  return max_len;
 }
 
 #undef _LOG_RECORD

@@ -52,14 +52,14 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
 // Input: BWT, LCP, GSA, \tau
 // Output: basic arc intervals grouped by starting symbols $\sigma$ and
 //    seed length $l$ (via $max{l}$ "QIntervalManager"s)
-void build_basic_arc_intervals( BWTIterator& bwt,
-										  LCPIterator& lcp,
-										  GSAIterator& gsa,
-										  PrefixManager& pref_mgr,
-										  const SequenceLength& read_length,
-										  const SequenceLength& tau,
-										  const vector< NucleoCounter >& C,
-										  BasicArcIntervalManager& baimgr);
+SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
+                                          LCPIterator& lcp,
+                                          GSAIterator& gsa,
+                                          PrefixManager& pref_mgr,
+                                          const SequenceLength& read_length,
+                                          const SequenceLength& tau,
+                                          const vector< NucleoCounter >& C,
+                                          BasicArcIntervalManager& baimgr);
 
 // Extend arc intervals and save extension symbols to an ExtensionSymbolPile
 void extend_arc_intervals( const int length,
