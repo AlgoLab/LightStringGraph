@@ -68,7 +68,7 @@ void extend_arc_intervals( const int length,
                            GSAIterator& gsait,
                            SameLengthArcIntervalManager& qmgr,
                            SameLengthArcIntervalManager& newqmgr,
-                           ExtendSymbolPile extsim_p,
+                           ExtendSymbolPile& extsim_p,
                            EdgeLabelIntervalManager& arcmgr);
 
 void extend_arc_labels( );

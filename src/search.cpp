@@ -737,7 +737,7 @@ void extend_arc_intervals( const int length,
                            GSAIterator& gsait,
                            SameLengthArcIntervalManager& qmgr,
                            SameLengthArcIntervalManager& newqmgr,
-                           ExtendSymbolPile extsim_p,
+                           ExtendSymbolPile& extsim_p,
                            EdgeLabelIntervalManager& edlblmgr)
 {
   unsigned long int nwintc =0; // New intervals
@@ -757,25 +757,22 @@ void extend_arc_intervals( const int length,
 
   while((qint != NULL) || (newqint != NULL))
     {
-      // if(qint != NULL && newqint != NULL && equalFirstInterval(qint->es_interval, newqint->es_interval))
-      //   {
-      //     DEBUG_LOG_VERBOSE( "Merged intervals" );
-      //     ++mrgintc;
-      //     qint->add_seed(newqint->seed_int);
-      //     newqint = newqmgr.get_next_interval( );
-      //   }
-
       ArcInterval         *currentInterval;
       bool                 is_new_interval = false;
+      bool                 from_qmgr = true;
       vector< Nucleotide > extendsymbols;
 
-      if(newqint == NULL ||
-         qint->es_interval.get_begin() < newqint->es_interval.get_begin())
-        currentInterval = qint;
+      if((newqint == NULL && qint != NULL) ||
+         (qint != NULL && qint->es_interval.get_begin() < newqint->es_interval.get_begin()))
+        {
+          currentInterval = qint;
+          from_qmgr = true;
+        }
       else
         {
           currentInterval = newqint;
           is_new_interval = true;
+          from_qmgr = false;
         }
 
       if(currentInterval->es_interval != lastInterval)
@@ -783,25 +780,32 @@ void extend_arc_intervals( const int length,
           // New qinterval
           lastInterval = currentInterval->es_interval;
           dst_reads.clear();
-          br.move_to( currentInterval->es_interval.get_begin() );
-          PI = br.get_Pi();
+          for(BWTPosition i(br.get_position()); i <= currentInterval->es_interval.get_begin(); ++i)
+            {
+              br.move_to( i );
+            }
+          PI = vector< NucleoCounter >( br.get_Pi() );
 
           while(gsait.get_position() < currentInterval->es_interval.get_begin())
             {
               ++gsait;
             }
+
           for(BWTPosition currentPosition=currentInterval->es_interval.get_begin();
               currentPosition < currentInterval->es_interval.get_end();
               ++currentPosition)
             {
               br.move_to(currentPosition);
-              ++gsait;
               if(br.get_current_nucleotide() == BASE_$)
                 {
                   dst_reads.push_back((*gsait).numSeq);
                 }
+              ++gsait;
             }
+          br.move_to(currentInterval->es_interval.get_end());
         }
+      pi = vector< NucleoCounter >( br.get_Pi() );
+
       if(!dst_reads.empty())
         {
           // TODO: Output Prefix and Suffix
@@ -811,14 +815,14 @@ void extend_arc_intervals( const int length,
       for(int base(BASE_A); base < ALPHABET_SIZE; ++base)
         {
           BWTPosition new_begin = C[ base ] + PI[ base ];
-          BWTPosition new_end   = C[ base ] + PI[ base ] + pi[ base ];
+          BWTPosition new_end   = C[ base ] + pi[ base ];
           if(new_end > new_begin)
             {
               ++nwintc;
               extendsymbols.push_back( (Nucleotide) base );
               if(is_new_interval)
                 {
-                  // Add intervals of lenght 0 in a meaninfull way
+                  // Add intervals of length 0 in a meaninfull way
                   QInterval whole_bwt(0, br.size( ));
                   EdgeLabelInterval void_interval(whole_bwt, whole_bwt);
                   // BASE_A acts as a void base if we add every possible intervals to that file
@@ -837,6 +841,7 @@ void extend_arc_intervals( const int length,
         {
           extsim_p.add_extend_symbol(extendsymbols, currentInterval->ext_len);
         }
+      from_qmgr ? qint = qmgr.get_next_interval() : newqint = newqmgr.get_next_interval();
     }
   std::cerr << "--> Merged " << mrgintc << " new intervals in old intervals" << std::endl;
   std::cerr << "--> Generated " << nwintc << " new intervals" << std::endl;
