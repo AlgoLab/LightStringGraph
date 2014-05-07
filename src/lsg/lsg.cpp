@@ -188,6 +188,9 @@ int main ( int argc, char** argv )
   BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-len_");
 
   build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
+
+  // TODO: REMBER TO MOVE THIS TO THE END
+  delete c;
   return -1;
 
   vector< SameLengthArcIntervalManager > qmgrs;
@@ -269,8 +272,6 @@ int main ( int argc, char** argv )
   // // for( std::vector<string>::iterator it=revqIntFilenames.begin(); it != revqIntFilenames.end();
   // //      ++it)
   // //   remove((*it).c_str());
-
-  delete c;
 
   return 0;
 }
