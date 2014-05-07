@@ -13,12 +13,9 @@
 #include "BWTIterator.h"
 #include "GSAIterator.h"
 #include "LCPIterator.h"
-#include "joined_q_interval.h"
 #include "util.h"
 #include "types.h"
 #include "search.h"
-#include "edge_joined_interval.h"
-#include "ext_sort.h"
 #include "extend_symbol_pile.h"
 
 using std::vector;
