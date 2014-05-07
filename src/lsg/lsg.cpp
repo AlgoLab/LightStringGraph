@@ -138,12 +138,6 @@ int main ( int argc, char** argv )
   //  JoinedQIntervalManager imgr( qIntFilenames );
   //  QIntervalManager qmgr( baseqIntFilenames );
 
-  DEBUG_LOG( "edgeIntFilenames sizes" );
-  for(size_t i(0); i < edgeIntFilenames.size(); ++i)
-    {
-      DEBUG_LOG( i << " : " << edgeIntFilenames[i].size() );
-    }
-
   BWTReader br( BWTInputFilenames );
   SameLengthArcIntervalManager qmgr( baseqIntFilenames );
 
@@ -193,27 +187,6 @@ int main ( int argc, char** argv )
 
   EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
 
-  // TODO: REMBER TO MOVE THIS TO THE END
-  delete c;
-
-  std::cout << "MAX LEN IS " << max_len << std::endl;
-
-  return -1;
-
-  vector< SameLengthArcIntervalManager > qmgrs;
-
-  // std::cerr << "Building base intervals (SEED length 1)" << std::endl;
-  // for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
-  //   {
-  //     QInterval qint( c->at( nucl ), c->at( nucl +1 ) );
-  //     qmgr.add_interval( qint, (Nucleotide) nucl );
-  //   }
-
-  // build_tau_intervals( br, qmgr, gsardr, *c, TAU);
-
-  std::cerr.flush();
-  qmgr.swap_files();
-
   for( int i( 0 ); i < CYCNUM; ++i )
     {
       LCPIterator lcpit( LCPInputFilenames );
@@ -225,15 +198,15 @@ int main ( int argc, char** argv )
       // std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
       // left_step( br, qmgr, gsardr, *c, i + TAU);
       std::cerr << "--> Extend-Arc-Intervals - " << i+1 << "/" << CYCNUM << std::endl;
-      extend_arc_intervals(i+1, *c, br, gsait, qmgr, qmgrs[i], extsim_p, edgemgr);
+      extend_arc_intervals(i+1, *c, br, gsait, qmgr, baimgr[i+TAU+1], extsim_p, edgemgr);
 
       extsim_p.switch_mode( );
 
       br.reset();
-      gsardr.reset();
-      qmgr.swap_files();
 
-      extsim_p.switch_mode( );
+      gsardr.reset();
+
+      qmgr.swap_files();
     }
 
   // temporary
@@ -279,6 +252,6 @@ int main ( int argc, char** argv )
   // // for( std::vector<string>::iterator it=revqIntFilenames.begin(); it != revqIntFilenames.end();
   // //      ++it)
   // //   remove((*it).c_str());
-
+  delete c;
   return 0;
 }
