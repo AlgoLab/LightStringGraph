@@ -50,7 +50,7 @@ public:
     for (typename interval_mgrs_t::iterator it= int_mgrs_.begin();
          it != int_mgrs_.end();
          ++it) {
-      it->swap_files();
+      (*it)->swap_files();
     }
   }
 
