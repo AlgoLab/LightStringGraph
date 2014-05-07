@@ -110,13 +110,6 @@ int main ( int argc, char** argv )
   vector< vector< string > > edgeIntFilenames;
   vector< string > extendSymbolFilenames;
 
-  for( SequenceLength i( 0 ); i < readLen; ++i )
-    {
-      edgeIntFilenames.push_back( vector< string >( ) );
-      std::ostringstream extsymfn;
-      extsymfn << ".extsym" << i;
-      extendSymbolFilenames.push_back(extsymfn.str());
-    }
   GSAReader gsardr( gsaInputFileName );
 
   // create filenames and add them to the previous vectors
@@ -134,13 +127,6 @@ int main ( int argc, char** argv )
       basicArcIntervalName << basename << ".lsg.bai.sigma_" << i;
       qIntFilename << ".QINT-" << i;
       baseqIntFilename << ".bQ-" << i;
-      for(SequenceLength j( 0 ); j < readLen; ++j)
-        {
-          edgeIntFilename << ".arc-" << i << "-" << j;
-          edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
-          edgeIntFilename.str(string(""));
-          edgeIntFilename.clear();
-        }
 
       BWTInputFilenames.push_back( partialBWTname.str( ) );
       LCPInputFilenames.push_back( partialLCPname.str( ) );
@@ -160,7 +146,6 @@ int main ( int argc, char** argv )
 
   BWTReader br( BWTInputFilenames );
   SameLengthArcIntervalManager qmgr( baseqIntFilenames );
-  EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
 
   std::cerr << "Building vector C..";
   std::cerr.flush( );
@@ -188,6 +173,25 @@ int main ( int argc, char** argv )
   BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-len_");
 
   SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
+
+  for(SequenceLength j(0); j < max_len; ++j)
+    {
+      std::ostringstream extsymfn, edgeIntFilename;
+      extsymfn << ".extsym-LEN-" << j;
+      extendSymbolFilenames.push_back(extsymfn.str());
+
+      edgeIntFilenames.push_back( vector< string >( ) );
+
+      for(int i(0); i < ALPHABET_SIZE; ++i)
+        {
+          edgeIntFilename << ".arc-SIGMA-" << i << "-LEN-" << j;
+          edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
+          edgeIntFilename.str(string(""));
+          edgeIntFilename.clear();
+        }
+    }
+
+  EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
 
   // TODO: REMBER TO MOVE THIS TO THE END
   delete c;
