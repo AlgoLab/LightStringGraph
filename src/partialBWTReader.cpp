@@ -89,14 +89,19 @@ bool partialBWTReader::move_to ( const BWTPosition & p )
           _start += _bufferlen;
           _position = 0;
           _bufferlen = _fileIn.gcount();
+          if(_bufferlen == 0)
+            {
+              return false;
+            }
         }
     }
-  if( _start + _position  < p )
+  if( (_start + _position  < p) || ((_position == 0) && (_bufferlen == 0)) )
     {
       DEBUG_LOG_VERBOSE("ERROR: asked to reach position " << p << " but reached position " \
                         << _start + _position << " instead.");
 
       return false;
     }
+
   return true;
 }
