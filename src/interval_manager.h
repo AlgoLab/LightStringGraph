@@ -47,7 +47,7 @@ public:
         std::ifstream t((*it).c_str(), std::ios::binary);
         if(!t.good())
           {
-            DEBUG_LOG( *it << " does not exists" );
+            DEBUG_LOG_VERBOSE( *it << " does not exists" );
             std::ofstream temp ((*it).c_str(), std::ios::binary);
             temp.close();
           }
@@ -161,9 +161,7 @@ public:
   {
     if ( (unsigned int) n >= _outputFiles.size() )
       {
-#ifdef DEBUG_VERBOSE
-        std::cerr << "ERROR: Can't add interval_t to file #" << n << std::endl;
-#endif
+        DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
     (*(_outputFiles[ (int) n ])) << i;
