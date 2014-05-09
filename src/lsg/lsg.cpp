@@ -214,49 +214,6 @@ int main ( int argc, char** argv )
       qmgr.swap_files();
     }
 
-  // temporary
-  // SGraph sg; // String graph
-  // Precedencies p; // p[ x ] = y if exists an edge y->x in sg
-
-  // for( int i( 0 ); i < CYCNUM; ++i ) // TODO: while exists interval in imgr or revimgr
-  //   {
-  //     stxxl::VECTOR_GENERATOR< PODEdgeInterval >::result prefix_interval;
-  //     // vector< EdgeInterval* >* LT;
-  //     // vector< EdgeInterval* >* RT;
-
-  //     std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
-  //     std::cerr << "Left search step #" << i+1 << std::endl;
-  //     br.reset( );
-  //     revbr.reset( );
-  //     size_t newlti = search_step_left( br, imgr, *c, prefix_interval);
-  //     imgr.swap_files( );
-  //     std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
-  //     std::cerr << "--> Sorting " << newlti << " elements..." << std::endl;
-  //     stxxl::sort(prefix_interval.begin(), prefix_interval.end(), SortPODEdgeInterval(), MEMORY_SORT_SIZE);
-  //     // std::ifstream* newLT = ext_sort( P_FILE );
-  //     // remove(P_FILE.c_str());
-  //     // std::ifstream* newLT = new std::ifstream( MERGED_FILES.c_str(), std::ios::binary );
-
-  //     std::cerr << "[" << now( "%I:%M:%S %p %Z" ) << "]" << std::endl;
-  //     std::cerr << "Right search step #" << i+1 << std::endl;
-  //     search_step_right( revbr, revimgr, *rev_c, prefix_interval );
-
-  //     revimgr.swap_files( );
-  //     // newLT->close();
-  //     // delete newLT;
-  //     // RT->clear( );
-  //     // delete RT;
-
-  //     remove(MERGED_FILES.c_str());
-  //     // All intervals got from search_step_right should be in GSA[ $ ]
-  //   }
-
-  // // for( std::vector<string>::iterator it=qIntFilenames.begin(); it != qIntFilenames.end();
-  // //      ++it)
-  // //   remove((*it).c_str());
-  // // for( std::vector<string>::iterator it=revqIntFilenames.begin(); it != revqIntFilenames.end();
-  // //      ++it)
-  // //   remove((*it).c_str());
   delete c;
   return 0;
 }
