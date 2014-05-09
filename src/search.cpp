@@ -584,6 +584,7 @@ static void next_record(BWTIterator& bwt,
 								BWTPosition& p,
 								LCPValue& lcur,
 								LCPValue& lnext,
+								SequenceLength& max_len,
 								const vector< NucleoCounter >& C,
 								vector< NucleoCounter >::size_type& Ci,
 								bool& record_moved,
@@ -593,6 +594,7 @@ static void next_record(BWTIterator& bwt,
   ++gsa;  // Generalized Suffix Array
   if (gsa==GSAIterator::end())
 	 return;
+  max_len= std::max(max_len, (*gsa).sa);
   if (use_bwt) ++bwt;  // BWT (if used)
 
   // LCP (current and next)
@@ -659,8 +661,6 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 
   while (gsa != GSAIterator::end()) {
 	 bool record_moved= false;
-   if((*gsa).sa > max_len)
-     max_len = (*gsa).sa;
 
 // Opening a superblock
 	 if ((lcur<lnext) && (lnext >= tau)) {
@@ -670,7 +670,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len) {
 		  DEBUG_LOG("A " << lnext << "-long suffix of read " << (*gsa).numSeq
 						<< " has been found.");
-		  next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved, use_bwt);
+		  next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, record_moved, use_bwt);
 		}
 		const BWTPosition e= p;
 		if (b < e) {
@@ -715,7 +715,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 
 
 	 if (!record_moved) {
-		next_record(bwt, lcp, gsa, p, lcur, lnext, C, Ci, record_moved, use_bwt);
+		next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, record_moved, use_bwt);
 	 }
   }
   baimgr.swap_all_files();
