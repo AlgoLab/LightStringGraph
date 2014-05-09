@@ -68,10 +68,16 @@ void extend_arc_intervals( const int length,
                            GSAIterator& gsait,
                            SameLengthArcIntervalManager& qmgr,
                            SameLengthArcIntervalManager& newqmgr,
-                           ExtendSymbolPile& extsim_p,
+                           ExtendSymbolPile& extsym_p,
                            EdgeLabelIntervalManager& arcmgr);
 
-void extend_arc_labels( );
+void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
+                        ExtendSymbolPile& extsym_p,
+                        const vector< NucleoCounter >& C,
+                        BWTReader& br,
+                        GSAIterator& gsait,
+                        LCPIterator& lcpit,
+                        const SequenceLength max_len);
 
 bool equalFirstInterval( const QInterval&, const QInterval& );
 

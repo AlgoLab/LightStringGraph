@@ -737,12 +737,13 @@ void extend_arc_intervals( const int length,
                            GSAIterator& gsait,
                            SameLengthArcIntervalManager& qmgr,
                            SameLengthArcIntervalManager& newqmgr,
-                           ExtendSymbolPile& extsim_p,
+                           ExtendSymbolPile& extsym_p,
                            EdgeLabelIntervalManager& edlblmgr)
 {
-  unsigned long int nwintc =0; // New intervals
-  unsigned long int nwltc  =0; // New left terminated intervals
-  unsigned long int mrgintc=0; // Merged intervals
+  unsigned long int nwintc =0;     // New produced intervals
+  unsigned long int nwarcs  =0;    // New arcs
+  unsigned long int nwintmgr=0;    // Intrvals read from qmgr
+  unsigned long int nwintnwmgr =0; // Intervals from neqmgr
 
   ArcInterval *qint, *newqint;
   qint = qmgr.get_next_interval( );
@@ -767,13 +768,18 @@ void extend_arc_intervals( const int length,
         {
           currentInterval = qint;
           from_qmgr = true;
+          ++nwintmgr;
         }
       else
         {
           currentInterval = newqint;
           is_new_interval = true;
           from_qmgr = false;
+          ++nwintnwmgr;
         }
+
+      DEBUG_LOG("Read Interval [" << currentInterval->es_interval.get_begin()
+                << "," << currentInterval->es_interval.get_end() << ")");
 
       if(currentInterval->es_interval != lastInterval)
         {
@@ -781,15 +787,12 @@ void extend_arc_intervals( const int length,
           lastInterval = currentInterval->es_interval;
           dst_reads.clear();
           for(BWTPosition i(br.get_position()); i <= currentInterval->es_interval.get_begin(); ++i)
-            {
               br.move_to( i );
-            }
+
           PI = vector< NucleoCounter >( br.get_Pi() );
 
           while(gsait.get_position() < currentInterval->es_interval.get_begin())
-            {
               ++gsait;
-            }
 
           for(BWTPosition currentPosition=currentInterval->es_interval.get_begin();
               currentPosition < currentInterval->es_interval.get_end();
@@ -797,19 +800,27 @@ void extend_arc_intervals( const int length,
             {
               br.move_to(currentPosition);
               if(br.get_current_nucleotide() == BASE_$)
-                {
-                  dst_reads.push_back((*gsait).numSeq);
-                }
-              ++gsait;
+                dst_reads.push_back((*gsait).numSeq);
+              if(gsait != GSAIterator::end()) ++gsait;
             }
           br.move_to(currentInterval->es_interval.get_end());
         }
+
       pi = vector< NucleoCounter >( br.get_Pi() );
 
       if(!dst_reads.empty())
         {
-          // TODO: Output Prefix and Suffix
-          ++nwltc;
+          // TODO: Output Prefix and Suffix in a more meaningful way
+          for(ReadSet::const_iterator read = dst_reads.begin();
+              read != dst_reads.end(); ++read)
+            {
+              std::cout << *read << " ";
+            }
+          std::cout << "-> [" << currentInterval->seed_int.begin << ", "
+                    << currentInterval->seed_int.end << ")"
+                    << std::endl;
+          ++nwarcs;
+          DEBUG_LOG("Add BASE_$");
           extendsymbols.push_back( BASE_$ );
         }
       for(int base(BASE_A); base < ALPHABET_SIZE; ++base)
@@ -819,6 +830,7 @@ void extend_arc_intervals( const int length,
           if(new_end > new_begin)
             {
               ++nwintc;
+              DEBUG_LOG("Add BASE_" << ntoc((Nucleotide)base));
               extendsymbols.push_back( (Nucleotide) base );
               if(is_new_interval)
                 {
@@ -829,26 +841,146 @@ void extend_arc_intervals( const int length,
                   edlblmgr.add_edge_interval( void_interval, 0, BASE_A );
                   // Add the interval only once
                   is_new_interval = false;
+                  DEBUG_LOG("Add interval [0," << br.size() << ") to edgelabelmanager");
                 }
               QInterval new_q_interval(new_begin, new_end);
               ArcInterval new_arc_interval(new_q_interval,
                                            currentInterval->ext_len +1,
                                            currentInterval->seed_int);
+              DEBUG_LOG("Add interval [" << new_begin << "," << new_end
+                        << ") to qmgr with ext_len = "
+                        << currentInterval->ext_len +1);
               qmgr.add_interval(new_arc_interval, (Nucleotide)base);
             }
         }
+
       if(extendsymbols.size() > 0)
-        {
-          extsim_p.add_extend_symbol(extendsymbols, currentInterval->ext_len);
-        }
+          extsym_p.add_extend_symbol(extendsymbols, currentInterval->ext_len);
+
       from_qmgr ? qint = qmgr.get_next_interval() : newqint = newqmgr.get_next_interval();
     }
-  std::cerr << "--> Merged " << mrgintc << " new intervals in old intervals" << std::endl;
+  DEBUG_LOG( "--> Got " << nwintmgr << " new intervals from qmgr" );
+  DEBUG_LOG( "--> Got " << nwintnwmgr << " new intervals from nwqmgr" );
   std::cerr << "--> Generated " << nwintc << " new intervals" << std::endl;
-  std::cerr << "--> Produced " << nwltc << " new edges (still not labeled)" << std::endl;
+  std::cerr << "--> Produced " << nwarcs << " new edges (still not labeled)" << std::endl;
 }
 
-void extend_arc_labels( )
+void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
+                        ExtendSymbolPile& extsym_p,
+                        const vector< NucleoCounter >& C,
+                        BWTReader& br,
+                        GSAIterator& gsait,
+                        LCPIterator& lcp,
+                        const SequenceLength max_len)
 {
+  vector< vector< NucleoCounter > > EPI(max_len, vector< NucleoCounter >(ALPHABET_SIZE));
+  struct EdgeLabelEntry currentEdge;
+  BWTPosition currentPosition=0;
+  LCPValue lcur = 0;
+  LCPValue lnext = 0;
+  EdgeLabelInterval lastInterval( QInterval(0,0), QInterval(0,0) );
 
+  while(edgemgr.get_next_interval( currentEdge ))
+    {
+      DEBUG_LOG("Current edgeLabelInterval is ["
+                << currentEdge._interval->get_label().get_begin() << ","
+                << currentEdge._interval->get_label().get_end() << ")"
+                << " and the reverse interval is ["
+                << currentEdge._interval->get_reverse_label().get_begin() << ","
+                << currentEdge._interval->get_reverse_label().get_end() << ")");
+      vector< Nucleotide > extend_symbols = extsym_p.get_next_symbol(currentEdge._len);
+      // Move to begin updating EPI
+      for(; currentPosition <= currentEdge._interval->get_label().get_begin(); ++currentPosition)
+        {
+          lcur = *lcp;
+          br.move_to(currentPosition);
+          ++lcp;
+          lnext = (lcp == LCPIterator::end()) ? 0 : *lcp;
+          if(lcur<lnext)
+            for(LCPValue l=lnext; l>lcur; --l)
+              {
+                DEBUG_LOG("Build EPI[" << l << "]");
+                EPI[l] = vector<NucleoCounter>(br.get_Pi());
+              }
+          else if(lnext<lcur)
+            for(LCPValue l=lcur; l>lnext; --l)
+              {
+                DEBUG_LOG("Clear EPI[" << l << "]");
+                EPI[l].clear();
+              }
+        }
+      // moved to begin
+      bool special_interval = (currentEdge._interval->get_reverse_label().get_size() == 1) ? true : false;
+      if(special_interval) DEBUG_LOG("SPECIAL INTERVAL..........");
+      else DEBUG_LOG("NOTSO SPECIAL");
+      // intervals of size 1 wont withstand to LCP rule
+      if(lastInterval != *(currentEdge._interval))
+        {
+          for(; currentPosition <= currentEdge._interval->get_label().get_end(); ++currentPosition)
+            {
+              br.move_to(currentPosition);
+              if(lcp != LCPIterator::end())
+                {
+                  lcur = *lcp;
+                  ++lcp;
+                }
+              lnext = (lcp == LCPIterator::end()) ? 0 : *lcp;
+            }
+        }
+
+      vector< NucleoCounter > pi = br.get_Pi();
+
+      for(vector< Nucleotide >::iterator nucl_i =extend_symbols.begin();
+          nucl_i != extend_symbols.end(); ++nucl_i)
+        {
+          DEBUG_LOG("Extending with " << *nucl_i);
+          Nucleotide extension = *nucl_i;
+          // Output if finished arc
+          if(extension == BASE_$)
+            std::cout << "LABEL :"
+                      << currentEdge._interval->get_reverse_label().get_begin()
+                      << ","
+                      << currentEdge._interval->get_reverse_label().get_end()
+                      << " EXT_LEN " << currentEdge._len << std::endl;
+          // Extend otherwise
+          else
+            {
+              BWTPosition new_begin;
+              if(special_interval) new_begin = C[ extension ] + pi[ extension ] -1;
+              else new_begin = C[extension] + EPI[currentEdge._len][extension];
+
+              BWTPosition new_end = C[ extension ] + pi[ extension ];
+              BWTPosition old_rev_begin = currentEdge._interval->get_reverse_label().get_begin();
+              BWTPosition new_rev_begin, new_rev_end;
+              if(currentEdge._len == 0)
+                {
+                  new_rev_begin = C[extension];
+                  new_rev_end = C[extension+1];
+                }
+              else
+                {
+                  if(special_interval)
+                    {
+                      new_rev_begin = old_rev_begin;
+                      new_rev_end = old_rev_begin +1;
+                    }
+                  else
+                    {
+                      new_rev_begin = old_rev_begin + OccLT(pi, extension) - OccLT(EPI[currentEdge._len], extension);
+                      new_rev_end = new_rev_begin + pi[extension] - EPI[currentEdge._len][extension];
+                    }
+                }
+              EdgeLabelInterval new_interval(QInterval(new_begin, new_end), QInterval(new_rev_begin, new_rev_end));
+              DEBUG_LOG("Extended to ["
+                        << new_begin << ","
+                        << new_end << ")"
+                        << " and the reverse interval is ["
+                        << new_rev_begin << ","
+                        << new_rev_end << ")");
+              edgemgr.add_edge_interval(new_interval, currentEdge._len +1, extension);
+            }
+        }
+      lastInterval = *(currentEdge._interval);
+      delete currentEdge._interval;;
+    } // ~while get next interval
 }
