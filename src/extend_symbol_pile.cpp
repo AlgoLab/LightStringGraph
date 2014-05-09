@@ -36,7 +36,7 @@ void ExtendSymbolPile::_init_files( )
 
   for(vector< string >::const_iterator it = _filenamesIn.begin();
       it != _filenamesIn.end(); ++it )
-    _files.push_back( new std::fstream( (*it).c_str(), _mode) );
+    _files.push_back( new std::fstream( (*it).c_str(), _mode | std::ios_base::binary) );
 }
 
 std::ios_base::openmode ExtendSymbolPile::switch_mode( )
