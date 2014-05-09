@@ -17,15 +17,29 @@ public:
   // Destructor
   ~EdgeLabelInterval( );
 
+  EdgeLabelInterval( const EdgeLabelInterval& other )
+    : _forward_interval(other.get_label()), _reverse_interval(other.get_reverse_label())
+  { };
+
   // get label
   const QInterval& get_label( ) const;
   const QInterval& get_reverse_label( ) const;
 
+  // Equality operator
+  bool operator==(const EdgeLabelInterval& rhs ) const;
+
+  // Inequality operator
+  bool operator!=(const EdgeLabelInterval& rhs) const;
+
+  // Assignement operator
+  EdgeLabelInterval& operator= ( const EdgeLabelInterval& other );
+
+  bool operator>(const EdgeLabelInterval& rhs) const;
+  bool operator<(const EdgeLabelInterval& rhs) const;
+
 private:
   // No need of copu ctor nor assigment operator
   EdgeLabelInterval( ) : _forward_interval(0,0), _reverse_interval(0, 0) { };
-  EdgeLabelInterval( const EdgeLabelInterval& other ) : _forward_interval(0,0), _reverse_interval(0,0) { };
-  EdgeLabelInterval& operator=( const EdgeLabelInterval& other ) { return *this; };
 };
 
 #endif
