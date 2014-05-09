@@ -883,14 +883,14 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
   while(edgemgr.get_next_interval( currentEdge ))
     {
       DEBUG_LOG("Current edgeLabelInterval is ["
-                << currentEdge._interval->get_label().get_begin() << ","
-                << currentEdge._interval->get_label().get_end() << ")"
+                << currentEdge._interval.get_label().get_begin() << ","
+                << currentEdge._interval.get_label().get_end() << ")"
                 << " and the reverse interval is ["
-                << currentEdge._interval->get_reverse_label().get_begin() << ","
-                << currentEdge._interval->get_reverse_label().get_end() << ")");
+                << currentEdge._interval.get_reverse_label().get_begin() << ","
+                << currentEdge._interval.get_reverse_label().get_end() << ")");
       vector< Nucleotide > extend_symbols = extsym_p.get_next_symbol(currentEdge._len);
       // Move to begin updating EPI
-      for(; currentPosition <= currentEdge._interval->get_label().get_begin(); ++currentPosition)
+      for(; currentPosition <= currentEdge._interval.get_label().get_begin(); ++currentPosition)
         {
           lcur = *lcp;
           br.move_to(currentPosition);
@@ -910,13 +910,13 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
               }
         }
       // moved to begin
-      bool special_interval = (currentEdge._interval->get_reverse_label().get_size() == 1) ? true : false;
+      bool special_interval = (currentEdge._interval.get_reverse_label().get_size() == 1) ? true : false;
       if(special_interval) DEBUG_LOG("SPECIAL INTERVAL..........");
       else DEBUG_LOG("NOTSO SPECIAL");
       // intervals of size 1 wont withstand to LCP rule
-      if(lastInterval != *(currentEdge._interval))
+      if(lastInterval != currentEdge._interval)
         {
-          for(; currentPosition <= currentEdge._interval->get_label().get_end(); ++currentPosition)
+          for(; currentPosition <= currentEdge._interval.get_label().get_end(); ++currentPosition)
             {
               br.move_to(currentPosition);
               if(lcp != LCPIterator::end())
@@ -938,9 +938,9 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
           // Output if finished arc
           if(extension == BASE_$)
             std::cout << "LABEL :"
-                      << currentEdge._interval->get_reverse_label().get_begin()
+                      << currentEdge._interval.get_reverse_label().get_begin()
                       << ","
-                      << currentEdge._interval->get_reverse_label().get_end()
+                      << currentEdge._interval.get_reverse_label().get_end()
                       << " EXT_LEN " << currentEdge._len << std::endl;
           // Extend otherwise
           else
@@ -950,7 +950,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
               else new_begin = C[extension] + EPI[currentEdge._len][extension];
 
               BWTPosition new_end = C[ extension ] + pi[ extension ];
-              BWTPosition old_rev_begin = currentEdge._interval->get_reverse_label().get_begin();
+              BWTPosition old_rev_begin = currentEdge._interval.get_reverse_label().get_begin();
               BWTPosition new_rev_begin, new_rev_end;
               if(currentEdge._len == 0)
                 {
@@ -980,7 +980,6 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
               edgemgr.add_edge_interval(new_interval, currentEdge._len +1, extension);
             }
         }
-      lastInterval = *(currentEdge._interval);
-      delete currentEdge._interval;;
+      lastInterval = currentEdge._interval;
     } // ~while get next interval
 }
