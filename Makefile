@@ -50,7 +50,7 @@ STXXLLIB=
 STXXLINC=
 endif
 
-CFLAGS	= -g -Wall -DDEBUG -DDEBUG_VERBOSE ${DEFINES} -O2 -march=native -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) -fopenmp
+CFLAGS	= -g -Wall ${DEFINES} ${DEBUGDEF} -O0 -march=native -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) -fopenmp
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 
