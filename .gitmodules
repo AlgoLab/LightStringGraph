@@ -1,0 +1,3 @@
+[submodule "thirdparty/BEETL"]
+	path = thirdparty/BEETL
+	url = https://github.com/AlgoLab/BEETL.git
