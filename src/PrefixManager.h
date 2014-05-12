@@ -33,11 +33,7 @@ public:
   PrefixManager(const std::string& filename)
       :filename_(filename),
        size_(0),
-#ifdef USE_BGZF
-       f_(bgzf_open(filename.c_str(), "w5")),
-#else
-       of_(filename, std::ios::out | std::ios::trunc | std::ios::binary),
-#endif
+       writing(false),
        reading(false)
   {
 #ifdef USE_BOOST_IOSTREAMS
@@ -57,6 +53,15 @@ public:
 
   void push(const elem_t& elem) {
     _FAIL_IF(reading);
+    if (!writing) {
+#ifdef USE_BGZF
+      f_= bgzf_open(filename_.c_str(), "w5");
+#else
+      of_.open(filename_.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+#endif
+      writing= true;
+    }
+
 #ifdef USE_BGZF
     bgzf_write(f_, reinterpret_cast<const void*>(&elem), sizeof(elem_t));
 #else
@@ -87,19 +92,21 @@ public:
                  std::vector<elem_t>& elems) {
     if (!reading) {
 #ifdef USE_BOOST_IOSTREAMS
-      of_.close();
+      if (writing) of_.close();
       mm_.open(filename_);
 #elif defined USE_BGZF
-      bgzf_flush(f_);
-      bgzf_close(f_);
+      if (writing) {
+        bgzf_flush(f_);
+        bgzf_close(f_);
+      }
       f_= bgzf_open(filename_.c_str(), "r");
 #else
-      of_.close();
+      if (writing) of_.close();
       if_.open(filename_, std::ios::in | std::ios::binary);
 #endif
+      writing= false;
       reading= true;
     }
-    _FAIL_IF( n_el < 0);
     elems.clear();
     elems.resize(n_el);
 #ifdef USE_BOOST_IOSTREAMS
@@ -109,7 +116,7 @@ public:
     const int64_t seek_result= bgzf_seek(f_, p, SEEK_SET);
     _FAIL_IF(seek_result != 0);
     const ssize_t read_result= bgzf_read(f_,
-	                                      reinterpret_cast<void*>(&elems[0]),
+                                         reinterpret_cast<void*>(&elems[0]),
                                          n_el*sizeof(elem_t));
     _FAIL_IF(read_result != (n_el*sizeof(elem_t)));
 #else
@@ -135,6 +142,7 @@ private:
 
   elem_t top_;
 
+  bool writing;
   bool reading;
 
 };

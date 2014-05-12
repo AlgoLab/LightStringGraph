@@ -677,7 +677,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		}
 		const BWTPosition e= p;
 		if (b < e) {
-		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.position()));
+		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.position(), pref_mgr.size()));
 		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
 		}
 	 }
@@ -692,7 +692,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		  ) {
 		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
 					 << stack_e.top().k << "-superblock.");
-		pref_mgr.push(pref_mgr_elem_t((*gsa).numSeq));
+		pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
 		DEBUG_LOG("Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
 	 }
 
@@ -713,7 +713,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
             add_interval(ArcInterval(QInterval(stack_e.top().b, stack_e.top().e),
                                      0,
                                      SeedInterval(stack_e.top().pos_on_pref_mgr,
-                                                  pref_mgr.size()-stack_e.top().pos_on_pref_mgr)),
+                                                  pref_mgr.size()-stack_e.top().size_of_pref_mgr)),
                          (Nucleotide)Ci);
 		  }
 		  stack_e.pop();
