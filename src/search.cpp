@@ -614,20 +614,23 @@ struct stack_e_elem_t {
   BWTPosition b;
   BWTPosition e;
   LCPValue k;
-  size_t idx_on_pref_mgr;
+  PrefixManager::position_t pos_on_pref_mgr;
+  PrefixManager::offset_t size_of_pref_mgr;
 
   explicit stack_e_elem_t(const BWTPosition b_,
 								  const BWTPosition e_,
 								  const LCPValue k_,
-								  const size_t idx_on_pref_mgr_)
-		:b(b_), e(e_), k(k_), idx_on_pref_mgr(idx_on_pref_mgr_)
+								  const PrefixManager::position_t pos_on_pref_mgr_,
+								  const PrefixManager::offset_t size_of_pref_mgr_)
+		:b(b_), e(e_), k(k_), pos_on_pref_mgr(pos_on_pref_mgr_),
+		 size_of_pref_mgr(size_of_pref_mgr_)
   {
   }
 
 };
 
 std::ostream& operator<<(std::ostream& os, const stack_e_elem_t& el) {
-  os << "( [" << el.b << ", " << el.e << "), " << el.k << ", " << el.idx_on_pref_mgr << ")";
+  os << "( [" << el.b << ", " << el.e << "), " << el.k << ", " << el.pos_on_pref_mgr << ")";
   return os;
 }
 
@@ -674,7 +677,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		}
 		const BWTPosition e= p;
 		if (b < e) {
-		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.size()));
+		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.position()));
 		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
 		}
 	 }
@@ -695,18 +698,19 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		LCPValue mink= std::max(lnext+1, tau);
 		DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
 		while(!stack_e.empty() && stack_e.top().k >= mink) {
-		  if (stack_e.top().idx_on_pref_mgr < pref_mgr.size()) {
-			 DEBUG_LOG("Adding the basic_arc_interval "
-						  << "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
-						  << "[ " << stack_e.top().idx_on_pref_mgr << ", " << pref_mgr.size() << "), "
-						  << "0) to file "
-						  << "E^0( " << ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
+		  if (stack_e.top().size_of_pref_mgr < pref_mgr.size()) {
+          DEBUG_LOG("Adding the basic_arc_interval "
+                    << "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
+                    << "[ " << stack_e.top().size_of_pref_mgr << ", " << pref_mgr.size() << "), "
+                    << "0) to file "
+                    << "E^0( " << ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
 // Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k+1
 // (Note: '+1' is because '$' was not considered.)
           baimgr[stack_e.top().k+1]. \
             add_interval(ArcInterval(QInterval(stack_e.top().b, stack_e.top().e),
                                      0,
-                                     SeedInterval(stack_e.top().idx_on_pref_mgr, pref_mgr.size())),
+                                     SeedInterval(stack_e.top().pos_on_pref_mgr,
+                                                  pref_mgr.size()-stack_e.top().pos_on_pref_mgr)),
                          (Nucleotide)Ci);
 		  }
 		  stack_e.pop();
