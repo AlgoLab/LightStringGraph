@@ -344,6 +344,8 @@ ifstream& operator>>( ifstream& in, EdgeLabelInterval*& e )
   in >> reverse;
   if(!reverse){ e = NULL; return in; }
   e = new EdgeLabelInterval( *label, *reverse );
+  delete label;
+  delete reverse;
   return in;
 }
 

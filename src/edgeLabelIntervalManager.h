@@ -18,29 +18,27 @@ struct EdgeLabelEntry;
 
 struct EdgeLabelEntry
 {
-  EdgeLabelInterval* _interval;
+  EdgeLabelInterval _interval;
   EdgeLength _len;
 
   EdgeLabelEntry( )
+    : _interval(QInterval(0,0), QInterval(0,0)), _len(0)
   {
-    _interval = NULL;
-    _len =0;
   }
 
-  EdgeLabelEntry( EdgeLabelInterval* i, EdgeLength l)
+  EdgeLabelEntry( EdgeLabelInterval& i, EdgeLength l)
+    :_interval(i), _len(l)
   {
-    _interval = new EdgeLabelInterval(*(i));
-    _len = l;
   }
 
   ~EdgeLabelEntry()
   {
-    _interval=NULL;
   }
 
   struct EdgeLabelEntry& operator=(const struct EdgeLabelEntry& other)
   {
-    _interval = new EdgeLabelInterval(*(other._interval));
+    if(this == &other) return *this;
+    _interval = other._interval;
     _len = other._len;
     return *this;
   }
@@ -48,9 +46,8 @@ struct EdgeLabelEntry
   bool operator<(const struct EdgeLabelEntry& rhs) const
   {
     // Use > instead of < to hack prority queue
-    return (*_interval > *(rhs._interval));
+    return (_interval > rhs._interval);
   }
-
 };
 
 class EdgeLabelIntervalManager
