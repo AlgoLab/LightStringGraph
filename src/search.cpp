@@ -747,7 +747,8 @@ void extend_arc_intervals( const int length,
                            SameLengthArcIntervalManager& qmgr,
                            SameLengthArcIntervalManager& newqmgr,
                            ExtendSymbolPile& extsym_p,
-                           EdgeLabelIntervalManager& edlblmgr)
+                           EdgeLabelIntervalManager& edlblmgr,
+                           PrefixManager& pref_mgr)
 {
   unsigned long int nwintc =0;     // New produced intervals
   unsigned long int nwarcs  =0;    // New arcs
@@ -820,14 +821,21 @@ void extend_arc_intervals( const int length,
       if(!dst_reads.empty())
         {
           // TODO: Output Prefix and Suffix in a more meaningful way
+          std::cout << "EXT_LEN " << currentInterval->ext_len << "\t";
           for(ReadSet::const_iterator read = dst_reads.begin();
               read != dst_reads.end(); ++read)
-            {
               std::cout << *read << " ";
+          std::cout << "-> ";
+          std::vector< PrefixManager::elem_t > seqOriginID;
+          pref_mgr.get_elems( currentInterval->seed_int.begin,
+                              currentInterval->seed_int.end,
+                              seqOriginID );
+          for(std::vector< PrefixManager::elem_t >::iterator it = seqOriginID.begin();
+              it != seqOriginID.end(); ++it)
+            {
+              std::cout << *it << " ";
             }
-          std::cout << "-> [" << currentInterval->seed_int.begin << ", "
-                    << currentInterval->seed_int.end << ")"
-                    << std::endl;
+          std::cout << std::endl;
           ++nwarcs;
           DEBUG_LOG("Add BASE_$");
           extendsymbols.push_back( BASE_$ );
@@ -920,8 +928,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
         }
       // moved to begin
       bool special_interval = (currentEdge._interval.get_reverse_label().get_size() == 1) ? true : false;
-      if(special_interval) DEBUG_LOG("SPECIAL INTERVAL..........");
-      else DEBUG_LOG("NOTSO SPECIAL");
+
       // intervals of size 1 wont withstand to LCP rule
       if(lastInterval != currentEdge._interval)
         {
@@ -946,11 +953,11 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
           Nucleotide extension = *nucl_i;
           // Output if finished arc
           if(extension == BASE_$)
-            std::cout << "LABEL :"
+            std::cout << "EXT_LEN " << currentEdge._len << "\t"
                       << currentEdge._interval.get_reverse_label().get_begin()
                       << ","
                       << currentEdge._interval.get_reverse_label().get_end()
-                      << " EXT_LEN " << currentEdge._len << std::endl;
+                      << std::endl;
           // Extend otherwise
           else
             {

@@ -198,7 +198,7 @@ int main ( int argc, char** argv )
       // std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
       // left_step( br, qmgr, gsardr, *c, i + TAU);
       std::cerr << "--> Extend-Arc-Intervals - " << i << "/" << CYCNUM << std::endl;
-      extend_arc_intervals(TAU + i, *c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr);
+      extend_arc_intervals(TAU + i, *c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr);
 
       extsym_p.switch_mode( );
 
