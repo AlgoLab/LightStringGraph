@@ -683,7 +683,10 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 	 }
 
 // Found a new prefix
-	 if ((!stack_e.empty()) &&         // some supeblock is active AND
+    if (//NOTE: condition '!stack-e.empty()' has been removed since we want that
+        //the "prefix"-file contain the lexicographical order of ALL the reads, and not only
+        //the ones "involved" in some superblocks.
+        //(!stack_e.empty()) &&         // some supeblock is active AND
 		  ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
 			((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
 		  ) {
