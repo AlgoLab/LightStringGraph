@@ -125,8 +125,8 @@ int main ( int argc, char** argv )
       partialBWTname << basename << "-B0" << i;
       partialLCPname << basename << "-L0" << i;
       basicArcIntervalName << basename << ".lsg.bai.sigma_" << i;
-      qIntFilename << ".QINT-" << i;
-      baseqIntFilename << ".bQ-" << i;
+      qIntFilename << basename << ".QINT-" << i;
+      baseqIntFilename << basename << ".bQ-" << i;
 
       BWTInputFilenames.push_back( partialBWTname.str( ) );
       LCPInputFilenames.push_back( partialLCPname.str( ) );
@@ -171,14 +171,14 @@ int main ( int argc, char** argv )
   for(SequenceLength j(0); j < max_len; ++j)
     {
       std::ostringstream extsymfn, edgeIntFilename;
-      extsymfn << ".extsym-LEN-" << j;
+      extsymfn << basename << ".extsym-LEN-" << j;
       extendSymbolFilenames.push_back(extsymfn.str());
 
       edgeIntFilenames.push_back( vector< string >( ) );
 
       for(int i(0); i < ALPHABET_SIZE; ++i)
         {
-          edgeIntFilename << ".arc-SIGMA-" << i << "-LEN-" << j;
+          edgeIntFilename << basename << ".arc-SIGMA-" << i << "-LEN-" << j;
           edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
           edgeIntFilename.str(string(""));
           edgeIntFilename.clear();
