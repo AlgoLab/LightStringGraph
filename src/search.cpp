@@ -680,6 +680,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.position(), pref_mgr.size()));
 		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
 		}
+		if (record_moved) continue;
 	 }
 
 // Found a new prefix
@@ -687,14 +688,15 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
         //the "prefix"-file contain the lexicographical order of ALL the reads, and not only
         //the ones "involved" in some superblocks.
         //(!stack_e.empty()) &&         // some supeblock is active AND
-		  ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
-			((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
-		  ) {
-		DEBUG_LOG("Found read " << (*gsa).numSeq << " inside a "
-					 << stack_e.top().k << "-superblock.");
-		pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
-		DEBUG_LOG("Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
-	 }
+        ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
+         ((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
+        ) {
+      pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
+      DEBUG_LOG("Read " << (*gsa).numSeq << " is the " << pref_mgr.size()
+                << "-th read of the lexicographic order.");
+      DEBUG_LOG("It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
+      DEBUG_LOG("Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
+    }
 
 // Closing some superblocks
 	 if ((lnext<lcur) && (lcur >= tau)) {
