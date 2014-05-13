@@ -748,7 +748,8 @@ void extend_arc_intervals( const int length,
                            SameLengthArcIntervalManager& newqmgr,
                            ExtendSymbolPile& extsym_p,
                            EdgeLabelIntervalManager& edlblmgr,
-                           PrefixManager& pref_mgr)
+                           PrefixManager& pref_mgr,
+                           OutputMultiFileManager& arcsOut )
 {
   unsigned long int nwintc =0;     // New produced intervals
   unsigned long int nwarcs  =0;    // New arcs
@@ -821,21 +822,27 @@ void extend_arc_intervals( const int length,
       if(!dst_reads.empty())
         {
           // TODO: Output Prefix and Suffix in a more meaningful way
-          std::cout << "EXT_LEN " << currentInterval->ext_len << "\t";
-          for(ReadSet::const_iterator read = dst_reads.begin();
-              read != dst_reads.end(); ++read)
-              std::cout << *read << " ";
-          std::cout << "-> ";
-          std::vector< PrefixManager::elem_t > seqOriginID;
-          pref_mgr.get_elems( currentInterval->seed_int.begin,
-                              currentInterval->seed_int.end,
-                              seqOriginID );
-          for(std::vector< PrefixManager::elem_t >::iterator it = seqOriginID.begin();
-              it != seqOriginID.end(); ++it)
-            {
-              std::cout << *it << " ";
-            }
-          std::cout << std::endl;
+          BWTPosition begin$pos = PI[BASE_$], end$pos = pi[BASE_$];
+
+          arcsOut[currentInterval->ext_len].write(reinterpret_cast<char*>(&begin$pos),
+                                                  sizeof(BWTPosition));
+          arcsOut[currentInterval->ext_len].write(reinterpret_cast<char*>(&end$pos),
+                                                  sizeof(BWTPosition));
+                    // std::cout << "EXT_LEN " << currentInterval->ext_len << "\t";
+          // for(ReadSet::const_iterator read = dst_reads.begin();
+          //     read != dst_reads.end(); ++read)
+          //     std::cout << *read << " ";
+          // std::cout << "-> ";
+          // std::vector< PrefixManager::elem_t > seqOriginID;
+          // pref_mgr.get_elems( currentInterval->seed_int.begin,
+          //                     currentInterval->seed_int.end,
+          //                     seqOriginID );
+          // for(std::vector< PrefixManager::elem_t >::iterator it = seqOriginID.begin();
+          //     it != seqOriginID.end(); ++it)
+          //   {
+          //     std::cout << *it << " ";
+          //   }
+          // std::cout << std::endl;
           ++nwarcs;
           DEBUG_LOG("Add BASE_$");
           extendsymbols.push_back( BASE_$ );
@@ -888,7 +895,8 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         BWTReader& br,
                         GSAIterator& gsait,
                         LCPIterator& lcp,
-                        const SequenceLength max_len)
+                        const SequenceLength max_len,
+                        OutputMultiFileManager& edgeOut )
 {
   vector< vector< NucleoCounter > > EPI(max_len, vector< NucleoCounter >(ALPHABET_SIZE));
   struct EdgeLabelEntry currentEdge;
@@ -896,6 +904,8 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
   LCPValue lcur = 0;
   LCPValue lnext = 0;
   EdgeLabelInterval lastInterval( QInterval(0,0), QInterval(0,0) );
+  unsigned long nwtermlbc =0;
+  unsigned long nwlbc =0;
 
   while(edgemgr.get_next_interval( currentEdge ))
     {
@@ -953,11 +963,21 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
           Nucleotide extension = *nucl_i;
           // Output if finished arc
           if(extension == BASE_$)
-            std::cout << "EXT_LEN " << currentEdge._len << "\t"
-                      << currentEdge._interval.get_reverse_label().get_begin()
-                      << ","
-                      << currentEdge._interval.get_reverse_label().get_end()
-                      << std::endl;
+            {
+              // Compiler does not accept a function as a argument for '&' ?
+              BWTPosition labbegin = currentEdge._interval.get_reverse_label().get_begin();
+              BWTPosition labend   = currentEdge._interval.get_reverse_label().get_end();
+              edgeOut[currentEdge._len].write(reinterpret_cast<char*>(&labbegin),
+                                              sizeof(BWTPosition));
+              edgeOut[currentEdge._len].write(reinterpret_cast<char*>(&labend),
+                                              sizeof(BWTPosition));
+              ++nwtermlbc;
+              // std::cout << "EXT_LEN " << currentEdge._len << "\t"
+              //           << currentEdge._interval.get_reverse_label().get_begin()
+              //           << ","
+              //           << currentEdge._interval.get_reverse_label().get_end()
+              //           << std::endl;
+            }
           // Extend otherwise
           else
             {
@@ -987,6 +1007,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                     }
                 }
               EdgeLabelInterval new_interval(QInterval(new_begin, new_end), QInterval(new_rev_begin, new_rev_end));
+              ++nwlbc;
               DEBUG_LOG("Extended to ["
                         << new_begin << ","
                         << new_end << ")"
@@ -998,4 +1019,6 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
         }
       lastInterval = currentEdge._interval;
     } // ~while get next interval
+  std::cerr << "--> Generated " << nwlbc << " new labels for arcs." << std::endl;
+  std::cerr << "--> Labeled " << nwtermlbc << " new arcs." << std::endl;
 }

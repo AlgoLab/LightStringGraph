@@ -28,6 +28,7 @@
 #include "extend_symbol_pile.h"
 #include "edgeLabelIntervalManager.h"
 #include "MultiIntervalManager.h"
+#include "MultiFileManager.h"
 
 using std::vector;
 using std::deque;
@@ -70,7 +71,8 @@ void extend_arc_intervals( const int length,
                            SameLengthArcIntervalManager& newqmgr,
                            ExtendSymbolPile& extsym_p,
                            EdgeLabelIntervalManager& arcmgr,
-                           PrefixManager& pref_mgr);
+                           PrefixManager& pref_mgr,
+                           OutputMultiFileManager& arcsOut);
 
 void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         ExtendSymbolPile& extsym_p,
@@ -78,7 +80,8 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         BWTReader& br,
                         GSAIterator& gsait,
                         LCPIterator& lcpit,
-                        const SequenceLength max_len);
+                        const SequenceLength max_len,
+                        OutputMultiFileManager& labelOut);
 
 bool equalFirstInterval( const QInterval&, const QInterval& );
 

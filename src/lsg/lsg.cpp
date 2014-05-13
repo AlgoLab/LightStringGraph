@@ -17,6 +17,7 @@
 #include "types.h"
 #include "search.h"
 #include "extend_symbol_pile.h"
+#include "MultiFileManager.h"
 
 using std::vector;
 using std::string;
@@ -186,6 +187,8 @@ int main ( int argc, char** argv )
     }
 
   EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
+  OutputMultiFileManager arcsOut(basename + ".out.arcs");
+  OutputMultiFileManager labelOut(basename + ".out.labels");
 
   for( int i( 1 ); i <= CYCNUM; ++i )
     {
@@ -197,8 +200,8 @@ int main ( int argc, char** argv )
       std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
       // std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
       // left_step( br, qmgr, gsardr, *c, i + TAU);
-      std::cerr << "--> Extend-Arc-Intervals - " << i << "/" << CYCNUM << std::endl;
-      extend_arc_intervals(TAU + i, *c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr);
+      std::cerr << "-> Extend-Arc-Intervals - " << i << "/" << CYCNUM << std::endl;
+      extend_arc_intervals(TAU + i, *c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr, arcsOut);
 
       extsym_p.switch_mode( );
 
@@ -207,7 +210,8 @@ int main ( int argc, char** argv )
       gsait.reset();
       edgemgr.swap_files();
 
-      extend_arc_labels(edgemgr, extsym_p, *c, br, gsait, lcpit, max_len);
+      std::cerr << "-> Extend-Arc-Labels - " << i << "/" << CYCNUM << std::endl;
+      extend_arc_labels(edgemgr, extsym_p, *c, br, gsait, lcpit, max_len, labelOut);
 
       br.reset();
       gsardr.reset();
