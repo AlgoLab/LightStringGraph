@@ -790,7 +790,7 @@ void extend_arc_intervals( const int length,
         }
 
       DEBUG_LOG("Read Interval [" << currentInterval->es_interval.get_begin()
-                << "," << currentInterval->es_interval.get_end() << ")");
+                << "," << currentInterval->es_interval.get_end() << ") from_qmgr?" << from_qmgr);
 
       if(currentInterval->es_interval != lastInterval)
         {
