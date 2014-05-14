@@ -7,7 +7,7 @@ BWTReader::BWTReader ( vector< string >& filenamesIN )
     {
       std::cerr << "ERROR: Can't initialize a BWTReader without filenames."
                 << std::endl << "Aborting." << std::endl;
-      std::exit( -1 );
+      _MY_FAIL;
     }
 
 

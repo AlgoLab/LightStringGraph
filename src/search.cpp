@@ -26,7 +26,7 @@ void build_tau_intervals( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
               std::cerr << "ERROR IN: seach.cpp:build_tau_interval" << std::endl;
               std::cerr << "Can't move to " << begin << std::endl;
               std::cerr << "Aborting..." << std::endl;
-              std::exit( -1 );
+              _MY_FAIL;
             }
 
           b.move_to( begin );
@@ -91,7 +91,7 @@ void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
           std::cerr << "Can't move to " << begin << std::endl;
           std::cerr << "Current position is " << grdr.get_position() << std::endl;
           std::cerr << "Aborting..." << std::endl;
-          std::exit(-1);
+          _MY_FAIL;
         }
       GSAEntry gsafent    = grdr.get_v(); // GSA entry @ begin
 

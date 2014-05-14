@@ -37,7 +37,7 @@ public:
       {
         std::cerr << "ERROR: Can't initialize an interval manager without any "
                   << "filename." << std::endl;
-        std::exit( -1 );
+        _MY_FAIL;
       }
     for ( vector< string >::iterator it = filenames.begin( );
           it != filenames.end( ); ++it )
@@ -66,7 +66,7 @@ public:
                   << "Aborting..." << std::endl;
         delete _inputFile;
         _inputFile = NULL;
-        std::exit( -1 );
+        _MY_FAIL;
       }
     _nextInputFile = 0;
     _populate_buffer( );
@@ -134,7 +134,7 @@ public:
           {
             std::cerr << "ERROR: Can't rename " << nextfile.str() << " to " << *it
                       << std::endl << "Aborting..." << std::endl;
-            std::exit( -1 );
+            _MY_FAIL;
           }
         remove( nextfile.str().c_str() );
         DEBUG_LOG_VERBOSE( "Renamed file " << nextfile.str() << " to " << *it);

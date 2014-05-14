@@ -8,7 +8,7 @@ partialLCPReader::partialLCPReader(std::string& inputFilename)
     {
       std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
                 << "Aborting." << std::endl;
-      std::exit(-1);
+      _MY_FAIL;
     }
 
   _start    = 0;
@@ -26,7 +26,7 @@ partialLCPReader::partialLCPReader(std::string& inputFilename, BWTPosition start
     {
       std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
                 << "Aborting." << std::endl;
-      std::exit(-1);
+      _MY_FAIL;
     }
 
   _start = start;

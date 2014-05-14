@@ -9,7 +9,7 @@ LCPReader::LCPReader(std::vector< std::string >& filenamesIN)
     {
       std::cerr << "ERROR: Can't initialize an LCPReader without filenames."
                 << std::endl << "Aborting." << std::endl;
-      std::exit(-1);
+      _MY_FAIL;
     }
 
   DEBUG_LOG_VERBOSE("Initializing LCPReader on files :");

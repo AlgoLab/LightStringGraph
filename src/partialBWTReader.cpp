@@ -7,7 +7,7 @@ partialBWTReader::partialBWTReader ( string inputFilename )
     {
       std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
                 << "Aborting." << std::endl;
-      std::exit( -1 );
+      _MY_FAIL;
     }
 
   for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
@@ -29,7 +29,7 @@ partialBWTReader::partialBWTReader ( string inputFilename, BWTPosition start,
     {
       std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
                 << "Aborting." << std::endl;
-      std::exit( -1 );
+      _MY_FAIL;
     }
 
   _start = start;
@@ -74,7 +74,7 @@ bool partialBWTReader::move_to ( const BWTPosition & p )
                 << _start + _position << std::endl;
       std::cerr << "_start    = " << _start << std::endl;
       std::cerr << "_position = " << _position << std::endl;
-      std::exit( -1 );
+      _MY_FAIL;
     }
   while ( ( _bufferlen != 0 ) &&
           ( _position < _bufferlen ) &&

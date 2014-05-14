@@ -30,7 +30,7 @@ char ntoc ( Nucleotide base )
     default:
       std::cerr << "ERROR: Can't convert Nucleotide int( "
                 << base << " ) to char. Aborting." << std::endl;
-      std::exit( -1 );
+      _MY_FAIL;
     }
   return ret;
 }
