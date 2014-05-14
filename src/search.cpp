@@ -828,7 +828,12 @@ void extend_arc_intervals( const int length,
                                                   sizeof(BWTPosition));
           arcsOut[currentInterval->ext_len].write(reinterpret_cast<char*>(&end$pos),
                                                   sizeof(BWTPosition));
-                    // std::cout << "EXT_LEN " << currentInterval->ext_len << "\t";
+          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(currentInterval->seed_int.begin)),
+                                                  sizeof(SequenceNumber));
+          SequenceNumber seedend = currentInterval->seed_int.begin + currentInterval->seed_int.end;
+          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(seedend)),
+                                                  sizeof(SequenceNumber));
+          // std::cout << "EXT_LEN " << currentInterval->ext_len << "\t";
           // for(ReadSet::const_iterator read = dst_reads.begin();
           //     read != dst_reads.end(); ++read)
           //     std::cout << *read << " ";
