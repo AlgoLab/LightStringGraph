@@ -568,7 +568,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 // }
 
 #define _LOG_RECORD											\
-  DEBUG_LOG("pos: " << p									\
+  DEBUG_LOG("  pos: " << p									\
 				<< "  sigma: "	<< ntoc((Nucleotide)Ci)						\
             << "  c_lcp: " << lcur											\
 				<< "  n_lcp: " << lnext											\
@@ -670,15 +670,17 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		DEBUG_LOG("Opening a " << lnext << "-superblock.");
 		const BWTPosition b= p;
 		const LCPValue suff_len= lnext;
-		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len) {
-		  DEBUG_LOG("A " << lnext << "-long suffix of read " << (*gsa).numSeq
+		bool first= true;
+		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len && (first || lcur == suff_len)) {
+		  DEBUG_LOG("    A " << suff_len << "-long suffix of read " << (*gsa).numSeq
 						<< " has been found.");
+		  first= false;
 		  next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, record_moved, use_bwt);
 		}
 		const BWTPosition e= p;
 		if (b < e) {
 		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.position(), pref_mgr.size()));
-		  DEBUG_LOG("Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
+		  DEBUG_LOG("  Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
 		}
 		if (record_moved) continue;
 	 }
@@ -692,10 +694,10 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
          ((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
         ) {
       pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
-      DEBUG_LOG("Read " << (*gsa).numSeq << " is the " << pref_mgr.size()
+      DEBUG_LOG("  Read " << (*gsa).numSeq << " is the " << pref_mgr.size()
                 << "-th read of the lexicographic order.");
-      DEBUG_LOG("It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
-      DEBUG_LOG("Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
+      DEBUG_LOG("  It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
+      DEBUG_LOG("  Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
     }
 
 // Closing some superblocks
