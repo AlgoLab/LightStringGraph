@@ -39,6 +39,11 @@ IM_BUFFERSIZE=1024
 endif
 endif
 
+ifndef OPTDEF
+OPTDEF:=-O3 -DNDEBUG -march=native
+$(info No custom optimization flags are found: using '${OPTDEF}')
+endif
+
 DEFINES = -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
 
 ifdef USESTXXL
@@ -50,7 +55,7 @@ STXXLLIB=
 STXXLINC=
 endif
 
-CFLAGS	= -g -Wall ${DEFINES} ${DEBUGDEF} -O3 -DNDEBUG -march=native -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) -fopenmp
+CFLAGS	= -g -Wall ${DEFINES} ${DEBUGDEF} ${OPTDEF} -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) #-fopenmp
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 
