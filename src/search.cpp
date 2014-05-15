@@ -901,7 +901,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         const SequenceLength max_len,
                         OutputMultiFileManager& edgeOut )
 {
-  vector< vector< NucleoCounter > > EPI(max_len, vector< NucleoCounter >(ALPHABET_SIZE));
+  vector< vector< NucleoCounter > > EPI(max_len+1, vector< NucleoCounter >(ALPHABET_SIZE));
   struct EdgeLabelEntry currentEdge;
   BWTPosition currentPosition=0;
   LCPValue lcur = 0;
