@@ -44,6 +44,15 @@ OPTDEF:=-O3 -DNDEBUG -march=native
 $(info No custom optimization flags are found: using '${OPTDEF}')
 endif
 
+#####################
+# TCMalloc detection
+# TCMalloc is a (generally faster) drop-in replacement for the standard malloc
+# See: http://code.google.com/p/gperftools/
+#
+HAS_TCMALLOC:=/$(shell echo "void main() {}" | $(CC) -x c -o /tmp/test - -ltcmalloc_minimal 2> /dev/null && echo yes || echo no)/
+#####################
+
+
 DEFINES = -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
 
 ifdef USESTXXL
@@ -58,6 +67,12 @@ endif
 CFLAGS	= -g -Wall ${DEFINES} ${DEBUGDEF} ${OPTDEF} -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) #-fopenmp
 CXXFLAGS= ${CFLAGS}
 LIBS 	= #
+
+ifeq ($(HAS_TCMALLOC), /yes/)
+$(info Using TCMalloc)
+LIBS+=-ltcmalloc_minimal
+endif
+
 
 BGSA_DEP= $(OBJ_DIR)partialBWTReader.o \
 	$(OBJ_DIR)BWTReader.o \
