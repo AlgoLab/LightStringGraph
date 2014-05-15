@@ -817,7 +817,7 @@ void extend_arc_intervals( const int length,
 
       pi = vector< NucleoCounter >( br.get_Pi() );
 
-      if(!dst_reads.empty())
+      if(!dst_reads.empty() && currentInterval->ext_len>0)
         {
           // TODO: Output Prefix and Suffix in a more meaningful way
           BWTPosition begin$pos = PI[BASE_$], end$pos = pi[BASE_$];
