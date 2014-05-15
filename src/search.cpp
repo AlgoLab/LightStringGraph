@@ -587,7 +587,6 @@ static void next_record(BWTIterator& bwt,
 								SequenceLength& max_len,
 								const vector< NucleoCounter >& C,
 								vector< NucleoCounter >::size_type& Ci,
-								bool& record_moved,
 								const bool use_bwt
 								) {
   ++p;    // Position
@@ -605,8 +604,7 @@ static void next_record(BWTIterator& bwt,
   // starting symbol
   while ((Ci + 1 < C.size()) && (p >= C[Ci+1])) ++Ci;
 
-  // mark as moved and print to log
-  record_moved= true;
+  // print to log
   _LOG_RECORD;
 }
 
@@ -662,29 +660,12 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 
   _LOG_RECORD;
 
+  bool opening_block= false;
+  BWTPosition ob_b, ob_e;
+  LCPValue suff_len;
+  PrefixManager::position_t pos_on_pref_mgr;
+  PrefixManager::offset_t size_of_pref_mgr;
   while (gsa != GSAIterator::end()) {
-	 bool record_moved= false;
-
-// Opening a superblock
-	 if ((lcur<lnext) && (lnext >= tau)) {
-		DEBUG_LOG("Opening a " << lnext << "-superblock.");
-		const BWTPosition b= p;
-		const LCPValue suff_len= lnext;
-		bool first= true;
-		while (gsa != GSAIterator::end() && (*gsa).sa == suff_len && (first || lcur == suff_len)) {
-		  DEBUG_LOG("    A " << suff_len << "-long suffix of read " << (*gsa).numSeq
-						<< " has been found.");
-		  first= false;
-		  next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, record_moved, use_bwt);
-		}
-		const BWTPosition e= p;
-		if (b < e) {
-		  stack_e.push(stack_e_elem_t(b, e, suff_len, pref_mgr.position(), pref_mgr.size()));
-		  DEBUG_LOG("  Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
-		}
-		if (record_moved) continue;
-	 }
-
 // Found a new prefix
     if (//NOTE: condition '!stack-e.empty()' has been removed since we want that
         //the "prefix"-file contain the lexicographical order of ALL the reads, and not only
@@ -696,38 +677,52 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
       pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
       DEBUG_LOG("  Read " << (*gsa).numSeq << " is the " << pref_mgr.size()
                 << "-th read of the lexicographic order.");
-      DEBUG_LOG("  It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
-      DEBUG_LOG("  Added element " << pref_mgr.top() << " to pref_mgr(" << pref_mgr.size() << ").");
+//DEBUG_LOG("  It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
     }
 
-// Closing some superblocks
-	 if ((lnext<lcur) && (lcur >= tau)) {
-		LCPValue mink= std::max(lnext+1, tau);
-		DEBUG_LOG("Closing k-superblocks with k in [" << mink << ", " << lcur << "].");
-		while(!stack_e.empty() && stack_e.top().k >= mink) {
-		  if (stack_e.top().size_of_pref_mgr < pref_mgr.size()) {
-          DEBUG_LOG("Adding the basic_arc_interval "
-                    << "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
-                    << "[ " << stack_e.top().size_of_pref_mgr << ", " << pref_mgr.size() << "), "
-                    << "0) to file "
-                    << "E^0( " << ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
-// Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k+1
-// (Note: '+1' is because '$' was not considered.)
-          baimgr[stack_e.top().k+1]. \
-            add_interval(ArcInterval(QInterval(stack_e.top().b, stack_e.top().e),
-                                     0,
-                                     SeedInterval(stack_e.top().pos_on_pref_mgr,
-                                                  pref_mgr.size()-stack_e.top().size_of_pref_mgr)),
-                         (Nucleotide)Ci);
-		  }
-		  stack_e.pop();
+	 if (opening_block & (((*gsa).sa != suff_len) || (lcur != suff_len))) {
+		opening_block= false;
+		ob_e= p;
+		if (ob_b < ob_e) {
+		  stack_e.push(stack_e_elem_t(ob_b, ob_e, suff_len, pos_on_pref_mgr, size_of_pref_mgr));
+		  DEBUG_LOG("  Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
+		} else {
+		  DEBUG_LOG("The possible " << suff_len << "-superblock has no suffixes, thus is not valid.");
 		}
 	 }
 
-
-	 if (!record_moved) {
-		next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, record_moved, use_bwt);
+// Closing some superblocks
+	 while(!stack_e.empty() && (stack_e.top().k > lcur || (lcp == LCPIterator::end()))) {
+		DEBUG_LOG("Closing a " << stack_e.top().k << "-superblock.");
+		if (stack_e.top().size_of_pref_mgr < pref_mgr.size()) {
+		  DEBUG_LOG("Adding the basic_arc_interval "
+						<< "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
+						<< "[ " << stack_e.top().size_of_pref_mgr << ", " << pref_mgr.size() << "), "
+						<< "0) to file "
+						<< "E^0( " << ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
+// Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k+1
+// (Note: '+1' is because '$' was not considered.)
+		  baimgr[stack_e.top().k+1].													\
+			 add_interval(ArcInterval(QInterval(stack_e.top().b, stack_e.top().e),
+											  0,
+											  SeedInterval(stack_e.top().pos_on_pref_mgr,
+																pref_mgr.size()-stack_e.top().size_of_pref_mgr)),
+							  (Nucleotide)Ci);
+		}
+		stack_e.pop();
 	 }
+
+// Opening a superblock
+	 if ((lcur<lnext) && (lnext >= tau) && (*gsa).sa == lnext) {
+		DEBUG_LOG("Possibly opening a " << lnext << "-superblock at position " << p << ".");
+		opening_block= true;
+		ob_b= p;
+		suff_len= lnext;
+		pos_on_pref_mgr= pref_mgr.position();
+		size_of_pref_mgr= pref_mgr.size();
+	 }
+
+	 next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, use_bwt);
   }
   baimgr.swap_all_files();
 
