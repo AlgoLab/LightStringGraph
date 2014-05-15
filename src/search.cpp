@@ -725,6 +725,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 	 next_record(bwt, lcp, gsa, p, lcur, lnext, max_len, C, Ci, use_bwt);
   }
   baimgr.swap_all_files();
+  pref_mgr.flush();
 
   return max_len;
 }

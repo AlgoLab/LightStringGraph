@@ -71,6 +71,16 @@ public:
     ++size_;
   }
 
+  void flush() {
+    if (writing) {
+#ifdef USE_BGZF
+      bgzf_flush(f_);
+#else
+      of_.flush();
+#endif
+    }
+  }
+
   elem_t top() const {
     _FAIL_IF(size_ == 0);
     return top_;
@@ -91,6 +101,7 @@ public:
   void get_elems(const position_t& p, const offset_t& n_el,
                  std::vector<elem_t>& elems) {
     if (!reading) {
+      flush();
 #ifdef USE_BOOST_IOSTREAMS
       if (writing) of_.close();
       mm_.open(filename_);
