@@ -661,10 +661,10 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
   _LOG_RECORD;
 
   bool opening_block= false;
-  BWTPosition ob_b, ob_e;
-  LCPValue suff_len;
-  PrefixManager::position_t pos_on_pref_mgr;
-  PrefixManager::offset_t size_of_pref_mgr;
+  BWTPosition ob_b= 0, ob_e= 0;
+  LCPValue suff_len= 0;
+  PrefixManager::position_t pos_on_pref_mgr= 0;
+  PrefixManager::offset_t size_of_pref_mgr= 0;
   while (gsa != GSAIterator::end()) {
 // Found a new prefix
     if (//NOTE: condition '!stack-e.empty()' has been removed since we want that
@@ -680,7 +680,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 //DEBUG_LOG("  It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
     }
 
-	 if (opening_block & (((*gsa).sa != suff_len) || (lcur != suff_len))) {
+	 if (opening_block && (((*gsa).sa != suff_len) || (lcur != suff_len))) {
 		opening_block= false;
 		ob_e= p;
 		if (ob_b < ob_e) {
