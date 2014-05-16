@@ -52,6 +52,13 @@ endif
 HAS_TCMALLOC:=/$(shell echo "void main() {}" | $(CC) -x c -o /tmp/test - -ltcmalloc_minimal 2> /dev/null && echo yes || echo no)/
 #####################
 
+#####################
+# zlib detection
+# Used for reading the BWT file
+#
+HAS_ZLIB:=/$(shell echo "void main() {}" | $(CC) -x c -o /tmp/test - -lz 2> /dev/null && echo yes || echo no)/
+#####################
+
 
 DEFINES = -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
 
@@ -71,6 +78,12 @@ LIBS 	= #
 ifeq ($(HAS_TCMALLOC), /yes/)
 $(info Using TCMalloc)
 LIBS+=-ltcmalloc_minimal
+endif
+
+ifeq ($(HAS_ZLIB), /yes/)
+$(info Using zlib)
+DEFINES+=-DHAS_ZLIB
+LIBS+=-lz
 endif
 
 

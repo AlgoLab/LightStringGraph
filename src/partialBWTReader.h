@@ -6,10 +6,16 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
-#include <fstream>
+
+#ifdef HAS_ZLIB
+#include <zlib.h>
+#else
+#include <cstdio>
+#endif
 
 #include "types.h"
 #include "util.h"
+
 
 using std::vector;
 using std::string;
@@ -19,12 +25,16 @@ using std::string;
 class partialBWTReader
 {
 private:
-  std::ifstream             _fileIn;                  // File from which we want to read;
-  char*                     _buffer;                  // Current buffer
-  BWTPosition               _start;                   // Buffer start position in BWT
-  BWTPosition               _position;                // Position reached within the buffer
-  BWTPosition               _bufferlen;               // Number of char read in the last "read"
-                                                      // call, used while moving inside the buffer
+#ifdef HAS_ZLIB
+  gzFile         _fileIn;         // File from which we want to read;
+#else
+  FILE*          _fileIn;         // File from which we want to read;
+#endif
+  char* const    _buffer;         // Current buffer
+  BWTPosition    _start;          // Buffer start position in BWT
+  BWTPosition    _position;       // Position reached within the buffer
+  BWTPosition    _bufferlen;      // Number of char read in the last "read"
+                                  // call, used while moving inside the buffer
   vector< NucleoCounter >   _occurrencesBeforeStart;  // PI vector
 
 public:
@@ -36,7 +46,13 @@ public:
   // Destructor
   ~partialBWTReader ( ) {
     delete[] _buffer;
-    _fileIn.close();
+    if (_fileIn != NULL) {
+#ifdef HAS_ZLIB
+      gzclose(_fileIn);
+#else
+      fclose(_fileIn);
+#endif
+    }
   }
 
   // Get occurrences before current position
@@ -60,13 +76,6 @@ public:
     return _buffer[_position];
   }
 
-private:
-  // no need of copy ctor nor assignment operator
-  partialBWTReader ( ) { }
-  partialBWTReader ( const partialBWTReader& other )
-  { }
-  partialBWTReader& operator= ( const partialBWTReader& other )
-  { return *this; }
 };
 
 #endif
