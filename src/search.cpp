@@ -569,7 +569,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 
 #define _LOG_RECORD											\
   DEBUG_LOG("  pos: " << p									\
-				<< "  sigma: "	<< ntoc((Nucleotide)Ci)						\
+				<< "  sigma: "	<< NuclConv::ntoc((Nucleotide)Ci)		\
             << "  c_lcp: " << lcur											\
 				<< "  n_lcp: " << lnext											\
 				<< "  bwt: " << (use_bwt?*bwt:'.')							\
@@ -699,7 +699,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 						<< "( [ " << stack_e.top().b << ", " << stack_e.top().e << "), "
 						<< "[ " << stack_e.top().size_of_pref_mgr << ", " << pref_mgr.size() << "), "
 						<< "0) to file "
-						<< "E^0( " << ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
+						<< "E^0( " << NuclConv::ntoc((Nucleotide)Ci) << ", " << (stack_e.top().k+1) << ").");
 // Add the basic_arc_interval to the interval manager with sigma=Ci and Length=stack_e.top().k+1
 // (Note: '+1' is because '$' was not considered.)
 		  baimgr[stack_e.top().k+1].													\
@@ -857,7 +857,7 @@ void extend_arc_intervals( const int length,
           if(new_end > new_begin)
             {
               ++nwintc;
-              DEBUG_LOG("Add BASE_" << ntoc((Nucleotide)base));
+              DEBUG_LOG("Add BASE_" << NuclConv::ntoc((Nucleotide)base));
               extendsymbols.push_back( (Nucleotide) base );
               if(is_new_interval)
                 {
