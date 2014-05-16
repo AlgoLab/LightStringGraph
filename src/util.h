@@ -10,6 +10,7 @@
 #include <sstream>
 #include <ctime>
 #include <stdexcept>
+#include <climits>
 
 #include "types.h"
 #include "edge_joined_interval.h"
@@ -22,13 +23,29 @@ using std::ofstream;
 using std::ifstream;
 using std::vector;
 
-// convert nucleotide (enum) to char
-char ntoc ( Nucleotide base );
-
-// convert char to nucleotide
-Nucleotide cton ( char c );
 #define LSG_INFIX_TMP ".tmplsg"
 #define LSG_INFIX_OUT ".outlsg"
+
+// convert nucleotide (enum) <-> char
+// ntoc: enum -> char
+// cton: char -> enum
+// WARNING: Does not perform safety checks!!
+class NuclConv {
+public:
+  static Nucleotide cton(const char c) {
+	 return _conv._cton[(unsigned int)c];
+  }
+
+  static char ntoc(const Nucleotide n) {
+	 return _conv._ntoc[n];
+  }
+
+private:
+  NuclConv();
+  Nucleotide _cton[UCHAR_MAX+1];
+  char _ntoc[ALPHABET_SIZE];
+  const static NuclConv _conv;
+};
 
 template <typename T>
 std::string convert_to_string(const T& el) {

@@ -81,7 +81,7 @@ bool partialBWTReader::move_to ( const BWTPosition & p )
           ( _start + _position < p ) )
     {
       char currentChar = _buffer[ _position ];
-      ++_occurrencesBeforeStart[ cton( currentChar ) ];
+      ++_occurrencesBeforeStart[ NuclConv::cton( currentChar ) ];
       ++_position;
       if ( _position == _bufferlen )
         {

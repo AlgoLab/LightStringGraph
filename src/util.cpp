@@ -1,82 +1,27 @@
 #include "util.h"
 
-char ntoc ( Nucleotide base )
-{
-  char ret ='N';
+const NuclConv NuclConv::_conv;
 
-  switch ( base )
-    {
-    case BASE_$:
-      ret = '$';
-      break;
-    case BASE_A:
-      ret = 'A';
-      break;
-    case BASE_C:
-      ret = 'C';
-      break;
-    case BASE_G:
-      ret = 'G';
-      break;
-    case BASE_T:
-      ret = 'T';
-      break;
-    case BASE_N:
-      ret = 'N';
-      break;
-    case BASE_Z:
-      ret = 'Z';
-      break;
-    default:
-      std::cerr << "ERROR: Can't convert Nucleotide int( "
-                << base << " ) to char. Aborting." << std::endl;
-      _MY_FAIL;
+NuclConv::NuclConv() {
+  for (int i = 0; i <= UCHAR_MAX; ++i) {
+    switch ( i ) {
+      case CHAR_BASE_$:                       _cton[i]= BASE_$; break;
+      case CHAR_BASE_A: case CHAR_BASE_A_LOW: _cton[i]= BASE_A; break;
+      case CHAR_BASE_C: case CHAR_BASE_C_LOW: _cton[i]= BASE_C; break;
+      case CHAR_BASE_G: case CHAR_BASE_G_LOW: _cton[i]= BASE_G; break;
+      case CHAR_BASE_T: case CHAR_BASE_T_LOW: _cton[i]= BASE_T; break;
+      case CHAR_BASE_N: case CHAR_BASE_N_LOW: _cton[i]= BASE_N; break;
+      case CHAR_BASE_Z: case CHAR_BASE_Z_LOW: _cton[i]= BASE_Z; break;
+      default: _cton[i]= ALPHABET_SIZE;                         break;
     }
-  return ret;
-}
-
-Nucleotide cton ( char c )
-{
-  Nucleotide ret = ALPHABET_SIZE;
-
-  switch ( c )
-    {
-    case '$':
-      ret = BASE_$;
-      break;
-    case 'A':
-    case 'a':
-      ret = BASE_A;
-      break;
-    case 'C':
-    case 'c':
-      ret = BASE_C;
-      break;
-    case 'G':
-    case 'g':
-      ret = BASE_G;
-      break;
-    case 'T':
-    case 't':
-      ret = BASE_T;
-      break;
-    case 'N':
-    case 'n':
-      ret = BASE_N;
-      break;
-    case 'Z':
-    case 'z':
-      ret = BASE_Z;
-      break;
-    default:
-#ifndef DEBUG
-      std::cerr << "ERROR: Received char '" << c << "' "
-                << " int( " << int(c) << " ). Which base is it?"
-                << std::endl;
-#endif
-      break;
-    }
-  return ret;
+  }
+  _ntoc[BASE_$]= CHAR_BASE_$;
+  _ntoc[BASE_A]= CHAR_BASE_A;
+  _ntoc[BASE_C]= CHAR_BASE_C;
+  _ntoc[BASE_G]= CHAR_BASE_G;
+  _ntoc[BASE_N]= CHAR_BASE_N;
+  _ntoc[BASE_T]= CHAR_BASE_T;
+  _ntoc[BASE_Z]= CHAR_BASE_Z;
 }
 
 // ofstream& operator<<( ofstream& out, const EdgeInterval& edgeint )

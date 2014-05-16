@@ -46,6 +46,22 @@ enum Nucleotide
     ALPHABET_SIZE
   };
 
+#define CHAR_BASE_$ '$'
+#define CHAR_BASE_A 'A'
+#define CHAR_BASE_C 'C'
+#define CHAR_BASE_G 'G'
+#define CHAR_BASE_N 'N'
+#define CHAR_BASE_T 'T'
+#define CHAR_BASE_Z 'Z'
+#define CHAR_ALPHABET_SIZE '\0'
+#define CHAR_BASE_A_LOW 'a'
+#define CHAR_BASE_C_LOW 'c'
+#define CHAR_BASE_G_LOW 'g'
+#define CHAR_BASE_N_LOW 'n'
+#define CHAR_BASE_T_LOW 't'
+#define CHAR_BASE_Z_LOW 'z'
+
+
 // As defined in BEETL/src/shared/Tools.hh (ElementType)
 
 // Type to represent: Number of sequences

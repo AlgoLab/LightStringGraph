@@ -153,7 +153,7 @@ int main ( int argc, char** argv )
   std::cerr << "--------------------" << std::endl;
   for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
     {
-      std::cerr << ntoc( (Nucleotide) nucl ) << "\t| " << c->at( nucl )
+      std::cerr << NuclConv::ntoc( (Nucleotide) nucl ) << "\t| " << c->at( nucl )
                 << std::endl;
     }
 

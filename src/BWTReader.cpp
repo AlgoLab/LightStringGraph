@@ -49,7 +49,7 @@ bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
     {
       if( move_to( i ) )
         {
-          if( cton(_currentBWT->get_current_nucleotide()) == BASE_$  )
+          if( NuclConv::cton(_currentBWT->get_current_nucleotide()) == BASE_$  )
             {
               prefixpos.push_back( i );
             }
@@ -133,5 +133,5 @@ void BWTReader::reset ( )
 
 Nucleotide BWTReader::get_current_nucleotide( ) const
 {
-  return cton(_currentBWT->get_current_nucleotide());
+  return NuclConv::cton(_currentBWT->get_current_nucleotide());
 }
