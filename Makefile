@@ -90,7 +90,6 @@ endif
 BGSA_DEP= $(OBJ_DIR)partialBWTReader.o \
 	$(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)util.o \
-	$(OBJ_DIR)q_interval.o \
 	$(OBJ_DIR)joined_q_interval.o \
 	$(OBJ_DIR)edge_joined_interval.o \
 	$(OBJ_DIR)bgsa/bgsa.o
@@ -104,7 +103,6 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)search.o \
 	$(OBJ_DIR)util.o \
 	$(OBJ_DIR)partialBWTReader.o \
-	$(OBJ_DIR)q_interval.o \
 	$(OBJ_DIR)edgeLabelIntervalManager.o \
 	$(OBJ_DIR)extend_symbol_pile.o \
 	$(OBJ_DIR)edgeLabelInterval.o \

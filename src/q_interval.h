@@ -6,47 +6,61 @@
 #include "types.h"
 
 /* Basic class that represent Q-Intervals. */
-
-struct PODQInterval
+class QInterval
 {
+private:
   BWTPosition   _begin,
     _end;
-};
-
-class QInterval : public PODQInterval
-{
 public:
   // Constructor
-  QInterval ( const BWTPosition&, const BWTPosition& );
+  QInterval ( const BWTPosition& begin,
+              const BWTPosition& end)
+      :_begin(begin), _end(end)
+  {}
 
   // Copy ctor
-  QInterval ( const QInterval& other );
+  QInterval ( const QInterval& other )
+      :_begin(other._begin), _end(other._end)
+  {}
 
   // Destructor
-  ~QInterval ( );
+  //~QInterval ( );
 
   // Get the size of the Q-interval
   // size equals to end - begin
-  BWTPosition get_size ( ) const;
+  BWTPosition get_size ( ) const {
+    return ( _end - _begin );
+  }
 
   // Get the begin position of the Q-interval
-  BWTPosition get_begin ( ) const;
+  BWTPosition get_begin ( ) const {
+    return _begin;
+  }
 
   // Get the end position of the Q-interval
-  BWTPosition get_end ( ) const;
+  BWTPosition get_end ( ) const {
+    return _end;
+  }
+
 
   // Equality operator
-  bool operator==(const QInterval& rhs ) const;
+  bool operator==(const QInterval& rhs ) const {
+    return (_begin == rhs._begin &&
+            _end == rhs._end);
+  }
 
   // Inequality operator
-  bool operator!=(const QInterval& rhs) const;
+  bool operator!=(const QInterval& rhs) const {
+    return !(*this==rhs);
+  }
 
-  // Assignement operator
-  QInterval& operator= ( const QInterval& other );
+  // Assignment operator
+  QInterval& operator= ( const QInterval& other ) {
+    _begin = other._begin;
+    _end = other._end;
+    return *this;
+  }
 
-private:
-  // no need of copy ctor nor assignment operator
-  QInterval ( ) { };
 };
 
 #endif
