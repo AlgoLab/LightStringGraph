@@ -27,6 +27,8 @@ char ntoc ( Nucleotide base );
 
 // convert char to nucleotide
 Nucleotide cton ( char c );
+#define LSG_INFIX_TMP ".tmplsg"
+#define LSG_INFIX_OUT ".outlsg"
 
 template <typename T>
 std::string convert_to_string(const T& el) {

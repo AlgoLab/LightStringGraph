@@ -125,9 +125,9 @@ int main ( int argc, char** argv )
       std::stringstream edgeIntFilename;
       partialBWTname << basename << "-B0" << i;
       partialLCPname << basename << "-L0" << i;
-      basicArcIntervalName << basename << ".lsg.bai.sigma_" << i;
-      qIntFilename << basename << ".QINT-" << i;
-      baseqIntFilename << basename << ".bQ-" << i;
+      basicArcIntervalName << basename << LSG_INFIX_TMP ".bai-SIGMA_" << i;
+      qIntFilename << basename << LSG_INFIX_TMP ".QINT-" << i;
+      baseqIntFilename << basename << LSG_INFIX_TMP ".bQ-" << i;
 
       BWTInputFilenames.push_back( partialBWTname.str( ) );
       LCPInputFilenames.push_back( partialLCPname.str( ) );
@@ -163,23 +163,23 @@ int main ( int argc, char** argv )
   LCPIterator lcpit( LCPInputFilenames );
   GSAIterator gsait( gsaInputFileName );
 
-  PrefixManager pref_mgr(basename + ".lsg.prefixes");
+  PrefixManager pref_mgr(basename + LSG_INFIX_OUT ".lexorder");
 
-  BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-len_");
+  BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-LEN_");
 
   SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
 
   for(SequenceLength j(0); j < max_len; ++j)
     {
       std::ostringstream extsymfn, edgeIntFilename;
-      extsymfn << basename << ".extsym-LEN-" << j;
+      extsymfn << basename << LSG_INFIX_TMP ".extsym-LEN_" << j;
       extendSymbolFilenames.push_back(extsymfn.str());
 
       edgeIntFilenames.push_back( vector< string >( ) );
 
       for(int i(0); i < ALPHABET_SIZE; ++i)
         {
-          edgeIntFilename << basename << ".arc-SIGMA-" << i << "-LEN-" << j;
+          edgeIntFilename << basename << LSG_INFIX_TMP ".arc-SIGMA_" << i << "-LEN_" << j;
           edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
           edgeIntFilename.str(string(""));
           edgeIntFilename.clear();
@@ -187,8 +187,8 @@ int main ( int argc, char** argv )
     }
 
   EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
-  OutputMultiFileManager arcsOut(basename + ".out.arcs");
-  OutputMultiFileManager labelOut(basename + ".out.labels");
+  OutputMultiFileManager arcsOut(basename + LSG_INFIX_OUT ".arcs_");
+  OutputMultiFileManager labelOut(basename + LSG_INFIX_OUT ".labels_");
 
   for( int i( 1 ); i <= CYCNUM; ++i )
     {
