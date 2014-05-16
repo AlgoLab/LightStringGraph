@@ -22,23 +22,29 @@ using std::string;
 class BWTReader
 {
 private:
-  vector< string >    _filenamesIN;       // names of BWT sections
-  unsigned short      _nextBWTFilename;   // index of next BWTFilename in _filenamesIoN
-  partialBWTReader*   _currentBWT;        // current BWT section
-  BWTPosition         _maxPosition;       // MaxPosition of BWT
+  const vector< string > _filenamesIN;       // names of BWT sections
+  unsigned short         _nextBWTFilename;   // index of next BWTFilename in _filenamesIoN
+  partialBWTReader*      _currentBWT;        // current BWT section
+  BWTPosition            _maxPosition;       // MaxPosition of BWT
 
 public:
   // Constructor
-  BWTReader ( vector< string >& filenamesIN );
+  BWTReader ( const vector< string >& filenamesIN );
 
   // Destructor
-  ~BWTReader ( );
+  ~BWTReader ( ) {
+	 delete _currentBWT;
+  }
 
   // Returns current position
-  BWTPosition get_position ( ) const;
+  BWTPosition get_position ( ) const {
+    return _currentBWT->get_position();
+  }
 
   // Returns max position
-  BWTPosition size( ) const;
+  BWTPosition size( ) const {
+    return _maxPosition;
+  }
 
   // Move to position p in this BWT and update nucleotide occurrences accordingly.
   // Return value:
@@ -54,10 +60,12 @@ public:
   bool move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos );
 
   // Return PI vector (occurrences of every nucleotide before current position).
-  vector< NucleoCounter >& get_Pi ( );
+  const vector< NucleoCounter >& get_Pi ( ) const {
+    return _currentBWT->get_Pi ( );
+  }
 
   // Return C (count)
-  vector< NucleoCounter >* get_C ( );
+  vector< NucleoCounter > get_C ( );
 
   // Reset BWT
   void reset ( );

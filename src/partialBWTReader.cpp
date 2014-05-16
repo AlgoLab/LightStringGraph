@@ -1,6 +1,12 @@
 #include <partialBWTReader.h>
 
-partialBWTReader::partialBWTReader ( string inputFilename )
+partialBWTReader::partialBWTReader ( const string& inputFilename,
+                                     BWTPosition start,
+                                     const vector< NucleoCounter >& occurrencesBeforeStart )
+    :_buffer(new char[ BUFFERSIZE ]),
+	  _start(start),
+	  _position(0),
+     _occurrencesBeforeStart(occurrencesBeforeStart)
 {
   _fileIn.open( inputFilename.c_str() );
   if( _fileIn.fail() )
@@ -10,60 +16,8 @@ partialBWTReader::partialBWTReader ( string inputFilename )
       _MY_FAIL;
     }
 
-  for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
-    _occurrencesBeforeStart.push_back( 0 );
-
-  _start =0;
-  _position = _start;
-
-  _buffer = new char[ BUFFERSIZE ];
   _fileIn.read( _buffer, BUFFERSIZE );
   _bufferlen = _fileIn.gcount();
-}
-
-partialBWTReader::partialBWTReader ( string inputFilename, BWTPosition start,
-                                     vector< NucleoCounter >& occurrencesBeforeStart )
-{
-  _fileIn.open( inputFilename.c_str() );
-  if( _fileIn.fail() )
-    {
-      std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
-                << "Aborting." << std::endl;
-      _MY_FAIL;
-    }
-
-  _start = start;
-  _position = 0;
-
-  for( vector< NucleoCounter >::iterator it = occurrencesBeforeStart.begin();
-       it != occurrencesBeforeStart.end();
-       ++it)
-    _occurrencesBeforeStart.push_back( *it );
-
-  _buffer = new char[ BUFFERSIZE ];
-  _fileIn.read( _buffer, BUFFERSIZE );
-  _bufferlen = _fileIn.gcount();
-}
-
-vector< NucleoCounter >& partialBWTReader::get_Pi ( )
-{
-  return _occurrencesBeforeStart;
-}
-
-char partialBWTReader::get_current_nucleotide( ) const
-{
-  return _buffer[_position];
-}
-
-partialBWTReader::~partialBWTReader ( )
-{
-  delete[] _buffer;
-  _fileIn.close();
-}
-
-BWTPosition partialBWTReader::get_position ( ) const
-{
-  return (_start + _position);
 }
 
 bool partialBWTReader::move_to ( const BWTPosition & p )

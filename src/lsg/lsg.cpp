@@ -145,7 +145,7 @@ int main ( int argc, char** argv )
   std::cerr << "Building vector C..";
   std::cerr.flush( );
 
-  vector< NucleoCounter >* c = br.get_C( );
+  const vector< NucleoCounter > c = br.get_C( );
 
   std::cerr << "done." << std::endl;
   std::cerr << std::endl << "Vector C" << std::endl;
@@ -153,7 +153,7 @@ int main ( int argc, char** argv )
   std::cerr << "--------------------" << std::endl;
   for (int nucl( BASE_A ); nucl < ALPHABET_SIZE; ++nucl)
     {
-      std::cerr << NuclConv::ntoc( (Nucleotide) nucl ) << "\t| " << c->at( nucl )
+      std::cerr << NuclConv::ntoc( (Nucleotide) nucl ) << "\t| " << c[ nucl ]
                 << std::endl;
     }
 
@@ -167,7 +167,7 @@ int main ( int argc, char** argv )
 
   BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-LEN_");
 
-  SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, *c, baimgr);
+  SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, c, baimgr);
 
   for(SequenceLength j(0); j < max_len; ++j)
     {
@@ -199,9 +199,9 @@ int main ( int argc, char** argv )
 
       std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
       // std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
-      // left_step( br, qmgr, gsardr, *c, i + TAU);
+      // left_step( br, qmgr, gsardr, c, i + TAU);
       std::cerr << "-> Extend-Arc-Intervals - " << i << "/" << CYCNUM << std::endl;
-      extend_arc_intervals(TAU + i, *c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr, arcsOut);
+      extend_arc_intervals(TAU + i, c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr, arcsOut);
 
       extsym_p.switch_mode( );
 
@@ -211,13 +211,12 @@ int main ( int argc, char** argv )
       edgemgr.swap_files();
 
       std::cerr << "-> Extend-Arc-Labels - " << i << "/" << CYCNUM << std::endl;
-      extend_arc_labels(edgemgr, extsym_p, *c, br, gsait, lcpit, max_len, labelOut);
+      extend_arc_labels(edgemgr, extsym_p, c, br, gsait, lcpit, max_len, labelOut);
 
       br.reset();
       gsardr.reset();
       qmgr.swap_files();
     }
 
-  delete c;
   return 0;
 }

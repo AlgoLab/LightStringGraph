@@ -28,18 +28,26 @@ private:
   vector< NucleoCounter >   _occurrencesBeforeStart;  // PI vector
 
 public:
-  // Constructors
-  partialBWTReader ( string inputFilename );
-  partialBWTReader ( string inputFilename, BWTPosition start, vector< NucleoCounter >& occurrencesBeforeStart );
+  // Constructor
+  partialBWTReader ( const string& inputFilename,
+                     BWTPosition start= 0,
+                     const vector< NucleoCounter >& occurrencesBeforeStart= vector< NucleoCounter >(ALPHABET_SIZE, 0));
 
   // Destructor
-  ~partialBWTReader ( );
+  ~partialBWTReader ( ) {
+    delete[] _buffer;
+    _fileIn.close();
+  }
 
   // Get occurrences before current position
-  vector< NucleoCounter >& get_Pi( );
+  const vector< NucleoCounter >& get_Pi ( ) const {
+    return _occurrencesBeforeStart;
+  }
 
   // Get absolute position in BWT
-  BWTPosition get_position ( ) const;
+  BWTPosition get_position ( ) const {
+    return (_start + _position);
+  }
 
   // Move to position p in this BWT and update nucleotide occurrences accordingly.
   // Return value:
@@ -48,7 +56,9 @@ public:
   bool move_to ( const BWTPosition & p );
 
   // Return nucleotide in the current position
-  char get_current_nucleotide() const;
+  char get_current_nucleotide_char( ) const {
+    return _buffer[_position];
+  }
 
 private:
   // no need of copy ctor nor assignment operator

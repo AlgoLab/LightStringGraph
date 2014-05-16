@@ -1,9 +1,10 @@
 #include "BWTReader.h"
 
-BWTReader::BWTReader ( vector< string >& filenamesIN )
-  : _filenamesIN( filenamesIN )
+BWTReader::BWTReader ( const vector< string >& filenamesIN )
+    : _filenamesIN( filenamesIN ),
+      _maxPosition( 0 ) // Useless to compute right now, will be computed by get_C
 {
-  if ( _filenamesIN.size() == 0 )
+  if ( _filenamesIN.empty() )
     {
       std::cerr << "ERROR: Can't initialize a BWTReader without filenames."
                 << std::endl << "Aborting." << std::endl;
@@ -12,35 +13,19 @@ BWTReader::BWTReader ( vector< string >& filenamesIN )
 
 
   DEBUG_LOG_VERBOSE("Initializing BWTReader on files :");
-  for ( vector< string >::iterator it = _filenamesIN.begin();
+  for ( vector< string >::const_iterator it = _filenamesIN.begin();
         it != _filenamesIN.end();
         ++it)
     {
       DEBUG_LOG_VERBOSE(*it);
     }
 
-  if ( _filenamesIN.size() >= 1 )
+  if ( !_filenamesIN.empty() )
     {
       _currentBWT = new partialBWTReader( _filenamesIN[ 0 ] );
       _nextBWTFilename = 1;
     }
 
-  _maxPosition =0; // Useless to compute right now, will be computed by get_C
-}
-
-BWTReader::~BWTReader ( )
-{
-  delete _currentBWT;
-}
-
-BWTPosition BWTReader::get_position ( ) const
-{
-  return _currentBWT->get_position();
-}
-
-BWTPosition BWTReader::size( ) const
-{
-  return _maxPosition;
 }
 
 bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
@@ -49,7 +34,7 @@ bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
     {
       if( move_to( i ) )
         {
-          if( NuclConv::cton(_currentBWT->get_current_nucleotide()) == BASE_$  )
+          if( _currentBWT->get_current_nucleotide_char() == CHAR_BASE_$  )
             {
               prefixpos.push_back( i );
             }
@@ -87,12 +72,7 @@ bool BWTReader::move_to ( const BWTPosition & p )
   return true;
 }
 
-vector< NucleoCounter >& BWTReader::get_Pi ( )
-{
-  return _currentBWT->get_Pi ( );
-}
-
-vector< NucleoCounter >* BWTReader::get_C ( )
+vector< NucleoCounter > BWTReader::get_C ( )
 {
   BWTPosition pos = 0;
 
@@ -107,14 +87,14 @@ vector< NucleoCounter >* BWTReader::get_C ( )
 
   DEBUG_LOG_VERBOSE("Reached the end..");
 
-  vector< NucleoCounter >* C = new vector< NucleoCounter >();
+  vector< NucleoCounter > C;
   NucleoCounter acc =0;
-  C->push_back( acc );
-  for( vector< NucleoCounter >::iterator it = _currentBWT->get_Pi().begin();
+  C.push_back( acc );
+  for( vector< NucleoCounter >::const_iterator it = _currentBWT->get_Pi().begin();
        it != _currentBWT->get_Pi().end(); ++it )
     {
       acc += *it;
-      C->push_back(acc);
+      C.push_back(acc);
     }
 
   _maxPosition = _currentBWT->get_position( );
@@ -133,5 +113,5 @@ void BWTReader::reset ( )
 
 Nucleotide BWTReader::get_current_nucleotide( ) const
 {
-  return NuclConv::cton(_currentBWT->get_current_nucleotide());
+  return NuclConv::cton(_currentBWT->get_current_nucleotide_char());
 }
