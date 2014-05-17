@@ -137,5 +137,14 @@ main(int argc, char** argv)
   for(vector< struct Node* >::size_type i =0; i < graph.size(); ++i)
       print_node(*graph[i]);
 
+  for(vector< struct Node* >::size_type i =0; i < graph.size(); ++i)
+      delete graph[i];
+
+  for(vector< std::ifstream* >::size_type i =0; i < arcsFiles.size(); ++i)
+    delete arcsFiles[i];
+
+  for(vector< std::ifstream* >::size_type i =0; i < labelFiles.size(); ++i)
+    delete labelFiles[i];
+
   return 0;
 }
