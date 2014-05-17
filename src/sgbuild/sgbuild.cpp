@@ -126,10 +126,10 @@ main(int argc, char** argv)
           pmgr.get_elems(sourcebegin, sourceend - sourcebegin, s_v);
           pmgr.get_elems(destbegin,   destend   - destbegin,   d_v);
           for(vector< SequenceNumber >::size_type i =0; i < s_v.size(); ++i)
-            for(vector< SequenceNumber >::size_type j =0; j < d_v.size(); ++j)
+            for(vector< SequenceNumber >::size_type k =0; k < d_v.size(); ++k)
               {
-                stretch(graph, std::max(s_v[i], d_v[j]));
-                add_dest(graph[s_v[i]], graph[d_v[j]], QInterval(labelbegin, labelend), maxarclen);
+                stretch(graph, std::max(s_v[i], d_v[k]));
+                add_dest(graph[s_v[i]], graph[d_v[k]], QInterval(labelbegin, labelend), j);
               }
         }
     }
