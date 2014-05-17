@@ -56,7 +56,7 @@ void ExtendSymbolPile::add_extend_symbol( vector< Nucleotide >& vnucl, const Edg
   assert( _mode == (std::ios_base::out | std::ios_base::trunc) );
   (*_files[ l ]) << (int)vnucl.size( );
   for( size_t i(0); i < vnucl.size(); ++i)
-    (*_files[ l ]) << ntoc(vnucl[ i ]);
+    (*_files[ l ]) << NuclConv::ntoc(vnucl[ i ]);
 }
 
 vector< Nucleotide > ExtendSymbolPile::get_next_symbol( EdgeLength& l )
@@ -69,7 +69,7 @@ vector< Nucleotide > ExtendSymbolPile::get_next_symbol( EdgeLength& l )
     {
       char c;
       (*_files[ l ]) >> c;
-      vnucl.push_back(cton(c));
+      vnucl.push_back(NuclConv::cton(c));
     }
   return vnucl;
 }

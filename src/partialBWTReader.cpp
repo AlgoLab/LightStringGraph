@@ -1,69 +1,32 @@
 #include <partialBWTReader.h>
 
-partialBWTReader::partialBWTReader ( string inputFilename )
+
+partialBWTReader::partialBWTReader ( const string& inputFilename,
+                                     BWTPosition start,
+                                     const vector< NucleoCounter >& occurrencesBeforeStart )
+    :_fileIn(NULL),
+     _buffer(new char[ BUFFERSIZE ]),
+     _start(start),
+     _position(0),
+     _occurrencesBeforeStart(occurrencesBeforeStart)
 {
-  _fileIn.open( inputFilename.c_str() );
-  if( _fileIn.fail() )
-    {
-      std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
-                << "Aborting." << std::endl;
-      _MY_FAIL;
-    }
-
-  for ( int i( 0 ); i < ALPHABET_SIZE; ++i )
-    _occurrencesBeforeStart.push_back( 0 );
-
-  _start =0;
-  _position = _start;
-
-  _buffer = new char[ BUFFERSIZE ];
-  _fileIn.read( _buffer, BUFFERSIZE );
-  _bufferlen = _fileIn.gcount();
-}
-
-partialBWTReader::partialBWTReader ( string inputFilename, BWTPosition start,
-                                     vector< NucleoCounter >& occurrencesBeforeStart )
-{
-  _fileIn.open( inputFilename.c_str() );
-  if( _fileIn.fail() )
-    {
-      std::cerr << "ERROR: Can't open file " << inputFilename << std::endl
-                << "Aborting." << std::endl;
-      _MY_FAIL;
-    }
-
-  _start = start;
-  _position = 0;
-
-  for( vector< NucleoCounter >::iterator it = occurrencesBeforeStart.begin();
-       it != occurrencesBeforeStart.end();
-       ++it)
-    _occurrencesBeforeStart.push_back( *it );
-
-  _buffer = new char[ BUFFERSIZE ];
-  _fileIn.read( _buffer, BUFFERSIZE );
-  _bufferlen = _fileIn.gcount();
-}
-
-vector< NucleoCounter >& partialBWTReader::get_Pi ( )
-{
-  return _occurrencesBeforeStart;
-}
-
-char partialBWTReader::get_current_nucleotide( ) const
-{
-  return _buffer[_position];
-}
-
-partialBWTReader::~partialBWTReader ( )
-{
-  delete[] _buffer;
-  _fileIn.close();
-}
-
-BWTPosition partialBWTReader::get_position ( ) const
-{
-  return (_start + _position);
+#ifdef HAS_ZLIB
+  _fileIn= gzopen(inputFilename.c_str(), "r");
+  if (_fileIn == Z_NULL) {
+#else
+  _fileIn= fopen(inputFilename.c_str(), "r");
+  if (_fileIn == NULL) {
+#endif
+    DEBUG_LOG("Impossible to open file '" << inputFilename << "' for reading.");
+    throw std::logic_error(std::string("Impossible to open file '")
+                           + inputFilename + "' for reading.");
+  }
+  DEBUG_LOG("File '" << inputFilename << "' successfully opened.");
+#ifdef HAS_ZLIB
+  _bufferlen= gzread( _fileIn, _buffer, BUFFERSIZE );
+#else
+  _bufferlen= fread( _buffer, 1, BUFFERSIZE, _fileIn);
+#endif
 }
 
 bool partialBWTReader::move_to ( const BWTPosition & p )
@@ -81,14 +44,17 @@ bool partialBWTReader::move_to ( const BWTPosition & p )
           ( _start + _position < p ) )
     {
       char currentChar = _buffer[ _position ];
-      ++_occurrencesBeforeStart[ cton( currentChar ) ];
+      ++_occurrencesBeforeStart[ NuclConv::cton( currentChar ) ];
       ++_position;
       if ( _position == _bufferlen )
         {
-          _fileIn.read( _buffer, BUFFERSIZE );
           _start += _bufferlen;
+#ifdef HAS_ZLIB
+          _bufferlen= gzread( _fileIn, _buffer, BUFFERSIZE );
+#else
+          _bufferlen= fread( _buffer, 1, BUFFERSIZE, _fileIn);
+#endif
           _position = 0;
-          _bufferlen = _fileIn.gcount();
           if(_bufferlen == 0)
             {
               return false;
