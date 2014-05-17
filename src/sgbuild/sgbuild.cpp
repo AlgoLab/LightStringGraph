@@ -25,9 +25,9 @@ struct Node
 void
 stretch(vector< struct Node* >& graph, vector< struct Node* >::size_type n)
 {
-  while(graph.size() <= n+1)
+  while(graph.size() <= n)
     {
-      graph.push_back(new struct Node(graph.size()+1));
+      graph.push_back(new struct Node(graph.size()));
     }
 }
 
@@ -60,9 +60,21 @@ print_node(struct Node n)
   assert(n._succs.size() == n._labels.size() && n._labels.size() == n._lens.size());
   for(unsigned int i=0; i<n._succs.size(); ++i)
     {
-      std::cout << n._id << " -> " << n._succs[i]->_id
-                << " [" << n._lens[i] << "]" << std::endl;
+      std::cout << n._succs[i]->_id << " -> " << n._id
+                << " [" << n._lens[i] -1 << "]" << std::endl;
     }
+}
+
+void
+show_usage(){
+  std::cerr << "Usage: sgbuild ";
+  std::cerr << " <basename> ";
+  std::cerr << " <maxarclen> ";
+  std::cerr << std::endl;
+  std::cerr << std::endl << "Parameters:" << std::endl;
+  std::cerr << "\t<basename>     # (required)" << std::endl;
+  std::cerr << "\t<maxarclen>    # (required)" << std::endl;
+  std::cerr << std::endl;
 }
 
 //Main
@@ -70,6 +82,12 @@ print_node(struct Node n)
 int
 main(int argc, char** argv)
 {
+  if(argc != 2)
+    {
+      show_usage();
+      return 1;
+    }
+
   vector< struct Node* > graph;
 
   vector< std::ifstream* > arcsFiles;
@@ -110,16 +128,14 @@ main(int argc, char** argv)
           for(vector< SequenceNumber >::size_type i =0; i < s_v.size(); ++i)
             for(vector< SequenceNumber >::size_type j =0; j < d_v.size(); ++j)
               {
-                stretch(graph, std::max(i, j));
-                add_dest(graph[i], graph[j], QInterval(labelbegin, labelend), maxarclen);
+                stretch(graph, std::max(s_v[i], d_v[j]));
+                add_dest(graph[s_v[i]], graph[d_v[j]], QInterval(labelbegin, labelend), maxarclen);
               }
         }
     }
 
-  for(vector< struct Node* >::const_iterator graph_it =graph.begin();
-      graph_it != graph.end(); ++graph_it)
-    {
-      print_node(**graph_it);
-    }
+  for(vector< struct Node* >::size_type i =0; i < graph.size(); ++i)
+      print_node(*graph[i]);
 
+  return 0;
 }
