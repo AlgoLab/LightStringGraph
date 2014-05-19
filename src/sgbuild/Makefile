@@ -9,8 +9,7 @@ CXXFLAGS= ${CFLAGS}
 LIBS 	= #
 
 SGBUILD_DEP= $(OBJ_DIR)sgbuild/sgbuild.o \
-	$(OBJ_DIR)edgeLabelInterval.o    \
-	$(OBJ_DIR)q_interval.o
+	$(OBJ_DIR)edgeLabelInterval.o
 
 .PHONY: all
 all: sgbuild
