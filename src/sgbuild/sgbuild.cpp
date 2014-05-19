@@ -23,12 +23,10 @@ struct Node
 };
 
 void
-stretch(vector< struct Node* >& graph, vector< struct Node* >::size_type n)
+stretch(vector< struct Node* >& graph, const vector< struct Node* >::size_type n)
 {
   while(graph.size() <= n)
-    {
       graph.push_back(new struct Node(graph.size()));
-    }
 }
 
 // Returns true if first is contained in second
@@ -40,7 +38,7 @@ is_contained(const QInterval& first, const QInterval& second)
 }
 
 bool
-add_dest(struct Node* source, struct Node* dest, const QInterval& label, SequenceLength len)
+add_dest(struct Node* source, struct Node* dest, const QInterval& label, const SequenceLength len)
 {
   for(vector< QInterval >::const_iterator qint_it = source->_labels.begin();
       qint_it != source->_labels.end(); qint_it++)
@@ -55,7 +53,7 @@ add_dest(struct Node* source, struct Node* dest, const QInterval& label, Sequenc
 }
 
 void
-print_node(struct Node n)
+print_node(const struct Node n)
 {
   assert(n._succs.size() == n._labels.size() && n._labels.size() == n._lens.size());
   for(unsigned int i=0; i<n._succs.size(); ++i)
