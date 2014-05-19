@@ -92,6 +92,7 @@ BGSA_DEP= $(OBJ_DIR)partialBWTReader.o \
 	$(OBJ_DIR)util.o \
 	$(OBJ_DIR)joined_q_interval.o \
 	$(OBJ_DIR)edge_joined_interval.o \
+	$(OBJ_DIR)edgeLabelInterval.o \
 	$(OBJ_DIR)bgsa/bgsa.o
 
 LSG_DEP= $(OBJ_DIR)BWTReader.o \
