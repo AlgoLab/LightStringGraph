@@ -910,6 +910,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
   unsigned long nwtermlbc =0;
   unsigned long nwlbc =0;
 
+  vector< NucleoCounter > pi(ALPHABET_SIZE);
   while(edgemgr.get_next_interval( currentEdge ))
     {
       DEBUG_LOG("Current edgeLabelInterval is ["
@@ -918,7 +919,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                 << " and the reverse interval is ["
                 << currentEdge._interval.get_reverse_label().get_begin() << ","
                 << currentEdge._interval.get_reverse_label().get_end() << ")");
-      vector< Nucleotide > extend_symbols = extsym_p.get_next_symbol(currentEdge._len);
+      const vector< Nucleotide >& extend_symbols = extsym_p.get_next_symbol(currentEdge._len);
       // Move to begin updating EPI
       for(; currentPosition <= currentEdge._interval.get_label().get_begin(); ++currentPosition)
         {
@@ -930,17 +931,17 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
             for(LCPValue l=lnext; l>lcur; --l)
               {
                 DEBUG_LOG("Build EPI[" << l << "]");
-                EPI[l] = vector<NucleoCounter>(br.get_Pi());
+					 std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI[l].begin());
               }
           else if(lnext<lcur)
             for(LCPValue l=lcur; l>lnext; --l)
               {
                 DEBUG_LOG("Clear EPI[" << l << "]");
-                EPI[l].clear();
+//                EPI[l].clear();
               }
         }
       // moved to begin
-      bool special_interval = (currentEdge._interval.get_reverse_label().get_size() == 1) ? true : false;
+      const bool special_interval = (currentEdge._interval.get_reverse_label().get_size() == 1);
 
       // intervals of size 1 wont withstand to LCP rule
       if(lastInterval != currentEdge._interval)
@@ -957,9 +958,9 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
             }
         }
 
-      vector< NucleoCounter > pi = br.get_Pi();
+		std::copy(br.get_Pi().begin(), br.get_Pi().end(), pi.begin());
 
-      for(vector< Nucleotide >::iterator nucl_i =extend_symbols.begin();
+      for(vector< Nucleotide >::const_iterator nucl_i =extend_symbols.begin();
           nucl_i != extend_symbols.end(); ++nucl_i)
         {
           DEBUG_LOG("Extending with " << *nucl_i);

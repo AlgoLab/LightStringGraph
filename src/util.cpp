@@ -187,7 +187,6 @@ ofstream& operator<<( ofstream& out, const QInterval& i )
   BWTPosition end = i.get_end( );
   out.write( (char *) &begin, sizeof( BWTPosition ) );
   out.write( (char *) &end, sizeof( BWTPosition ) );
-  out.flush( );
 
   return out;
 }
@@ -207,7 +206,6 @@ ofstream& operator<<( ofstream& out, const GSAEntry& g )
 {
   out.write( (char *) &g.sa, sizeof( SequenceLength ) );
   out.write( (char *) &g.numSeq, sizeof( SequenceNumber ) );
-  out.flush( );
 
   return out;
 }
