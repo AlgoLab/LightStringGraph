@@ -59,7 +59,7 @@ print_node(const struct Node n)
   for(unsigned int i=0; i<n._succs.size(); ++i)
     {
       std::cout << n._succs[i]->_id << " -> " << n._id
-                << " [" << n._lens[i] -1 << "]" << std::endl;
+                << " [" << n._lens[i] << "]" << std::endl;
     }
 }
 
