@@ -34,7 +34,7 @@ bool
 is_contained(const QInterval& first, const QInterval& second)
 {
   // Works only for non-overlapping intervals.
-  return (second.get_begin() < first.get_begin() || second.get_end() > first.get_end());
+  return (second.get_begin() <= first.get_begin() && second.get_end() >= first.get_end());
 }
 
 bool
