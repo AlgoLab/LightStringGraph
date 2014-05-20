@@ -4,10 +4,6 @@
 #include <sstream>
 #include <iostream>
 
-#ifdef USESTXXL
-#include <stxxl.h>
-#endif
-
 #include "BWTReader.h"
 #include "GSAReader.h"
 #include "BWTIterator.h"

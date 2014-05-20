@@ -7,10 +7,6 @@
 #include <vector>
 #include <cstdint>
 
-#ifdef STXXL
-#include <stxxl.h>
-#endif
-
 using std::vector;
 
 // #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
@@ -77,9 +73,6 @@ struct GSAEntry
   SequenceNumber numSeq; // sequence number
 };
 
-// STXXL placeholder
-//typedef stxxl::vector< BWTPosition, PAGE_SIZE, stxxl::lru_pager< PAGE_NUM >, BLOCK_SIZE * 1024 * 1024, stxxl::RC > BWTPExtVect;
-//typedef stxxl::vector< SequenceNumber, PAGE_SIZE, stxxl::lru_pager< PAGE_NUM >, BLOCK_SIZE * 1024 * 1024, stxxl::RC > SeqNExtVect;
 typedef std::vector< BWTPosition > BWTPExtVect;
 typedef std::vector< SequenceNumber > SeqNExtVect;
 

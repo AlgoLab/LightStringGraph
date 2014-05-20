@@ -7,10 +7,6 @@
 #include <vector>
 #include <deque>
 
-#ifdef USESTXXL
-#include <stxxl.h>
-#endif
-
 #include "types.h"
 #include "util.h"
 #include "BWTReader.h"
