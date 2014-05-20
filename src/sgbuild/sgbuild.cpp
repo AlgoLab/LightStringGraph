@@ -143,9 +143,9 @@ print_edge(vector< string >& ids, unsigned int source, unsigned int dest, int ov
   // 8.  sequence 2 length
   // 9.  sequence 2 orientation (1 for reversed with respect to sequence 1)
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
-  std::cout << "ED\t" << ids[source] << "\t" << ids[dest] << "\t" << readslen - overlap
-            << "\t" << readslen << "\t" << readslen << "\t0\t" << overlap << "\t" << readslen
-            << "\t0\t0" << std::endl;
+  std::cout << "ED " << ids[source] << " " << ids[dest] << " " << overlap
+            << " " << readslen-1 << " " << readslen << " 0 " << readslen -overlap -1 << " " << readslen
+            << " 0 0" << std::endl;
 }
 
 //Main
