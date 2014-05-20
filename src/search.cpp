@@ -666,30 +666,13 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
   PrefixManager::position_t pos_on_pref_mgr= 0;
   PrefixManager::offset_t size_of_pref_mgr= 0;
   while (gsa != GSAIterator::end()) {
-// Found a new prefix
-    if (//NOTE: condition '!stack-e.empty()' has been removed since we want that
-        //the "prefix"-file contain the lexicographical order of ALL the reads, and not only
-        //the ones "involved" in some superblocks.
-        //(!stack_e.empty()) &&         // some supeblock is active AND
-        ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
-         ((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
-        ) {
-      pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
-      DEBUG_LOG("  Read " << (*gsa).numSeq << " is the " << pref_mgr.size()
-                << "-th read of the lexicographic order.");
-//DEBUG_LOG("  It is also inside a "<< (stack_e.empty()?0:stack_e.top().k) << "-superblock.");
+    if (opening_block && (((*gsa).sa != suff_len) || (lcur != suff_len))) {
+      opening_block= false;
+      ob_e= p;
+      _FAIL_IF(ob_b >= ob_e);
+      stack_e.push(stack_e_elem_t(ob_b, ob_e, suff_len, pos_on_pref_mgr, size_of_pref_mgr));
+      DEBUG_LOG("  Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
     }
-
-	 if (opening_block && (((*gsa).sa != suff_len) || (lcur != suff_len))) {
-		opening_block= false;
-		ob_e= p;
-		if (ob_b < ob_e) {
-		  stack_e.push(stack_e_elem_t(ob_b, ob_e, suff_len, pos_on_pref_mgr, size_of_pref_mgr));
-		  DEBUG_LOG("  Added element " << stack_e.top() << " to stack_e(" << stack_e.size() << ").");
-		} else {
-		  DEBUG_LOG("The possible " << suff_len << "-superblock has no suffixes, thus is not valid.");
-		}
-	 }
 
 // Closing some superblocks
 	 while(!stack_e.empty() && (stack_e.top().k > lcur || (lcp == LCPIterator::end()))) {
@@ -711,6 +694,20 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 		}
 		stack_e.pop();
 	 }
+
+	 // Found a new prefix
+    if (//NOTE: condition '!stack-e.empty()' has been removed since we want that
+        //the "prefix"-file contain the lexicographical order of ALL the reads, and not only
+        //the ones "involved" in some superblocks.
+        //(!stack_e.empty()) &&         // some supeblock is active AND
+        ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
+         ((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
+        ) {
+      pref_mgr.push(PrefixManager::elem_t((*gsa).numSeq));
+		DEBUG_LOG("  Read " << (*gsa).numSeq << " is the " << pref_mgr.size()
+					 << "-th read of the lexicographic order.");
+    }
+
 
 // Opening a superblock
 	 if ((lcur<lnext) && (lnext >= tau) && (*gsa).sa == lnext) {
