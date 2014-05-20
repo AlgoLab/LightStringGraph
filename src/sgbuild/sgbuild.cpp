@@ -165,6 +165,8 @@ main(int argc, char** argv)
 
   vector< string > reads_ids;
 
+  std::cerr << "Gathering sequence IDs...";
+
   gzFile fp;
   kseq_t *seq;
   fp = gzopen(readsfilename.c_str(), "r");
@@ -176,6 +178,8 @@ main(int argc, char** argv)
     }
   kseq_destroy(seq);
   gzclose(fp);
+
+  std::cerr << "done." << std::endl;
 
   vector< struct Node* > graph;
 
@@ -195,6 +199,7 @@ main(int argc, char** argv)
     }
   PrefixManager pmgr(basename + ".outlsg.lexorder");
 
+  std::cerr << "Building the graph...";
   for(SequenceLength j(0); j < maxarclen; ++j)
     {
       BWTPosition sourcebegin=0, sourceend=0;
@@ -228,12 +233,17 @@ main(int argc, char** argv)
             }
         }
     }
+  std::cerr << "done." << std::endl;
 
   if(!exaustive)
-    for(unsigned int i =0; i < graph.size(); ++i)
-      for(unsigned int j=0; j < graph[i]->_succs.size(); ++j)
-        print_edge(reads_ids, graph[i]->_succs[j]->_id,
-                   graph[i]->_id, graph[i]->_lens[j], readslen);
+    {
+      std::cerr << "Output edges to stdout...";
+      for(unsigned int i =0; i < graph.size(); ++i)
+        for(unsigned int j=0; j < graph[i]->_succs.size(); ++j)
+          print_edge(reads_ids, graph[i]->_succs[j]->_id,
+                     graph[i]->_id, graph[i]->_lens[j], readslen);
+      std::cerr << "done." << std::endl;
+    }
 
   for(vector< struct Node* >::size_type i =0; i < graph.size(); ++i)
       delete graph[i];
