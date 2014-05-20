@@ -226,7 +226,7 @@ main(int argc, char** argv)
                       add_dest(graph[s_v[i]], graph[d_v[k]], QInterval(labelbegin, labelend), j);
                     }
                   else
-                    print_edge(reads_ids, s_v[i], d_v[k], j, readslen);
+                    print_edge(reads_ids, d_v[k], s_v[i], j, readslen);
                   if(countedg)
                     edges += ((sourceend - sourcebegin) * (destend - destbegin));
                 }
