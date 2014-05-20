@@ -6,6 +6,7 @@ BIN_DIR	=bin/
 
 CFLAGS	= -g -Wall ${DEFINES} ${DEBUGDEF} -O0 -march=native -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) -fopenmp
 CXXFLAGS= ${CFLAGS}
+LDFLAGS= -lz -lm
 LIBS 	= #
 
 SGBUILD_DEP= $(OBJ_DIR)sgbuild/sgbuild.o \
@@ -29,7 +30,7 @@ $(BIN_DIR)sgbuild: $(SGBUILD_DEP)
 	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
-	-o $@ $^ $(LIBS)
+	-o $@ $^ $(LIBS) $(LDFLAGS)
 
 clean:
 	@echo "Cleaning..."
