@@ -109,9 +109,9 @@ main(int argc, char** argv)
 
   for(SequenceLength j(0); j < maxarclen; ++j)
     {
-      BWTPosition sourcebegin, sourceend;
-      SequenceNumber destbegin, destend;
-      BWTPosition labelbegin, labelend;
+      BWTPosition sourcebegin=0, sourceend=0;
+      SequenceNumber destbegin=0, destend=0;
+      BWTPosition labelbegin=0, labelend=0;
       while(arcsFiles[j]->read(reinterpret_cast<char*>(&destbegin), sizeof(BWTPosition))       &&
             arcsFiles[j]->read(reinterpret_cast<char*>(&destend), sizeof(BWTPosition))         &&
             arcsFiles[j]->read(reinterpret_cast<char*>(&sourcebegin), sizeof(SequenceNumber))  &&
