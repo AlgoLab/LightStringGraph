@@ -62,12 +62,14 @@ show_usage(){
   std::cerr << "Usage: sgbuild ";
   std::cerr << " -b <basename> ";
   std::cerr << " -m <maxarclen> ";
+  std::cerr << " -r <readsfilename> ";
   std::cerr << " [-c]";
   std::cerr << " [-x]";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
-  std::cerr << "\t-b <basename>     # (required)" << std::endl;
-  std::cerr << "\t-m <maxarclen>    # (required)" << std::endl;
+  std::cerr << "\t-b <basename>       # (required)" << std::endl;
+  std::cerr << "\t-m <maxarclen>      # (required)" << std::endl;
+  std::cerr << "\t-r <readsfilename>  # (required) " << std::endl;
   std::cerr << "\t[-c]                # (optional) count edges % default = false" << std::endl;
   std::cerr << "\t[-x]                # (optional) exaustive   % default = false" << std::endl;
   std::cerr << std::endl;
@@ -78,7 +80,7 @@ parse_cmds(int argc, char** argv, string& basename, string& readsfilename,
            SequenceLength& maxarclen, int& readslen, bool& exaustive,
            bool& countedg)
 {
-  if(argc < 5)
+  if(argc < 7)
     {
       show_usage();
       return false;
