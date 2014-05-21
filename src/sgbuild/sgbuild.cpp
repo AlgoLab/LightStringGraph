@@ -63,6 +63,7 @@ show_usage(){
   std::cerr << " -b <basename> ";
   std::cerr << " -m <maxarclen> ";
   std::cerr << " -r <readsfilename> ";
+  std::cerr << " -l <readslen> ";
   std::cerr << " [-c]";
   std::cerr << " [-x]";
   std::cerr << std::endl;
@@ -70,6 +71,7 @@ show_usage(){
   std::cerr << "\t-b <basename>       # (required)" << std::endl;
   std::cerr << "\t-m <maxarclen>      # (required)" << std::endl;
   std::cerr << "\t-r <readsfilename>  # (required) " << std::endl;
+  std::cerr << "\t-l <readslen>       # (required) " << std::endl;
   std::cerr << "\t[-c]                # (optional) count edges % default = false" << std::endl;
   std::cerr << "\t[-x]                # (optional) exaustive   % default = false" << std::endl;
   std::cerr << std::endl;
