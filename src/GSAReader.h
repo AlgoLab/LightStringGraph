@@ -8,10 +8,6 @@
 #include <fstream>
 #include <iostream>
 
-#ifdef STXXL
-#include <stxxl.h>
-#endif
-
 #include "types.h"
 #include "util.h"
 

@@ -7,10 +7,6 @@
 #include <string>
 #include <cstdlib>
 
-#ifdef STXXL
-#include <stxxl.h>
-#endif
-
 #include "types.h"
 #include "partialBWTReader.h"
 
