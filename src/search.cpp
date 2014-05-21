@@ -900,6 +900,131 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
 {
   vector< vector< NucleoCounter > > EPI(max_len+1, vector< NucleoCounter >(ALPHABET_SIZE));
   struct EdgeLabelEntry currentEdge;
+  LCPValue lcur = (lcp == LCPIterator::end()) ? 0 : *lcp;
+  ++lcp;
+  LCPValue lnext = (lcp == LCPIterator::end()) ? 0 : *lcp;
+  unsigned long nwtermlbc =0;
+  unsigned long nwlbc =0;
+  vector< NucleoCounter > pi(ALPHABET_SIZE);
+
+  br.move_to(0);
+  edgemgr.get_next_interval( currentEdge );
+
+  while(true) // TODO: find a better condition
+    {
+      DEBUG_LOG("position       : " << lcp.get_position()-1);
+      DEBUG_LOG("lcur           : " << lcur);
+      DEBUG_LOG("lnext          : " << lnext);
+      DEBUG_LOG("currentInterval: " << currentEdge._interval.get_label().get_begin()
+                << ", " << currentEdge._interval.get_label().get_end());
+      if(lcur<lnext)                         // potential open
+          for(LCPValue l=lnext; l>lcur; --l)
+            {
+              DEBUG_LOG("Build EPI[" << l << "]");
+              std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI[l].begin());
+            }
+      br.move_to(lcp.get_position());
+
+      while(lcp.get_position() == currentEdge._interval.get_label().get_end())
+        {
+          // Close and extend intervals
+          DEBUG_LOG("Current edgeLabelInterval is ["
+                    << currentEdge._interval.get_label().get_begin() << ","
+                    << currentEdge._interval.get_label().get_end() << ")"
+                    << " and the reverse interval is ["
+                    << currentEdge._interval.get_reverse_label().get_begin() << ","
+                    << currentEdge._interval.get_reverse_label().get_end() << ")");
+          const vector< Nucleotide >& extend_symbols = extsym_p.get_next_symbol(currentEdge._len);
+          std::copy(br.get_Pi().begin(), br.get_Pi().end(), pi.begin());
+          const bool special_interval = (currentEdge._interval.get_label().get_size() == 1);
+
+          for(vector< Nucleotide >::const_iterator nucl_i =extend_symbols.begin();
+              nucl_i != extend_symbols.end(); ++nucl_i)
+            {
+              DEBUG_LOG("Extending with " << *nucl_i << NuclConv::ntoc(*nucl_i));
+              _FAIL_IF(*nucl_i > BASE_T);
+              Nucleotide extension = *nucl_i;
+              // Output if finished arc
+              if(extension == BASE_$)
+                {
+                  // Compiler does not accept a function as a argument for '&' ?
+                  BWTPosition labbegin = currentEdge._interval.get_reverse_label().get_begin();
+                  BWTPosition labend   = currentEdge._interval.get_reverse_label().get_end();
+                  edgeOut[currentEdge._len].write(reinterpret_cast<char*>(&labbegin),
+                                                  sizeof(BWTPosition));
+                  edgeOut[currentEdge._len].write(reinterpret_cast<char*>(&labend),
+                                                  sizeof(BWTPosition));
+                  ++nwtermlbc;
+                }
+              // Extend otherwise
+              else
+                {
+                  BWTPosition new_begin;
+                  if(special_interval) new_begin = C[ extension ] + pi[ extension ] -1;
+                  else new_begin = C[extension] + EPI[currentEdge._len][extension];
+
+                  BWTPosition new_end = C[ extension ] + pi[ extension ];
+                  BWTPosition old_rev_begin = currentEdge._interval.get_reverse_label().get_begin();
+                  BWTPosition new_rev_begin, new_rev_end;
+                  if(currentEdge._len == 0)
+                    {
+                      new_rev_begin = C[extension];
+                      new_rev_end = C[extension+1];
+                    }
+                  else
+                    {
+                      if(special_interval)
+                        {
+                          new_rev_begin = old_rev_begin;
+                          new_rev_end = old_rev_begin+1;
+                        }
+                      else
+                        {
+                          new_rev_begin = old_rev_begin + OccLT(pi, extension) - OccLT(EPI[currentEdge._len], extension);
+                          new_rev_end = new_rev_begin + pi[extension] - EPI[currentEdge._len][extension];
+                        }
+                    }
+                  EdgeLabelInterval new_interval(QInterval(new_begin, new_end), QInterval(new_rev_begin, new_rev_end));
+                  ++nwlbc;
+
+                  DEBUG_LOG("Extended to [" << new_begin << "," << new_end << ")" << " and the reverse interval is ["
+                            << new_rev_begin << "," << new_rev_end << ")");
+
+                  edgemgr.add_edge_interval(new_interval, currentEdge._len +1, extension);
+                }
+            }
+          if(!edgemgr.get_next_interval( currentEdge ))
+            break;
+        }// ~while interval ends in this position
+
+      if(lnext<lcur)                          // potential close
+        for(LCPValue l=lcur; l>lnext; --l)
+          {
+            DEBUG_LOG("Clear EPI[" << l << "]");
+            // EPI[l].clear();
+          }
+      lcur = lnext;
+      if(lcp == LCPIterator::end())
+        break;
+      ++lcp;
+      lnext = (lcp == LCPIterator::end()) ? 0 : *lcp;
+    } // ~while true
+
+  std::cerr << "--> Generated " << nwlbc << " new labels for arcs." << std::endl;
+  std::cerr << "--> Labeled " << nwtermlbc << " new arcs." << std::endl;
+}
+
+static void extend_arc_labels_old( EdgeLabelIntervalManager& edgemgr,
+                        ExtendSymbolPile& extsym_p,
+                        const vector< NucleoCounter >& C,
+                        BWTReader& br,
+                        GSAIterator& gsait,
+                        LCPIterator& lcp,
+                        const SequenceLength max_len,
+                        OutputMultiFileManager& edgeOut )
+{
+  vector< vector< NucleoCounter > > EPI(max_len+1, vector< NucleoCounter >(ALPHABET_SIZE));
+  struct EdgeLabelEntry currentEdge;
   BWTPosition currentPosition=0;
   LCPValue lcur = 0;
   LCPValue lnext = 0;
