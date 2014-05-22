@@ -117,7 +117,7 @@ parse_cmds(const int argc, char** argv, string& basename, string& readsfilename,
 void
 print_vertex(const kseq_t* seq)
 {
-  std::cout << "VT\t" << seq->name.s <<"\t" << seq->seq.s << std::endl;
+  std::cout << "VT\t" << seq->name.s <<"\t" << seq->seq.s << '\n';
 }
 
 void
@@ -138,7 +138,7 @@ print_edge(const vector< string >& ids, const unsigned int source, const unsigne
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
   std::cout << "ED " << ids[source] << " " << ids[dest] << " " << overlap
             << " " << readslen-1 << " " << readslen << " 0 " << readslen -overlap -1 << " " << readslen
-            << " 0 0" << std::endl;
+            << " 0 0" << '\n';
 }
 
 //Main
@@ -159,10 +159,8 @@ main(int argc, char** argv)
   std::ifstream pmgr_tmp(string(basename + ".outlsg.lexorder").c_str(),
                          std::ios_base::binary);
   pmgr_tmp.seekg(0, std::ios_base::end);
-  int elem_num = pmgr_tmp.tellg()/sizeof(SequenceNumber);
+  const unsigned int elem_num = pmgr_tmp.tellg()/sizeof(SequenceNumber);
   pmgr_tmp.close();
-
-  vector< struct Node > graph(elem_num);
 
   vector< string > reads_ids;
 
@@ -184,6 +182,11 @@ main(int argc, char** argv)
   PrefixManager pmgr(basename + ".outlsg.lexorder");
 
   std::cerr << "Building the graph...";
+  { // This block is needed in order to ensure that memory allocated by vector 'graph' is
+	 // released whenever the graph has been written to the file
+  vector< struct Node > graph(elem_num);
+  vector< SequenceNumber > d_v;
+  vector< SequenceNumber > s_v;
   for(SequenceLength j(0); j < maxarclen; ++j)
     {
       BWTPosition sourcebegin=0, sourceend=0;
@@ -196,8 +199,6 @@ main(int argc, char** argv)
             labelFiles[j]->read(reinterpret_cast<char*>(&labelbegin), sizeof(BWTPosition))     &&
             labelFiles[j]->read(reinterpret_cast<char*>(&labelend), sizeof(BWTPosition)))
         {
-          vector< SequenceNumber > d_v;
-          vector< SequenceNumber > s_v;
           pmgr.get_elems(sourcebegin, sourceend - sourcebegin, s_v);
           pmgr.get_elems(destbegin,   destend   - destbegin,   d_v);
           for(vector< SequenceNumber >::size_type i =0; i < s_v.size(); ++i)
@@ -218,13 +219,14 @@ main(int argc, char** argv)
     {
       for(SequenceNumber j =0; j < graph[i]._succs.size(); ++j)
         {
-          graphout.write(reinterpret_cast<char*>(&i), sizeof(SequenceNumber));
           graphout.write(reinterpret_cast<char*>(&graph[i]._succs[j]), sizeof(SequenceNumber));
+          graphout.write(reinterpret_cast<char*>(&i), sizeof(SequenceNumber));
           graphout.write(reinterpret_cast<char*>(&graph[i]._lens[j]), sizeof(SequenceLength));
         }
     }
   graphout.close();
   graph.clear();
+  }
   std::cerr << "done." << std::endl;
 
   std::cerr << "Gathering sequence IDs...";
@@ -234,7 +236,7 @@ main(int argc, char** argv)
   seq = kseq_init(fp);
   while (kseq_read(seq) >= 0)
     {
-      reads_ids.push_back(string(seq->name.s));
+      reads_ids.push_back(seq->name.s);
       print_vertex(seq);
     }
   kseq_destroy(seq);
@@ -252,6 +254,7 @@ main(int argc, char** argv)
       print_edge(reads_ids, source, dest, arclen, readslen);
     }
   graphin.close();
+  std::cout.flush();
   std::cerr << "done." << std::endl;
 
   for(vector< std::ifstream* >::size_type i =0; i < arcsFiles.size(); ++i)
