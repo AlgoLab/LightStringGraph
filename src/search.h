@@ -86,7 +86,7 @@ struct EPI_t
   vector< vector< NucleoCounter > > _occs;
   int                               _next;
 
-  EPI_t(int i) : _occs(i, vector< NucleoCounter >(ALPHABET_SIZE)), _next(0) {};
+  EPI_t(int i) : _occs(i, vector< NucleoCounter >(ALPHABET_SIZE, 0)), _next(1) {};
 };
 
 // Legacy. Don't you dare using it.
