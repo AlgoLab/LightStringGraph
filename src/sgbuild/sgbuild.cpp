@@ -19,20 +19,10 @@ using std::vector;
 
 struct Node
 {
-  SequenceNumber                  _id;
-  vector< struct Node* >          _succs;
+  vector< SequenceNumber >        _succs;
   vector< QInterval >             _labels;
   vector< SequenceLength >        _lens;
-  
-  Node(SequenceNumber id) : _id(id) {};
 };
-
-void
-stretch(vector< struct Node* >& graph, const vector< struct Node* >::size_type n)
-{
-  while(graph.size() <= n)
-      graph.push_back(new struct Node(graph.size()));
-}
 
 // Returns true if first is contained in second
 bool
@@ -43,17 +33,17 @@ is_contained(const QInterval& first, const QInterval& second)
 }
 
 bool
-add_dest(struct Node* source, struct Node* dest, const QInterval& label, const SequenceLength len)
+add_dest(struct Node& source, const SequenceNumber& dest, const QInterval& label, const SequenceLength len)
 {
-  for(vector< QInterval >::const_iterator qint_it = source->_labels.begin();
-      qint_it != source->_labels.end(); qint_it++)
+  for(vector< QInterval >::const_iterator qint_it = source._labels.begin();
+      qint_it != source._labels.end(); qint_it++)
     {
       if(is_contained(label, (*qint_it)))
         return false;
     }
-  source->_succs.push_back(dest);
-  source->_labels.push_back(label);
-  source->_lens.push_back(len);
+  source._succs.push_back(dest);
+  source._labels.push_back(label);
+  source._lens.push_back(len);
   return true;
 }
 
@@ -78,7 +68,7 @@ show_usage(){
 }
 
 bool
-parse_cmds(int argc, char** argv, string& basename, string& readsfilename,
+parse_cmds(const int argc, char** argv, string& basename, string& readsfilename,
            SequenceLength& maxarclen, int& readslen, bool& exaustive,
            bool& countedg)
 {
@@ -125,13 +115,14 @@ parse_cmds(int argc, char** argv, string& basename, string& readsfilename,
 }
 
 void
-print_vertex(kseq_t* seq)
+print_vertex(const kseq_t* seq)
 {
   std::cout << "VT\t" << seq->name.s <<"\t" << seq->seq.s << std::endl;
 }
 
 void
-print_edge(vector< string >& ids, unsigned int source, unsigned int dest, int overlap, int readslen)
+print_edge(const vector< string >& ids, const unsigned int source, const unsigned int dest,
+           const int overlap, const int readslen)
 {
   // Fields:
   // 0.  string ED
@@ -165,10 +156,17 @@ main(int argc, char** argv)
   if(!parse_cmds(argc, argv, basename, readsfilename, maxarclen, readslen, exaustive, countedg))
     return false;
 
+  std::ifstream pmgr_tmp(string(basename + ".outlsg.lexorder").c_str(),
+                         std::ios_base::binary);
+  pmgr_tmp.seekg(0, std::ios_base::end);
+  int elem_num = pmgr_tmp.tellg()/sizeof(SequenceNumber);
+  pmgr_tmp.close();
+
+  vector< struct Node > graph(elem_num);
+
   vector< string > reads_ids;
 
   std::cerr << "Gathering sequence IDs...";
-
   gzFile fp;
   kseq_t *seq;
   fp = gzopen(readsfilename.c_str(), "r");
@@ -180,10 +178,7 @@ main(int argc, char** argv)
     }
   kseq_destroy(seq);
   gzclose(fp);
-
   std::cerr << "done." << std::endl;
-
-  vector< struct Node* > graph;
 
   vector< std::ifstream* > arcsFiles;
   vector< std::ifstream* > labelFiles;
@@ -199,6 +194,7 @@ main(int argc, char** argv)
       labelFiles.push_back(new std::ifstream(labelFilename.str().c_str(),
                                              std::ios_base::in | std::ios_base::binary));
     }
+
   PrefixManager pmgr(basename + ".outlsg.lexorder");
 
   std::cerr << "Building the graph...";
@@ -224,13 +220,14 @@ main(int argc, char** argv)
                 {
                   if(!exaustive)
                     {
-                      stretch(graph, std::max(s_v[i], d_v[k]));
-                      add_dest(graph[s_v[i]], graph[d_v[k]], QInterval(labelbegin, labelend), j);
+                      if(add_dest(graph[s_v[i]], d_v[k], QInterval(labelbegin, labelend), j))
+                          ++edges;
                     }
                   else
-                    print_edge(reads_ids, d_v[k], s_v[i], j, readslen);
-                  if(countedg)
-                    edges += ((sourceend - sourcebegin) * (destend - destbegin));
+                    {
+                      print_edge(reads_ids, d_v[k], s_v[i], j, readslen);
+                      ++edges;
+                    }
                 }
             }
         }
@@ -241,14 +238,10 @@ main(int argc, char** argv)
     {
       std::cerr << "Output edges to stdout...";
       for(unsigned int i =0; i < graph.size(); ++i)
-        for(unsigned int j=0; j < graph[i]->_succs.size(); ++j)
-          print_edge(reads_ids, graph[i]->_succs[j]->_id,
-                     graph[i]->_id, graph[i]->_lens[j], readslen);
+        for(unsigned int j=0; j < graph[i]._succs.size(); ++j)
+          print_edge(reads_ids, graph[i]._succs[j], i, graph[i]._lens[j], readslen);
       std::cerr << "done." << std::endl;
     }
-
-  for(vector< struct Node* >::size_type i =0; i < graph.size(); ++i)
-      delete graph[i];
 
   for(vector< std::ifstream* >::size_type i =0; i < arcsFiles.size(); ++i)
     delete arcsFiles[i];
