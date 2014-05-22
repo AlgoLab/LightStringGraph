@@ -27,14 +27,14 @@ endif
 # TCMalloc is a (generally faster) drop-in replacement for the standard malloc
 # See: http://code.google.com/p/gperftools/
 #
-HAS_TCMALLOC:=/$(shell echo "void main() {}" | $(CC) -x c -o /tmp/test - -ltcmalloc_minimal 2> /dev/null && echo yes || echo no)/
+HAS_TCMALLOC:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -ltcmalloc_minimal 2> /dev/null && echo yes || echo no)/
 #####################
 
 #####################
 # zlib detection
 # Used for reading the BWT file
 #
-HAS_ZLIB:=/$(shell echo "void main() {}" | $(CC) -x c -o /tmp/test - -lz 2> /dev/null && echo yes || echo no)/
+HAS_ZLIB:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lz 2> /dev/null && echo yes || echo no)/
 #####################
 
 
