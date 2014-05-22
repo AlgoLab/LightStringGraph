@@ -899,7 +899,8 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         OutputMultiFileManager& edgeOut )
 {
   struct EPI_t EPI(max_len +1);
-  vector< int > EPI_p(max_len +1);
+  vector< int > EPI_p(max_len +1, -1);
+  EPI_p[0] = 0;
   // vector< vector< NucleoCounter > > EPI(max_len+1, vector< NucleoCounter >(ALPHABET_SIZE));
   struct EdgeLabelEntry currentEdge;
   LCPValue lcur = (lcp == LCPIterator::end()) ? 0 : *lcp;
@@ -921,10 +922,10 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                 << ", " << currentEdge._interval.get_label().get_end());
       if(lcur<lnext)                         // potential open
         {
+          std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI._occs[EPI._next].begin());
           for(LCPValue l=lnext; l>lcur; --l)
             {
               DEBUG_LOG("Build EPI[" << l << "]");
-              std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI._occs[EPI._next].begin());
               EPI_p[l] = EPI._next;
               // std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI[l].begin());
             }
@@ -1012,7 +1013,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
               EPI_p[l] = -1;
               // EPI[l].clear();
             }
-          --EPI._next;
+          EPI._next = EPI_p[lnext]+1;
         }
       lcur = lnext;
       if(lcp == LCPIterator::end())
