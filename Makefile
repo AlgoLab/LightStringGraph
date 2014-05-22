@@ -37,6 +37,14 @@ HAS_TCMALLOC:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -ltcmal
 HAS_ZLIB:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lz 2> /dev/null && echo yes || echo no)/
 #####################
 
+#####################
+# Boost iostreams detection
+# Used for reading lexicographic permutation of the reads.
+#
+HAS_BOOST_IOSTREAMS_MT:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lboost_iostreams-mt 2> /dev/null && echo yes || echo no)/
+HAS_BOOST_IOSTREAMS:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lboost_iostreams 2> /dev/null && echo yes || echo no)/
+#####################
+
 
 DEFINES = -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
 
@@ -53,6 +61,16 @@ ifeq ($(HAS_ZLIB), /yes/)
 $(info Using zlib)
 DEFINES+=-DHAS_ZLIB
 LIBS+=-lz
+endif
+
+ifeq ($(HAS_BOOST_IOSTREAMS), /yes/)
+$(info Using Boost iostreams)
+DEFINES+=-DUSE_BOOST_IOSTREAMS
+ifeq ($(HAS_BOOST_IOSTREAMS_MT), /yes/)
+LIBS+=-lboost_iostreams-mt
+else
+LIBS+=-lboost_iostreams
+endif
 endif
 
 
