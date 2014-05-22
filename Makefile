@@ -78,8 +78,11 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)edgeLabelInterval.o \
 	$(OBJ_DIR)lsg/lsg.o
 
+SGBUILD_DEP= $(OBJ_DIR)sgbuild/sgbuild.o \
+	$(OBJ_DIR)edgeLabelInterval.o
+
 .PHONY: all
-all: lsg bgsa
+all: lsg bgsa sgbuild
 
 ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	@echo '* Compiling $<'
@@ -107,6 +110,17 @@ $(BIN_DIR)bgsa: $(BGSA_DEP)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
 	-o $@ $^ $(LIBS)
+
+.PHONY: sgbuild
+sgbuild: $(BIN_DIR)sgbuild
+	@echo '* $@ OK!'
+
+$(BIN_DIR)sgbuild: $(SGBUILD_DEP)
+	@echo '* Linking $@'
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) \
+	-o $@ $^ $(LIBS) $(LDFLAGS)
+
 
 clean:
 	@echo "Cleaning..."
