@@ -81,6 +81,14 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
 
 bool equalFirstInterval( const QInterval&, const QInterval& );
 
+struct EPI_t
+{
+  vector< vector< NucleoCounter > > _occs;
+  int                               _next;
+
+  EPI_t(int i) : _occs(i, vector< NucleoCounter >(ALPHABET_SIZE)), _next(0) {};
+};
+
 // Legacy. Don't you dare using it.
 // bool int_overlap( const QInterval& a, const QInterval& b );
 

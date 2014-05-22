@@ -898,7 +898,9 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         const SequenceLength max_len,
                         OutputMultiFileManager& edgeOut )
 {
-  vector< vector< NucleoCounter > > EPI(max_len+1, vector< NucleoCounter >(ALPHABET_SIZE));
+  struct EPI_t EPI(max_len +1);
+  vector< int > EPI_p(max_len +1);
+  // vector< vector< NucleoCounter > > EPI(max_len+1, vector< NucleoCounter >(ALPHABET_SIZE));
   struct EdgeLabelEntry currentEdge;
   LCPValue lcur = (lcp == LCPIterator::end()) ? 0 : *lcp;
   ++lcp;
@@ -918,11 +920,16 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
       DEBUG_LOG("currentInterval: " << currentEdge._interval.get_label().get_begin()
                 << ", " << currentEdge._interval.get_label().get_end());
       if(lcur<lnext)                         // potential open
+        {
           for(LCPValue l=lnext; l>lcur; --l)
             {
               DEBUG_LOG("Build EPI[" << l << "]");
-              std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI[l].begin());
+              std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI._occs[EPI._next].begin());
+              EPI_p[l] = EPI._next;
+              // std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI[l].begin());
             }
+          ++EPI._next;
+        }
       br.move_to(lcp.get_position());
 
       while(lcp.get_position() == currentEdge._interval.get_label().get_end())
@@ -961,7 +968,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                 {
                   BWTPosition new_begin;
                   if(special_interval) new_begin = C[ extension ] + pi[ extension ] -1;
-                  else new_begin = C[extension] + EPI[currentEdge._len][extension];
+                  else new_begin = C[extension] + EPI._occs[EPI_p[currentEdge._len]][extension];
 
                   BWTPosition new_end = C[ extension ] + pi[ extension ];
                   BWTPosition old_rev_begin = currentEdge._interval.get_reverse_label().get_begin();
@@ -980,8 +987,8 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         }
                       else
                         {
-                          new_rev_begin = old_rev_begin + OccLT(pi, extension) - OccLT(EPI[currentEdge._len], extension);
-                          new_rev_end = new_rev_begin + pi[extension] - EPI[currentEdge._len][extension];
+                          new_rev_begin = old_rev_begin + OccLT(pi, extension) - OccLT(EPI._occs[EPI_p[currentEdge._len]], extension);
+                          new_rev_end = new_rev_begin + pi[extension] - EPI._occs[EPI_p[currentEdge._len]][extension];
                         }
                     }
                   EdgeLabelInterval new_interval(QInterval(new_begin, new_end), QInterval(new_rev_begin, new_rev_end));
@@ -998,11 +1005,15 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
         }// ~while interval ends in this position
 
       if(lnext<lcur)                          // potential close
-        for(LCPValue l=lcur; l>lnext; --l)
-          {
-            DEBUG_LOG("Clear EPI[" << l << "]");
-            // EPI[l].clear();
-          }
+        {
+          for(LCPValue l=lcur; l>lnext; --l)
+            {
+              DEBUG_LOG("Clear EPI[" << l << "]");
+              EPI_p[l] = -1;
+              // EPI[l].clear();
+            }
+          --EPI._next;
+        }
       lcur = lnext;
       if(lcp == LCPIterator::end())
         break;
