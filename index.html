@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="LightStringGraph : Lightweight String Graph Construction" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>LightStringGraph</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/AlgoLab/LightStringGraph">View on GitHub</a>
+
+          <h1 id="project_title">LightStringGraph</h1>
+          <h2 id="project_tagline">Lightweight String Graph Construction</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/AlgoLab/LightStringGraph/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/AlgoLab/LightStringGraph/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="lightstringgraph" class="anchor" href="#lightstringgraph"><span class="octicon octicon-link"></span></a>LightStringGraph</h1>
+
+<p>Lightweight String Graph Construction</p>
+
+<p>At this stage this software is a prototype/proof of concept and only builds the overlap graph of a given dataset.</p>
+
+<h3>
+<a name="building-and-running-lighstringgraph" class="anchor" href="#building-and-running-lighstringgraph"><span class="octicon octicon-link"></span></a>Building and running LighStringGraph</h3>
+
+<p>The software is composed by two different tools <code>bgsa</code> (build general suffix array) and <code>lsg</code> (light (string) overlap grap).</p>
+
+<p>To build both lsg and bgsa simply move in the root directory of the project and run <code>make all</code>.</p>
+
+<p>If you want to try out the software on some simulated reads follow this steps:</p>
+
+<ol>
+<li>download and compile <a href="https://github.com/BEETL/BEETL">BEETL</a> (tested with version 0.4.0 and 0.9.0, set to 1 the flag <code>BUILD_SA</code> in src/shared/Tools.hh before compiling)</li>
+<li>Given a FASTA file <code>a.fa</code> (all the reads must have the same size) build the BWT with <code>beetl bwt -i a.fa -o BWT -f ascii</code>
+</li>
+<li>rebuild GSA <code>./bin/bgsa -i BWT.pairSA -o coBWT.pairSA -l &lt;reads length&gt;</code> (may take a while, not yet optimized)</li>
+<li>run LightStringGraph <code>./bin/lsg -B BWT-B0 -G newSA.pairSA -T &lt;Tau&gt; -C &lt;CycNum&gt;</code> where <code>&lt;Tau&gt;</code> is the minimum overlap between reads and <code>&lt;CycNum&gt; &gt;= &lt;reads length&gt; - &lt;Tau&gt;</code>.</li>
+</ol><p><code>lsg</code> outputs (STDOUT) all the possible arcs as a csv, one arc per line. Every line is represented by a triplet of integers <code>&lt;from&gt;,&lt;to&gt;,&lt;length&gt;</code> where</p>
+
+<ol>
+<li>
+<code>from</code> is the source read ID (read position in <code>a.fa</code>)</li>
+<li>
+<code>to</code> is the destination read ID (read position in <code>a.fa</code>)</li>
+<li>
+<code>length</code> is the length of the overlap between the reads <code>from</code> and <code>to</code>.</li>
+</ol>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">LightStringGraph maintained by <a href="https://github.com/AlgoLab">AlgoLab</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
