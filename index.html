@@ -36,32 +36,24 @@
 
 <p>Lightweight String Graph Construction</p>
 
-<p>At this stage this software is a prototype/proof of concept and only builds the overlap graph of a given dataset.</p>
+<p>This software is in its initial stage of development.
+Please contact <a href="http://algolab.eu/people/previtali/">Marco Previtali</a> for any questions or use the <a href="https://github.com/AlgoLab/LightStringGraph/issues">issue tracker</a> for reporting bugs.</p>
 
 <h3>
-<a name="building-and-running-lighstringgraph" class="anchor" href="#building-and-running-lighstringgraph"><span class="octicon octicon-link"></span></a>Building and running LighStringGraph</h3>
+<a name="building-and-running-lightstringgraph" class="anchor" href="#building-and-running-lightstringgraph"><span class="octicon octicon-link"></span></a>Building and running LightStringGraph</h3>
 
-<p>The software is composed by two different tools <code>bgsa</code> (build general suffix array) and <code>lsg</code> (light (string) overlap grap).</p>
+<p>The software is composed of two different tools: <code>lsg</code> (light (string) overlap graph) and <code>redbuild</code> (string graph build).</p>
 
-<p>To build both lsg and bgsa simply move in the root directory of the project and run <code>make all</code>.</p>
+<p>To build both lsg and redbuild simply move in the root directory of the project and run <code>make lsg redbuild</code>.</p>
 
-<p>If you want to try out the software on some simulated reads follow this steps:</p>
+<p>If you want to try out the software on some (simulated or real) reads follow this steps:</p>
 
 <ol>
-<li>download and compile <a href="https://github.com/BEETL/BEETL">BEETL</a> (tested with version 0.4.0 and 0.9.0, set to 1 the flag <code>BUILD_SA</code> in src/shared/Tools.hh before compiling)</li>
-<li>Given a FASTA file <code>a.fa</code> (all the reads must have the same size) build the BWT with <code>beetl bwt -i a.fa -o BWT -f ascii</code>
+<li>download and compile <a href="https://github.com/AlgoLab/BEETL">BEETL</a> (version 0.9.0 fixed to correctly compute LCP)</li>
+<li>given a FASTA file <code>a.fa</code> (all the reads must have the same length), build the BWT with <code>beetl bwt -i a.fa -o &lt;BWTPrefix&gt; -f ascii</code>
 </li>
-<li>rebuild GSA <code>./bin/bgsa -i BWT.pairSA -o coBWT.pairSA -l &lt;reads length&gt;</code> (may take a while, not yet optimized)</li>
-<li>run LightStringGraph <code>./bin/lsg -B BWT-B0 -G newSA.pairSA -T &lt;Tau&gt; -C &lt;CycNum&gt;</code> where <code>&lt;Tau&gt;</code> is the minimum overlap between reads and <code>&lt;CycNum&gt; &gt;= &lt;reads length&gt; - &lt;Tau&gt;</code>.</li>
-</ol><p><code>lsg</code> outputs (STDOUT) all the possible arcs as a csv, one arc per line. Every line is represented by a triplet of integers <code>&lt;from&gt;,&lt;to&gt;,&lt;length&gt;</code> where</p>
-
-<ol>
-<li>
-<code>from</code> is the source read ID (read position in <code>a.fa</code>)</li>
-<li>
-<code>to</code> is the destination read ID (read position in <code>a.fa</code>)</li>
-<li>
-<code>length</code> is the length of the overlap between the reads <code>from</code> and <code>to</code>.</li>
+<li>run LightStringGraph <code>./bin/lsg -B &lt;BWTPrefix&gt; -T &lt;Tau&gt; -C &lt;CycNum&gt;</code> where <code>&lt;Tau&gt;</code> is the minimum overlap between reads and <code>&lt;CycNum&gt; &gt;= &lt;reads length&gt; - &lt;Tau&gt;</code>.</li>
+<li>run redbuild <code>./bin/redbuild -b &lt;BWTPrefix&gt; -r a.fa -m &lt;CycNum&gt;+1 -l &lt;ReadLength&gt;</code> and redirect STDOUT (the string graph in the <a href="https://github.com/jts/sga/wiki/ASQG-Format">ASQG format</a>) to a file (you can compress it on the fly).</li>
 </ol>
       </section>
     </div>
