@@ -78,78 +78,98 @@ void
 show_usage(){
   std::cerr << "Usage: sgbuild ";
   std::cerr << " -b <basename> ";
-  std::cerr << " -m <maxarclen> ";
-  std::cerr << " -r <readsfilename> ";
-  std::cerr << " -l <readslen> ";
+  std::cerr << " -m <max_arc_length> ";
+  std::cerr << " -r <read_filename> ";
+  std::cerr << " -l <read_length> ";
   std::cerr << " [-c]";
-  std::cerr << " [-x]";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>       # (required)" << std::endl;
-  std::cerr << "\t-m <maxarclen>      # (required)" << std::endl;
-  std::cerr << "\t-r <readsfilename>  # (required) " << std::endl;
-  std::cerr << "\t-l <readslen>       # (required) " << std::endl;
+  std::cerr << "\t-m <max_arc_length> # (required)" << std::endl;
+  std::cerr << "\t-r <read_filename>  # (required) " << std::endl;
+  std::cerr << "\t-l <read_length>    # (required) " << std::endl;
   std::cerr << "\t[-c]                # (optional) count edges % default = false" << std::endl;
-  std::cerr << "\t[-x]                # (optional) exaustive   % FORCED TO FALSE" << std::endl;
   std::cerr << std::endl;
 }
 
-bool
-parse_cmds(const int argc, char** argv, string& basename, string& readsfilename,
-           SequenceLength& maxarclen, int& readslen, bool& exaustive,
-           bool& countedg)
+struct options_t {
+  bool initialized;
+  std::string basename;
+  std::string read_filename;
+  SequenceLength max_arc_length;
+  SequenceLength read_length;
+  bool count_edges;
+  bool exhaustive;
+
+  options_t()
+      :initialized(false),
+       basename(""),
+       read_filename(""),
+       max_arc_length(0),
+       read_length(0),
+       count_edges(false),
+       exhaustive(false)
+  {};
+};
+
+std::ostream& operator<<(std::ostream& out, const options_t& opts) {
+  if (!opts.initialized) {
+    out << "Options not initialized.";
+  } else {
+    out << "Basename     : " << opts.basename << '\n'
+        << "Reads file   : " << opts.read_filename << '\n'
+        << "Reads length : " << opts.read_length << '\n'
+        << "Max arc len  : " << opts.max_arc_length << '\n'
+        << "Count edges  : " << std::boolalpha << opts.count_edges << '\n'
+        << "Overlap graph: " << std::boolalpha << opts.exhaustive;
+  }
+  return out;
+}
+
+
+
+options_t
+parse_cmds(const int argc, const char** argv)
 {
-  if(argc < 7)
-    {
+  options_t opts;
+  opts.initialized= false;
+  if(argc < 7) {
+    show_usage();
+    return opts;
+  }
+  for(int i=1; i<argc; ++i) {
+    const std::string carg(argv[i]);
+    if(carg == "-b")
+      opts.basename= std::string(argv[++i]);
+    else if(carg == "-r")
+      opts.read_filename= std::string(argv[++i]);
+    else if(carg == "-m")
+      opts.max_arc_length= atoi(argv[++i]);
+    else if(carg == "-l")
+      opts.read_length= atoi(argv[++i]);
+    else if(carg == "-c")
+      opts.count_edges= true;
+    else {
+      std::cerr << "Can't parse argument: " << argv[i] << std::endl;
       show_usage();
-      return false;
+      return opts;
     }
-  for(int i=1; i<argc; ++i)
-    {
-      if(string(argv[i]) == "-b")
-        basename = string(argv[++i]);
-      else if(string(argv[i]) == "-r")
-        readsfilename = string(argv[++i]);
-      else if(string(argv[i]) == "-m")
-        maxarclen = atoi(argv[++i]);
-      else if(string(argv[i]) == "-l")
-        readslen = atoi(argv[++i]);
-      else if(string(argv[i]) == "-x")
-        exaustive = false;
-      else if(string(argv[i]) == "-c")
-        countedg = true;
-      else
-        {
-          std::cerr << "Can't parse argument: " << argv[i] << std::endl;
-          show_usage();
-          return false;
-        }
-    }
+  }
 
-  std::cerr << "Basename       : " << basename << std::endl
-            << "Reads file     : " << readsfilename << std::endl
-            << "Reads length   : " << readslen << std::endl
-            << "Max arcs len   : " << maxarclen << std::endl;
-  std::cerr << "Options: " << std::endl
-            << "   count-edges : ";
-  countedg ? std::cerr << "true" : std::cerr << "false";
-  std::cerr << std::endl;
-  std::cerr << "   exaustive   : ";
-  exaustive ? std::cerr << "true" : std::cerr << "false";
-  std::cerr << std::endl;
-
-  return true;
+  opts.initialized= true;
+  std::cerr << opts << std::endl;
+  return opts;
 }
 
 void
 print_vertex(const kseq_t* seq)
 {
-  std::cout << "VT\t" << seq->name.s <<"\t" << seq->seq.s << '\n';
+  std::cout << "VT\t" << seq->name.s << '\t' << seq->seq.s << '\n';
 }
 
 void
-print_edge(const vector< string >& ids, const unsigned int source, const unsigned int dest,
-           const int overlap, const int readslen)
+print_edge(const vector< string >& ids, const SequenceNumber source, const SequenceNumber dest,
+           const SequenceLength overlap, const SequenceLength readslen)
 {
   // Fields:
   // 0.  string ED
@@ -163,30 +183,40 @@ print_edge(const vector< string >& ids, const unsigned int source, const unsigne
   // 8.  sequence 2 length
   // 9.  sequence 2 orientation (1 for reversed with respect to sequence 1)
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
-  std::cout << "ED " << ids[source] << " " << ids[dest] << " " << overlap
-            << " " << readslen-1 << " " << readslen << " 0 " << readslen -overlap -1 << " " << readslen
-            << " 0 0" << '\n';
+  std::cout << "ED "
+            << ids[source] << ' '
+            << ids[dest] << ' '
+            << overlap << ' '
+            << readslen-1 << ' '
+            << readslen << ' '
+            << "0 "
+            << readslen - overlap - 1 << ' '
+            << readslen << ' '
+            << "0 0\n";
+}
+
+
+std::string n2str(const int n) {
+  std::stringstream nstream;
+  nstream << n;
+  return nstream.str();
 }
 
 //Main
 
 int
-main(int argc, char** argv)
+main(const int argc, const char** argv)
 {
-  bool exaustive = false;
-  bool countedg  = false;
-  string basename, readsfilename;
-  int readslen =0;
-  SequenceLength maxarclen;
+  const options_t opts= parse_cmds(argc, argv);
   long edges = 0;
 
-  if(!parse_cmds(argc, argv, basename, readsfilename, maxarclen, readslen, exaustive, countedg))
+  if(!opts.initialized)
     return false;
 
-  std::ifstream pmgr_tmp(string(basename + ".outlsg.lexorder").c_str(),
+  std::ifstream pmgr_tmp((opts.basename + ".outlsg.lexorder").c_str(),
                          std::ios_base::binary);
   pmgr_tmp.seekg(0, std::ios_base::end);
-  const unsigned int elem_num = pmgr_tmp.tellg()/sizeof(SequenceNumber);
+  const SequenceNumber elem_num = pmgr_tmp.tellg()/sizeof(SequenceNumber);
   pmgr_tmp.close();
 
   vector< string > reads_ids;
@@ -194,27 +224,23 @@ main(int argc, char** argv)
   vector< std::ifstream* > arcsFiles;
   vector< std::ifstream* > labelFiles;
 
-  for(SequenceLength j(0); j < maxarclen; ++j)
-    {
-      std::stringstream arcFilename;
-      std::stringstream labelFilename;
-      arcFilename << basename << ".outlsg.arcs_" << j;
-      arcsFiles.push_back(new std::ifstream(arcFilename.str().c_str(),
-                                            std::ios_base::in | std::ios_base::binary));
-      labelFilename << basename << ".outlsg.labels_" << j;
-      labelFiles.push_back(new std::ifstream(labelFilename.str().c_str(),
-                                             std::ios_base::in | std::ios_base::binary));
-    }
+  for(SequenceLength j(0); j < opts.max_arc_length; ++j) {
+    const std::string jstr(n2str(j));
+    arcsFiles.push_back(new std::ifstream((opts.basename + ".outlsg.arcs_"  + jstr).c_str(),
+                                          std::ios_base::in | std::ios_base::binary));
+    labelFiles.push_back(new std::ifstream((opts.basename + ".outlsg.labels_"  + jstr).c_str(),
+                                           std::ios_base::in | std::ios_base::binary));
+  }
 
-  PrefixManager pmgr(basename + ".outlsg.lexorder");
+  PrefixManager pmgr(opts.basename + ".outlsg.lexorder");
 
   std::cerr << "Building the graph...";
   { // This block is needed in order to ensure that memory allocated by vector 'graph' is
-	 // released whenever the graph has been written to the file
+    // released whenever the graph has been written to the file
   vector< struct Node > graph(elem_num);
   vector< SequenceNumber > d_v;
   vector< SequenceNumber > s_v;
-  for(SequenceLength j(0); j < maxarclen; ++j)
+  for(SequenceLength j(0); j < opts.max_arc_length; ++j)
     {
       BWTPosition sourcebegin=0, sourceend=0;
       SequenceNumber destbegin=0, destend=0;
@@ -240,7 +266,7 @@ main(int argc, char** argv)
     }
   std::cerr << "done." << std::endl;
 
-  std::ofstream graphout( basename + ".outlsg.reduced.graph", std::ios_base::binary);
+  std::ofstream graphout( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
   std::cerr << "Flushing the graph to file...";
   for(SequenceNumber i =0; i < graph.size(); ++i)
     {
@@ -259,7 +285,7 @@ main(int argc, char** argv)
   std::cerr << "Gathering sequence IDs...";
   gzFile fp;
   kseq_t *seq;
-  fp = gzopen(readsfilename.c_str(), "r");
+  fp = gzopen(opts.read_filename.c_str(), "r");
   seq = kseq_init(fp);
   while (kseq_read(seq) >= 0)
     {
@@ -269,16 +295,16 @@ main(int argc, char** argv)
   kseq_destroy(seq);
   gzclose(fp);
   std::cerr << "done." << std::endl;
-  
+
   std::cerr << "Printing edges..." << std::endl;
   SequenceNumber source =0, dest =0;
   SequenceLength arclen =0;
-  std::ifstream graphin( basename + ".outlsg.reduced.graph", std::ios_base::binary);
+  std::ifstream graphin( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
   while(graphin.read(reinterpret_cast<char*>(&source), sizeof(SequenceNumber)) &&
         graphin.read(reinterpret_cast<char*>(&dest), sizeof(SequenceNumber)) &&
         graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)))
     {
-      print_edge(reads_ids, source, dest, arclen, readslen);
+      print_edge(reads_ids, source, dest, arclen, opts.read_length);
     }
   graphin.close();
   std::cout.flush();
@@ -290,7 +316,7 @@ main(int argc, char** argv)
   for(vector< std::ifstream* >::size_type i =0; i < labelFiles.size(); ++i)
     delete labelFiles[i];
 
-  if(countedg)
+  if(opts.count_edges)
     std::cerr << "Produced " << edges << " edges." << std::endl;
 
   return 0;
