@@ -227,11 +227,11 @@ main(int argc, char** argv)
   std::cerr << "Building the graph...";
   for(SequenceLength j(0); j < maxarclen; ++j)
     {
-      BWTPosition sourcebegin=0, sourceend=0;
+      SequenceNumber sourcebegin=0, sourceend=0;
       SequenceNumber destbegin=0, destend=0;
       BWTPosition labelbegin=0, labelend=0;
-      while(arcsFiles[j]->read(reinterpret_cast<char*>(&destbegin), sizeof(BWTPosition))       &&
-            arcsFiles[j]->read(reinterpret_cast<char*>(&destend), sizeof(BWTPosition))         &&
+      while(arcsFiles[j]->read(reinterpret_cast<char*>(&destbegin), sizeof(SequenceNumber))    &&
+            arcsFiles[j]->read(reinterpret_cast<char*>(&destend), sizeof(SequenceNumber))      &&
             arcsFiles[j]->read(reinterpret_cast<char*>(&sourcebegin), sizeof(SequenceNumber))  &&
             arcsFiles[j]->read(reinterpret_cast<char*>(&sourceend), sizeof(SequenceNumber))    &&
             labelFiles[j]->read(reinterpret_cast<char*>(&labelbegin), sizeof(BWTPosition))     &&

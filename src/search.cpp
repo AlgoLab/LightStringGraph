@@ -844,15 +844,16 @@ void extend_arc_intervals( const int length,
       if(!dst_reads.empty() && currentInterval->ext_len>0)
         {
           // TODO: Output Prefix and Suffix in a more meaningful way
-          BWTPosition begin$pos = PI[BASE_$], end$pos = pi[BASE_$];
+          const SequenceNumber begin$pos = (SequenceNumber)PI[BASE_$],
+				end$pos = (SequenceNumber)pi[BASE_$];
 
-          arcsOut[currentInterval->ext_len].write(reinterpret_cast<char*>(&begin$pos),
-                                                  sizeof(BWTPosition));
-          arcsOut[currentInterval->ext_len].write(reinterpret_cast<char*>(&end$pos),
-                                                  sizeof(BWTPosition));
+          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&begin$pos),
+                                                  sizeof(SequenceNumber));
+          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&end$pos),
+                                                  sizeof(SequenceNumber));
           arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(currentInterval->seed_int.begin)),
                                                   sizeof(SequenceNumber));
-          SequenceNumber seedend = currentInterval->seed_int.begin + currentInterval->seed_int.end;
+          const SequenceNumber seedend = currentInterval->seed_int.begin + currentInterval->seed_int.end;
           arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(seedend)),
                                                   sizeof(SequenceNumber));
           // std::cout << "EXT_LEN " << currentInterval->ext_len << "\t";

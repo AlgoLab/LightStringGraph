@@ -167,6 +167,44 @@ public:
 #endif
   }
 
+  elem_t get_elem(const position_t& p) {
+    if (!reading) {
+      flush();
+#ifdef USE_BOOST_IOSTREAMS
+      if (writing) of_.close();
+      mm_.open(filename_);
+#elif defined USE_BGZF
+      if (writing) {
+        bgzf_flush(f_);
+        bgzf_close(f_);
+      }
+      f_= bgzf_open(filename_.c_str(), "r");
+#else
+      if (writing) of_.close();
+      if_.open(filename_, std::ios::in | std::ios::binary);
+#endif
+      writing= false;
+      reading= true;
+    }
+	 elem_t result= 0;
+#ifdef USE_BOOST_IOSTREAMS
+    const elem_t* const data= reinterpret_cast<const elem_t*>(mm_.data());
+	 result= *(data+p);
+#elif defined USE_BGZF
+    const int64_t seek_result= bgzf_seek(f_, p, SEEK_SET);
+    _FAIL_IF(seek_result != 0);
+    const ssize_t read_result= bgzf_read(f_,
+                                         reinterpret_cast<void*>(&result),
+                                         sizeof(elem_t));
+    _FAIL_IF(read_result != (sizeof(elem_t)));
+#else
+    if_.seekg(p * sizeof(elem_t));
+    if_.read(reinterpret_cast<char*>(&result), sizeof(elem_t));
+    _FAIL_IF( !if_ );
+#endif
+	 return result;
+  }
+
 private:
   const std::string filename_;
   offset_t size_;
