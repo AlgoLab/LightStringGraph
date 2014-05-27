@@ -29,17 +29,20 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
-#include <zlib.h>
-#include <stdio.h>
+#include <cstdio>
 #include <cassert>
+
+#include <zlib.h>
+#include "kseq.h"
+KSEQ_INIT(gzFile, gzread)
 
 #include "types.h"
 #include "util.h"
 #include "PrefixManager.h"
 #include "edgeLabelInterval.h"
 
-#include "kseq.h"
-KSEQ_INIT(gzFile, gzread)
+
+#include "asqg_fmt.h"
 
 using std::string;
 using std::vector;
@@ -161,39 +164,6 @@ parse_cmds(const int argc, const char** argv)
   return opts;
 }
 
-void
-print_vertex(const kseq_t* seq)
-{
-  std::cout << "VT\t" << seq->name.s << '\t' << seq->seq.s << '\n';
-}
-
-void
-print_edge(const vector< string >& ids, const SequenceNumber source, const SequenceNumber dest,
-           const SequenceLength overlap, const SequenceLength readslen)
-{
-  // Fields:
-  // 0.  string ED
-  // 1.  sequence 1 name
-  // 2.  sequence 2 name
-  // 3.  sequence 1 overlap start (0 based)
-  // 4.  sequence 1 overlap end (inclusive)
-  // 5.  sequence 1 length
-  // 6.  sequence 2 overlap start (0 based)
-  // 7.  sequence 2 overlap end (inclusive)
-  // 8.  sequence 2 length
-  // 9.  sequence 2 orientation (1 for reversed with respect to sequence 1)
-  // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
-  std::cout << "ED "
-            << ids[source] << ' '
-            << ids[dest] << ' '
-            << overlap << ' '
-            << readslen-1 << ' '
-            << readslen << ' '
-            << "0 "
-            << readslen - overlap - 1 << ' '
-            << readslen << ' '
-            << "0 0\n";
-}
 
 
 std::string n2str(const int n) {
@@ -290,7 +260,7 @@ main(const int argc, const char** argv)
   while (kseq_read(seq) >= 0)
     {
       reads_ids.push_back(seq->name.s);
-      print_vertex(seq);
+      print_vertex(std::cout, seq->name.s, seq->seq.s);
     }
   kseq_destroy(seq);
   gzclose(fp);
@@ -304,7 +274,7 @@ main(const int argc, const char** argv)
         graphin.read(reinterpret_cast<char*>(&dest), sizeof(SequenceNumber)) &&
         graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)))
     {
-      print_edge(reads_ids, source, dest, arclen, opts.read_length);
+      print_edge(std::cout, reads_ids, source, dest, arclen, opts.read_length);
     }
   graphin.close();
   std::cout.flush();

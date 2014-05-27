@@ -100,6 +100,7 @@ SGBUILD_DEP= $(OBJ_DIR)sgbuild/sgbuild.o \
 	$(OBJ_DIR)edgeLabelInterval.o
 
 REDBUILD_DEP= $(OBJ_DIR)sgbuild/redbuild.o \
+	$(OBJ_DIR)sgbuild/asqg_fmt.o \
 	$(OBJ_DIR)edgeLabelInterval.o
 
 .PHONY: all
