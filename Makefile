@@ -27,7 +27,9 @@ endif
 # TCMalloc is a (generally faster) drop-in replacement for the standard malloc
 # See: http://code.google.com/p/gperftools/
 #
+ifeq ($(origin HAS_TCMALLOC), undefined)
 HAS_TCMALLOC:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -ltcmalloc_minimal 2> /dev/null && echo yes || echo no)/
+endif
 #####################
 
 #####################
