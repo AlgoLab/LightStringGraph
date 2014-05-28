@@ -32,17 +32,11 @@
 #include <cstdio>
 #include <cassert>
 
-#include <zlib.h>
-#include "kseq.h"
-KSEQ_INIT(gzFile, gzread)
-
 #include "types.h"
 #include "util.h"
 #include "PrefixManager.h"
 #include "edgeLabelInterval.h"
 
-
-#include "asqg_fmt.h"
 
 #include "MultiFileManager.h"
 
@@ -92,9 +86,10 @@ struct graph_t
 
   const SequenceNumber base_vertex;
   nodes_t nodes;
+  PrefixManager& pmgr;
 
-  graph_t(const SequenceNumber n_vertices, const SequenceNumber base_vertex_=0)
-      :base_vertex(base_vertex_), nodes(n_vertices)
+  graph_t(PrefixManager& pmgr_, const SequenceNumber n_vertices, const SequenceNumber base_vertex_=0)
+      :base_vertex(base_vertex_), nodes(n_vertices), pmgr(pmgr_)
   {
   }
 
@@ -121,9 +116,11 @@ std::ostream& operator<<(std::ostream& out, const graph_t& graph) {
   SequenceNumber i= graph.base_vertex;
   for(graph_t::nodes_t::const_iterator it= graph.nodes.begin();
       it != graph.nodes.end(); ++it, ++i) {
+    const SequenceNumber reali= graph.pmgr.get_elem(i);
     for(SequenceNumber j =0; j < it->succs.size(); ++j) {
-      out.write(reinterpret_cast<const char*>(&(it->succs[j])), sizeof(SequenceNumber));
-      out.write(reinterpret_cast<const char*>(&i), sizeof(SequenceNumber));
+      const SequenceNumber realsucc= graph.pmgr.get_elem(it->succs[j]);
+      out.write(reinterpret_cast<const char*>(&realsucc), sizeof(SequenceNumber));
+      out.write(reinterpret_cast<const char*>(&reali), sizeof(SequenceNumber));
       out.write(reinterpret_cast<const char*>(&(it->lens[j])), sizeof(SequenceLength));
     }
   }
@@ -135,18 +132,14 @@ std::ostream& operator<<(std::ostream& out, const graph_t& graph) {
 
 void
 show_usage(){
-  std::cerr << "Usage: sgbuild ";
+  std::cerr << "Usage: redbuild ";
   std::cerr << " -b <basename> ";
   std::cerr << " -m <max_arc_length> ";
-  std::cerr << " -r <read_filename> ";
-  std::cerr << " -l <read_length> ";
   std::cerr << " [-g <bucket_length>] ";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>        # (required)" << std::endl;
   std::cerr << "\t-m <max_arc_length>  # (required)" << std::endl;
-  std::cerr << "\t-r <read_filename>   # (required) " << std::endl;
-  std::cerr << "\t-l <read_length>     # (required) " << std::endl;
   std::cerr << "\t[-g <bucket length>] # (optional) % default = " << DEFAULT_BUCKET_LENGTH << std::endl;
   std::cerr << std::endl;
 }
@@ -154,17 +147,13 @@ show_usage(){
 struct options_t {
   bool initialized;
   std::string basename;
-  std::string read_filename;
   SequenceLength max_arc_length;
-  SequenceLength read_length;
   SequenceLength max_bucket_length;
 
   options_t()
       :initialized(false),
        basename(""),
-       read_filename(""),
        max_arc_length(0),
-       read_length(0),
        max_bucket_length(DEFAULT_BUCKET_LENGTH)
   {};
 };
@@ -175,7 +164,7 @@ parse_cmds(const int argc, const char** argv)
 {
   options_t opts;
   opts.initialized= false;
-  if(argc < 7) {
+  if(argc < 5) {
     show_usage();
     return opts;
   }
@@ -183,12 +172,8 @@ parse_cmds(const int argc, const char** argv)
     const std::string carg(argv[i]);
     if(carg == "-b")
       opts.basename= std::string(argv[++i]);
-    else if(carg == "-r")
-      opts.read_filename= std::string(argv[++i]);
     else if(carg == "-m")
       opts.max_arc_length= atoi(argv[++i]);
-    else if(carg == "-l")
-      opts.read_length= atoi(argv[++i]);
     else if(carg == "-g") {
       opts.max_bucket_length= atoi(argv[++i]);
       _FAIL_IF(opts.max_bucket_length==0);
@@ -227,14 +212,15 @@ void multiplex_intervals(vector<std::ifstream*> in_arc_files,
   }
 }
 
-void reduce_bucket(std::ifstream& in_bucketfile,
+void reduce_bucket(PrefixManager& pmgr,
+                   std::ifstream& in_bucketfile,
                    std::ofstream& out_graph,
                    long& no_of_edges,
                    const SequenceNumber base_vertex,
                    const SequenceNumber bucket_length) {
   LDEBUG("Reading and reducing bucket...");
 
-  graph_t graph(bucket_length, base_vertex);
+  graph_t graph(pmgr, bucket_length, base_vertex);
   SequenceNumber arc[4];
   BWTPosition label[2];
   SequenceLength l;
@@ -275,8 +261,6 @@ main(const int argc, const char** argv)
 
   INFO("redbuild - Starting...");
   INFO("Basename      : " << opts.basename);
-  INFO("Reads file    : " << opts.read_filename);
-  INFO("Reads length  : " << opts.read_length);
   INFO("Max arc len   : " << opts.max_arc_length);
   INFO("Max bucket len: " << opts.max_bucket_length);
 
@@ -323,6 +307,7 @@ main(const int argc, const char** argv)
   INFO("Starting reduction of each bucket...");
   long no_of_edges= 0;
   {
+    PrefixManager pmgr(opts.basename + ".outlsg.lexorder");
     std::ofstream out_graph( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
     SequenceNumber base_vertex= 0;
     for (size_t bucket_number= 0;
@@ -333,7 +318,7 @@ main(const int argc, const char** argv)
       std::ifstream in_bucketfile(opts.basename + ".tmplsg.bucket_" + n2str(bucket_number),
                                   std::ios::binary);
       const SequenceNumber bucket_length= std::min(no_of_reads, base_vertex+real_bucket_length)-base_vertex;
-      reduce_bucket(in_bucketfile, out_graph, no_of_edges, base_vertex, bucket_length);
+      reduce_bucket(pmgr, in_bucketfile, out_graph, no_of_edges, base_vertex, bucket_length);
       base_vertex += bucket_length;
 // Remove bucket file
       remove((opts.basename + ".tmplsg.bucket_" + n2str(bucket_number)).c_str());
@@ -342,42 +327,6 @@ main(const int argc, const char** argv)
   INFO("Reduction terminated!");
   INFO("Number of edges: " << no_of_edges);
 
-
-  INFO("Writing the string graph in ASQG format...");
-  {
-    vector< string > reads_ids;
-    reads_ids.reserve(no_of_reads);
-    {
-      INFO("Reading sequence IDs from the FASTA file (and writing vertices)...");
-      gzFile fp= gzopen(opts.read_filename.c_str(), "r");
-      kseq_t *seq= kseq_init(fp);
-      while (kseq_read(seq) >= 0) {
-        reads_ids.push_back(seq->name.s);
-        print_vertex(std::cout, seq->name.s, seq->seq.s);
-      }
-      kseq_destroy(seq);
-      gzclose(fp);
-      INFO("Sequence IDs read (and vertices written)!");
-    }
-    {
-      INFO("Writing edges...");
-      PrefixManager pmgr(opts.basename + ".outlsg.lexorder");
-      SequenceNumber arc[2];
-      SequenceNumber &source= arc[0], &dest= arc[1];
-      SequenceLength arclen =0;
-      SequenceNumber rsource= 0, rdest= 0;
-      std::ifstream graphin( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
-      while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
-            graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
-        rsource= pmgr.get_elem(source);
-        rdest= pmgr.get_elem(dest);
-        print_edge(std::cout, reads_ids, rsource, rdest, arclen, opts.read_length);
-      }
-      graphin.close();
-      std::cout.flush();
-      INFO("Edges written!");
-    }
-  }
   INFO("redbuild - Terminated!");
   return EXIT_SUCCESS;
 }

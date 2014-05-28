@@ -100,11 +100,14 @@ SGBUILD_DEP= $(OBJ_DIR)sgbuild/sgbuild.o \
 	$(OBJ_DIR)edgeLabelInterval.o
 
 REDBUILD_DEP= $(OBJ_DIR)sgbuild/redbuild.o \
+	$(OBJ_DIR)edgeLabelInterval.o
+
+GRAPH2ASQG_DEP= $(OBJ_DIR)sgbuild/graph2asqg.o \
 	$(OBJ_DIR)sgbuild/asqg_fmt.o \
 	$(OBJ_DIR)edgeLabelInterval.o
 
 .PHONY: all
-all: lsg bgsa sgbuild redbuild
+all: lsg bgsa sgbuild redbuild graph2asqg
 
 ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	@echo '* Compiling $<'
@@ -148,6 +151,16 @@ redbuild: $(BIN_DIR)redbuild
 	@echo '* $@ OK!'
 
 $(BIN_DIR)redbuild: $(REDBUILD_DEP)
+	@echo '* Linking $@'
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) \
+	-o $@ $^ $(LIBS) $(LDFLAGS)
+
+.PHONY: graph2asqg
+graph2asqg: $(BIN_DIR)graph2asqg
+	@echo '* $@ OK!'
+
+$(BIN_DIR)graph2asqg: $(GRAPH2ASQG_DEP)
 	@echo '* Linking $@'
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
