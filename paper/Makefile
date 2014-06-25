@@ -41,7 +41,7 @@ experiment: lsg.log sga.log
 
 
 sga/$(fafile): $(fa)
-	ln -s $< $@
+	ln -s ../$< $@
 
 
 $(fa): $(fafile)-xaa.gz $(fafile)-xal.gz
