@@ -33,7 +33,6 @@ clean :
 SHELL=/bin/bash
 
 fafile = pp.90_fqhar_70_ov.filter.pass.fa
-fafile = pp.250k.filter.pass.fa
 fa = input-data/reads/$(fafile)
 lsg_fafile = output/$(fafile)
 bin = progrs
@@ -66,16 +65,16 @@ lsg.log: lsg1.log lsg2.log lsg3.log lsg4.log
 	cat $^ > $@
 
 lsg1.log: $(lsg_fafile).sa
-	ulimit -v 12582912 && ulimit -f unlimited && ulimit -n 102400 && /usr/bin/time -ao $@ $(bin)/lsg -B $(lsg_fafile) -T 65 -C 26 &> $@
+	/usr/bin/time -ao $@ $(bin)/lsg -B $(lsg_fafile) -T 65 -C 26 &> $@
 
 lsg2.log: $(lsg_fafile).sa lsg1.log
-	ulimit -v 12582912 && ulimit -f unlimited && ulimit -n 102400 && /usr/bin/time -ao $@ $(bin)/redbuild -b $(lsg_fafile) -m 26 -g 1000000 &> $@
+	/usr/bin/time -ao $@ $(bin)/redbuild -b $(lsg_fafile) -m 26 -g 1000000 &> $@
 
 lsg3.log: $(lsg_fafile).sa lsg2.log
-	ulimit -v 12582912 && ulimit -f unlimited && ulimit -n 102400 && /usr/bin/time -ao $@ $(bin)/sgbuild -b $(lsg_fafile) -m 26 -l 90 -r $< -c -x &> $@ | gzip -c > $(lsg_fafile).outlsg.exhaustive.asqg.gz
+	/usr/bin/time -ao $@ $(bin)/sgbuild -b $(lsg_fafile) -m 26 -l 90 -r $< -c -x &> $@ | gzip -c > $(lsg_fafile).outlsg.exhaustive.asqg.gz
 
 lsg4.log: $(lsg_fafile).sa lsg3.log
-	ulimit -v 12582912 && ulimit -f unlimited && ulimit -n 102400 && /usr/bin/time -ao $@ $(bin)/graph2asqg -b $(lsg_fafile) -l 90 -r $(lsg_fafile) 2> $@ > $(lsg_fafile).filter.pass.fa.outlsg.reduced.asqg
+	/usr/bin/time -ao $@ $(bin)/graph2asqg -b $(lsg_fafile) -l 90 -r $(lsg_fafile) 2> $@ > $(lsg_fafile).filter.pass.fa.outlsg.reduced.asqg
 
 sga.log : sga/$(fafile)
 	/usr/bin/time -ao $@ $(bin)/sga-1way index -a ropebwt $< &> $@ && /usr/bin/time -ao $@ $(bin)/sga-1way overlap -m 65 $< &>> $@
