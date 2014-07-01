@@ -216,7 +216,7 @@ int main ( int argc, char** argv )
   for( int i( 1 ); i <= CYCNUM; ++i )
     {
       LCPIterator lcpit( LCPInputFilenames );
-      GSAIterator gsait( gsaInputFileName );
+      //      GSAIterator gsait( gsaInputFileName );
 
       ExtendSymbolPile extsym_p(extendSymbolFilenames);
 
@@ -224,20 +224,22 @@ int main ( int argc, char** argv )
       // std::cerr << "--> Left Step - " << i+1 << "/" << CYCNUM << std::endl;
       // left_step( br, qmgr, gsardr, c, i + TAU);
       std::cerr << "-> Extend-Arc-Intervals - " << i << "/" << CYCNUM << std::endl;
-      extend_arc_intervals(TAU + i, c, br, gsait, qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr, arcsOut);
+      extend_arc_intervals(TAU + i, c, br, //gsait,
+                           qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr, arcsOut);
 
       extsym_p.switch_mode( );
 
       br.reset();
-      gsardr.reset();
-      gsait.reset();
+      //      gsardr.reset();
+      //      gsait.reset();
       edgemgr.swap_files();
 
       std::cerr << "-> Extend-Arc-Labels - " << i << "/" << CYCNUM << std::endl;
-      extend_arc_labels(edgemgr, extsym_p, c, br, gsait, lcpit, max_len, labelOut);
+      extend_arc_labels(edgemgr, extsym_p, c, br, //gsait,
+                        lcpit, max_len, labelOut);
 
       br.reset();
-      gsardr.reset();
+      //      gsardr.reset();
       qmgr.swap_files();
     }
 

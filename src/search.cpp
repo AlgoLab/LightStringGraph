@@ -765,7 +765,7 @@ bool equalFirstInterval( const QInterval& a, const QInterval& b )
 void extend_arc_intervals( const int length,
                            const vector< NucleoCounter >& C,
                            BWTReader& br,
-                           GSAIterator& gsait,
+                           //                           GSAIterator& gsait,
                            SameLengthArcIntervalManager& qmgr,
                            SameLengthArcIntervalManager& newqmgr,
                            ExtendSymbolPile& extsym_p,
@@ -787,7 +787,8 @@ void extend_arc_intervals( const int length,
   vector< NucleoCounter > PI;
   vector< NucleoCounter > pi;
 
-  ReadSet dst_reads;
+  bool $_extension = false;
+  //  ReadSet dst_reads;
 
   while((qint != NULL) || (newqint != NULL))
     {
@@ -818,14 +819,15 @@ void extend_arc_intervals( const int length,
         {
           // New qinterval
           lastInterval = currentInterval->es_interval;
-          dst_reads.clear();
+          $_extension = false;
+          //          dst_reads.clear();
           for(BWTPosition i(br.get_position()); i <= currentInterval->es_interval.get_begin(); ++i)
               br.move_to( i );
 
           PI = vector< NucleoCounter >( br.get_Pi() );
 
-          while(gsait.get_position() < currentInterval->es_interval.get_begin())
-              ++gsait;
+          // while(gsait.get_position() < currentInterval->es_interval.get_begin())
+          //     ++gsait;
 
           for(BWTPosition currentPosition=currentInterval->es_interval.get_begin();
               currentPosition < currentInterval->es_interval.get_end();
@@ -833,15 +835,17 @@ void extend_arc_intervals( const int length,
             {
               br.move_to(currentPosition);
               if(br.get_current_nucleotide() == BASE_$)
-                dst_reads.push_back((*gsait).numSeq);
-              if(gsait != GSAIterator::end()) ++gsait;
+                $_extension = true;
+              //   dst_reads.push_back((*gsait).numSeq);
+              // if(gsait != GSAIterator::end()) ++gsait;
             }
           br.move_to(currentInterval->es_interval.get_end());
         }
 
       pi = vector< NucleoCounter >( br.get_Pi() );
 
-      if(!dst_reads.empty() && currentInterval->ext_len>0)
+      //      if(!dst_reads.empty() && currentInterval->ext_len>0)
+      if($_extension && currentInterval->ext_len>0)
         {
           // TODO: Output Prefix and Suffix in a more meaningful way
           const SequenceNumber begin$pos = (SequenceNumber)PI[BASE_$],
@@ -921,7 +925,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         ExtendSymbolPile& extsym_p,
                         const vector< NucleoCounter >& C,
                         BWTReader& br,
-                        GSAIterator& gsait,
+                        //                        GSAIterator& gsait,
                         LCPIterator& lcp,
                         const SequenceLength max_len,
                         OutputMultiFileManager& edgeOut )
