@@ -88,7 +88,6 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)partialLCPReader.o \
 	$(OBJ_DIR)LCPReader.o \
 	$(OBJ_DIR)LCPIterator.o \
-	$(OBJ_DIR)GSAReader.o \
 	$(OBJ_DIR)GSAIterator.o \
 	$(OBJ_DIR)search.o \
 	$(OBJ_DIR)util.o \

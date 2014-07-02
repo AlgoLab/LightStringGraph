@@ -35,7 +35,7 @@
 
 #include "types.h"
 #include "util.h"
-#include "PrefixManager.h"
+#include "EndPosManager.h"
 #include "edgeLabelInterval.h"
 
 #include "kseq.h"
@@ -183,13 +183,14 @@ main(int argc, char** argv)
   if(!parse_cmds(argc, argv, basename, readsfilename, maxarclen, readslen, exaustive, countedg))
     return false;
 
-  std::ifstream pmgr_tmp(string(basename + ".outlsg.lexorder").c_str(),
-                         std::ios_base::binary);
-  pmgr_tmp.seekg(0, std::ios_base::end);
-  int elem_num = pmgr_tmp.tellg()/sizeof(SequenceNumber);
-  pmgr_tmp.close();
+  std::ifstream eomgr_tmp((basename + "-end-pos").c_str(),
+                          std::ios_base::binary);
+  SequenceNumber tmp_ = 0;
+  eomgr_tmp.read( reinterpret_cast<char*>(&tmp_), sizeof( SequenceNumber ) );
+  const SequenceNumber no_of_reads = tmp_;
+  eomgr_tmp.close();
 
-  vector< struct Node > graph(elem_num);
+  vector< struct Node > graph(no_of_reads);
 
   vector< string > reads_ids;
 
@@ -222,7 +223,7 @@ main(int argc, char** argv)
                                              std::ios_base::in | std::ios_base::binary));
     }
 
-  PrefixManager pmgr(basename + ".outlsg.lexorder");
+  EndPosManager eomgr(basename + "-end-pos");
 
   std::cerr << "Building the graph...";
   for(SequenceLength j(0); j < maxarclen; ++j)
@@ -239,8 +240,8 @@ main(int argc, char** argv)
         {
           vector< SequenceNumber > d_v;
           vector< SequenceNumber > s_v;
-          pmgr.get_elems(sourcebegin, sourceend - sourcebegin, s_v);
-          pmgr.get_elems(destbegin,   destend   - destbegin,   d_v);
+          eomgr.get_elems(sourcebegin, sourceend - sourcebegin, s_v);
+          eomgr.get_elems(destbegin,   destend   - destbegin,   d_v);
           for(vector< SequenceNumber >::size_type i =0; i < s_v.size(); ++i)
             {
               for(vector< SequenceNumber >::size_type k =0; k < d_v.size(); ++k)

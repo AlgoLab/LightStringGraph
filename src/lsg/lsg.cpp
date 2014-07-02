@@ -32,7 +32,6 @@
 #include <iostream>
 
 #include "BWTReader.h"
-#include "GSAReader.h"
 #include "BWTIterator.h"
 #include "GSAIterator.h"
 #include "LCPIterator.h"
@@ -92,11 +91,13 @@ int main ( int argc, char** argv )
         gsaInputFileName = string(argv[++i]);
       } else if (string(argv[i]) == "--TAU" || string(argv[i]) == "-T") {
         stringstream convert(string(argv[++i]));
-        if( !( convert >> TAU ) ) {
+        BWTPosition tmp;
+        if( !( convert >> tmp ) ) {
           std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (TAU)." << std::endl;
           std::cerr << "Aborting.." << std::endl;
           std::exit( -1 );
         }
+        TAU= static_cast<SequenceLength>(tmp);
       } else if (string(argv[i]) == "--CycNum" || string(argv[i]) == "-C") {
         stringstream convert(string(argv[++i]));
         if( !( convert >> CYCNUM ) ) {
@@ -134,7 +135,6 @@ int main ( int argc, char** argv )
   vector< vector< string > > edgeIntFilenames;
   vector< string > extendSymbolFilenames;
 
-  GSAReader gsardr( gsaInputFileName );
 
   // create filenames and add them to the previous vectors
   for ( int i( BASE_$ ); i < ALPHABET_SIZE; ++i )
@@ -186,29 +186,28 @@ int main ( int argc, char** argv )
   LCPIterator lcpit( LCPInputFilenames );
   GSAIterator gsait( gsaInputFileName );
 
-  PrefixManager pref_mgr(basename + LSG_INFIX_OUT ".lexorder");
-
   BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-LEN_");
 
-  SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, pref_mgr, readLen, TAU, c, baimgr);
+  SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, readLen, TAU, c, baimgr);
 
   for(SequenceLength j(0); j < max_len; ++j)
     {
       std::ostringstream extsymfn, edgeIntFilename;
-      extsymfn << basename << LSG_INFIX_TMP ".extsym-LEN_" << j;
+      extsymfn << basename << LSG_INFIX_TMP ".extsym-LEN_" << PRINT_SL(j);
       extendSymbolFilenames.push_back(extsymfn.str());
 
       edgeIntFilenames.push_back( vector< string >( ) );
 
       for(int i(0); i < ALPHABET_SIZE; ++i)
         {
-          edgeIntFilename << basename << LSG_INFIX_TMP ".arc-SIGMA_" << i << "-LEN_" << j;
+          edgeIntFilename << basename << LSG_INFIX_TMP ".arc-SIGMA_" << i << "-LEN_" << PRINT_SL(j);
           edgeIntFilenames[j].push_back( edgeIntFilename.str( ) );
           edgeIntFilename.str(string(""));
           edgeIntFilename.clear();
         }
     }
 
+  EndPosManager endpos_mgr(basename + "-end-pos");
   EdgeLabelIntervalManager edgemgr( edgeIntFilenames );
   OutputMultiFileManager arcsOut(basename + LSG_INFIX_OUT ".arcs_");
   OutputMultiFileManager labelOut(basename + LSG_INFIX_OUT ".labels_");
@@ -225,7 +224,7 @@ int main ( int argc, char** argv )
       // left_step( br, qmgr, gsardr, c, i + TAU);
       std::cerr << "-> Extend-Arc-Intervals - " << i << "/" << CYCNUM << std::endl;
       extend_arc_intervals(TAU + i, c, br, //gsait,
-                           qmgr, baimgr[i+TAU], extsym_p, edgemgr, pref_mgr, arcsOut);
+                           qmgr, baimgr[i+TAU], extsym_p, edgemgr, endpos_mgr, arcsOut);
 
       extsym_p.switch_mode( );
 
