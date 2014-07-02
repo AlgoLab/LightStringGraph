@@ -38,12 +38,11 @@
 #include "types.h"
 #include "util.h"
 #include "BWTReader.h"
-#include "GSAReader.h"
 #include "LCPReader.h"
 #include "BWTIterator.h"
 #include "GSAIterator.h"
 #include "LCPIterator.h"
-#include "PrefixManager.h"
+#include "EndPosManager.h"
 #include "joined_q_int_manager.h"
 #include "joined_q_interval.h"
 #include "interval_manager.h"
@@ -57,17 +56,6 @@
 using std::vector;
 using std::deque;
 
-// Builds every possibile Q-Intervals of length T in BWT and saves the in qmgr.
-// This procedure filters out the Q-intervals for string Q that doesn't occur as
-// suffix in any read (using the GSA).
-void build_tau_intervals( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
-                          vector< NucleoCounter >& C, int T );
-
-// Extend the intervals in qmgr one step on the left
-// This procedure filters out the Q-interals for string Q that doesn't occur as
-// suffix in any read (using th GSA).
-void left_step( BWTReader& b, QIntervalManager& qmgr, GSAReader& grdr,
-                vector< NucleoCounter >& C, int iteration );
 // Count the occurrences of characters lexicographically smaller than base.
 BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
 
@@ -80,7 +68,6 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base );
 SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
                                           LCPIterator& lcp,
                                           GSAIterator& gsa,
-                                          PrefixManager& pref_mgr,
                                           const SequenceLength& read_length,
                                           const SequenceLength& tau,
                                           const vector< NucleoCounter >& C,
@@ -95,7 +82,7 @@ void extend_arc_intervals( const int length,
                            SameLengthArcIntervalManager& newqmgr,
                            ExtendSymbolPile& extsym_p,
                            EdgeLabelIntervalManager& arcmgr,
-                           PrefixManager& pref_mgr,
+                           EndPosManager& endpos_mgr,
                            OutputMultiFileManager& arcsOut);
 
 void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,

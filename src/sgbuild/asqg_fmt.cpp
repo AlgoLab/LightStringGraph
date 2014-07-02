@@ -53,11 +53,11 @@ print_edge(std::ostream& out,
   out << "ED "
       << ids[source] << ' '
       << ids[dest] << ' '
-      << overlap << ' '
-      << readslen-1 << ' '
-      << readslen << ' '
+      << PRINT_SL(overlap) << ' '
+      << PRINT_SL(readslen-1) << ' '
+      << PRINT_SL(readslen) << ' '
       << "0 "
-      << readslen - overlap - 1 << ' '
-      << readslen << ' '
+      << PRINT_SL(readslen - overlap - 1) << ' '
+      << PRINT_SL(readslen) << ' '
       << "0 0\n";
 }

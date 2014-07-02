@@ -232,7 +232,7 @@ ifstream& operator>>( ifstream& in, QInterval*& i )
 ofstream& operator<<( ofstream& out, const GSAEntry& g )
 {
   out.write( (char *) &g.sa, sizeof( SequenceLength ) );
-  out.write( (char *) &g.numSeq, sizeof( SequenceNumber ) );
+//  out.write( (char *) &g.numSeq, sizeof( SequenceNumber ) );
 
   return out;
 }
@@ -240,7 +240,7 @@ ofstream& operator<<( ofstream& out, const GSAEntry& g )
 ifstream& operator>>( ifstream& in, GSAEntry& g )
 {
   in.read( (char *) &g.sa, sizeof( SequenceLength ) );
-  in.read( (char *) &g.numSeq, sizeof( SequenceNumber ) );
+//  in.read( (char *) &g.numSeq, sizeof( SequenceNumber ) );
   return in;
 }
 

@@ -115,11 +115,13 @@ ifstream& operator>>( ifstream&, EdgeLabelInterval*& );
 std::string now( const char* format );
 
 #ifdef DEBUG
-#define DEBUG_LOG(s)                          \
-  do {                                        \
-    std::cerr << "DBG:"                       \
-              << __FILE__ << ":" << __LINE__  \
-              << "  " << s << std::endl;      \
+#define DEBUG_LOG(s)                                                    \
+  do {                                                                  \
+    std::cerr << "DBG:"                                                 \
+              << __FILE__ << ":"                                        \
+              << std::setiosflags (std::ios::left) << std::setw(4)      \
+              << __LINE__                                               \
+              << "  " << s << std::endl;                                \
   } while (0)
 #else
 #define DEBUG_LOG(s) do {} while(0)

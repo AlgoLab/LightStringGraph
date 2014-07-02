@@ -129,15 +129,16 @@ main(const int argc, const char** argv)
   INFO("graph2asqg - Starting...");
   INFO("Basename      : " << opts.basename);
   INFO("Reads file    : " << opts.read_filename);
-  INFO("Reads length  : " << opts.read_length);
+  INFO("Reads length  : " << PRINT_SL(opts.read_length));
 
   LDEBUG("Getting the number of reads...");
 // Get the number of reads
-  std::ifstream pmgr_tmp((opts.basename + ".outlsg.lexorder").c_str(),
-                         std::ios_base::binary);
-  pmgr_tmp.seekg(0, std::ios_base::end);
-  const SequenceNumber no_of_reads = pmgr_tmp.tellg()/sizeof(SequenceNumber);
-  pmgr_tmp.close();
+  std::ifstream eomgr_tmp((opts.basename + "-end-pos").c_str(),
+                          std::ios_base::binary);
+  SequenceNumber tmp_ = 0;
+  eomgr_tmp.read( reinterpret_cast<char*>(&tmp_), sizeof( SequenceNumber ) );
+  const SequenceNumber no_of_reads = tmp_;
+  eomgr_tmp.close();
 
   INFO("Building the string graph of " << no_of_reads << " reads.");
 
