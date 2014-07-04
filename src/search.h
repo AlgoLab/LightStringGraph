@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+#include <stack>
 
 #include "types.h"
 #include "util.h"

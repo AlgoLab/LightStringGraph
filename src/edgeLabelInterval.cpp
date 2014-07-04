@@ -71,9 +71,9 @@ EdgeLabelInterval& EdgeLabelInterval::operator=( const EdgeLabelInterval& other)
 
 bool EdgeLabelInterval::operator>( const EdgeLabelInterval& rhs) const
 {
-  if((_forward_interval.get_end() > rhs.get_label().get_end()) ||
-     ((_forward_interval.get_end() == rhs.get_label().get_end()) &&
-      (_forward_interval.get_begin() < rhs.get_label().get_begin())))
+  if(_forward_interval.get_begin() < rhs.get_label().get_begin() ||
+     (_forward_interval.get_begin() == rhs.get_label().get_begin() &&
+      _forward_interval.get_end() >= rhs.get_label().get_end()))
     return true;
   else
     return false;

@@ -73,8 +73,7 @@ struct EdgeLabelEntry
 
   bool operator<(const struct EdgeLabelEntry& rhs) const
   {
-    // Use > instead of < to hack prority queue
-    return (_interval > rhs._interval);
+    return (_interval < rhs._interval);
   }
 };
 
