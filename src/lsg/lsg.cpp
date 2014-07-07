@@ -233,5 +233,8 @@ int main ( int argc, char** argv )
       qmgr.swap_files();
     }
 
+  std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
+  std::cerr << "-> lsg - Terminated!" << std::endl;
+
   return 0;
 }
