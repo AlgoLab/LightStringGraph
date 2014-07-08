@@ -296,58 +296,6 @@ private:
           }
       }
     _nextInterval = _buffer.begin( );
-    // // TODO: Refactor this method, there are too many nested if/else
-    // bool isThereMore = true;
-    // while ( _buffer.size() < BUFFERSIZE && isThereMore)
-    //   {
-    //    if( _inputFile != NULL && _inputFile->eof() )
-    //      {
-    //        _inputFile->close();
-    //        delete _inputFile;
-    //        if( _nextInputFile < _filenames.size() )
-    //          {
-    //      _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
-    //              std::ios::binary );
-    //      // ++_nextInputFile;
-    //          }
-    //        else
-    //          {
-    //      _inputFile = NULL;
-    //          }
-    //      }
-    //    else
-    //      {
-    //        if( _inputFile != NULL )
-    //          {
-    //      interval_t* intervalRead = new interval_t();
-    //      _inputFile->read( (char *) intervalRead, sizeof( interval_t ) );
-    //      isThereMore = ( _inputFile->gcount() > 0 ) ? true : false ;
-    //      if( !isThereMore )
-    //        {
-    //          delete intervalRead;
-    //          _inputFile->close();
-    //          delete _inputFile;
-    //          _inputFile = NULL;
-    //          // ++_nextInputFile;
-    //          if( _nextInputFile < _filenames.size() )
-    //            {
-    //        _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str(),
-    //                std::ios::binary );
-    //        isThereMore = true;
-    //            }
-    //        }
-    //      else
-    //        {
-    //          _buffer.push_back( intervalRead );
-    //        }
-    //          }
-    //        else
-    //          {
-    //      isThereMore = false;
-    //          }
-    //      }
-    //   }
-    // _nextInterval = _buffer.begin( );
   }
 
 };
