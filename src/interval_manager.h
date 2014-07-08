@@ -47,12 +47,22 @@ using std::string;
 template< class interval_t > class IntervalManager
 {
 private:
+  struct IntervalRun {
+    interval_t* _interval; // Interval
+    long        _mult;     // Multiplicity
+
+    IntervalRun() : _interval(NULL), _mult(0) {};
+    IntervalRun(interval_t* t) : _interval(t), _mult(1) {};
+    IntervalRun(interval_t* t, long mult) : _interval(t), _mult(mult) {};
+  };
+
   vector< string >                          _filenames;     // Input filenames
   unsigned short                            _nextInputFile; // Index of next file to open in _filenames
   std::ifstream*                            _inputFile;       // Current input stream
+  vector< IntervalRun >                     _buffer;        // current intervals
+  typename vector< IntervalRun >::iterator  _nextInterval;     // next interval in buffer
   vector< std::ofstream* >                  _outputFiles;       // New intervals (interval_t) will be
-  vector< interval_t* >                     _buffer;        // current intervals
-  typename vector< interval_t* >::iterator  _nextInterval;     // next interval in buffer
+  vector< IntervalRun >                     _outIntervals;  // Buffer for intervals to store in external memory
 
 public:
 
@@ -98,6 +108,7 @@ public:
       }
     _nextInputFile = 0;
     _populate_buffer( );
+    _outIntervals = vector<IntervalRun>(ALPHABET_SIZE);
     _init_new_outputfiles( );
   } // IntervalManager
 
@@ -117,11 +128,11 @@ public:
         delete _inputFile;
         _inputFile = NULL;
       }
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
+    for( typename vector< IntervalRun >::iterator it = _buffer.begin( );
          it != _buffer.end( ); ++it )
       {
-        delete (*it);
-        (*it) = NULL;
+        delete it->_interval;
+        it->_interval = NULL;
       }
 
     for( typename vector< string >::iterator it = _filenames.begin();
@@ -141,6 +152,14 @@ public:
         _inputFile->close();
         delete _inputFile;
         _inputFile = NULL;
+      }
+    for(int n = BASE_A; n != ALPHABET_SIZE; n++)
+      {
+        if(_outIntervals[n]._mult !=0)
+          {
+            (*(_outputFiles[n])) << *(_outIntervals[n]._interval);
+            (*(_outputFiles[n])).write((char*)&(_outIntervals[n]._mult), sizeof(long));
+          }
       }
     for ( vector< std::ofstream* >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( );
@@ -180,7 +199,15 @@ public:
       {
         _populate_buffer( );
       }
-    interval_t* i = ( _buffer.size( ) == 0 ) ? NULL : *_nextInterval++;
+    interval_t* i = NULL;
+    if(_buffer.size() == 0)
+      i = NULL;
+    else
+      {
+        i = _nextInterval->_interval;
+        if(--(_nextInterval->_mult) == 0)
+          _nextInterval++;
+      }
     return i;
   } // get_next_interval
 
@@ -192,8 +219,21 @@ public:
         DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
-    (*(_outputFiles[ (int) n ])) << i;
-    // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
+    if(_outIntervals[n]._interval == NULL)
+      {
+        interval_t* t = new interval_t(i);
+        _outIntervals[n] = IntervalRun(t);
+      }
+    else if(i == *(_outIntervals[n]._interval))
+        ++(_outIntervals[n]._mult);
+    else
+      {
+        (*(_outputFiles[(int) n])) << *(_outIntervals[n]._interval);
+        (*(_outputFiles[(int) n])).write((char *)&(_outIntervals[n]._mult), sizeof(long));
+        delete (_outIntervals[n]._interval);
+        interval_t* t = new interval_t(i);
+        _outIntervals[n] = IntervalRun(t);
+      }
     return true;
   } // add_interval
 
@@ -215,22 +255,30 @@ private:
         _outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
                                                    std::ios::binary | std::ios::app) );
       }
+    for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
+      {
+        if(_outIntervals[n]._interval != NULL)
+          delete (_outIntervals[n]._interval);
+        _outIntervals[n] = IntervalRun();
+      }
   } // _init_new_outputfiles
 
   // Read new intervals and store them in _buffer
   void _populate_buffer()
   {
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
+    for(typename vector< IntervalRun >::iterator it = _buffer.begin();
+        it != _buffer.end(); ++it)
       {
-        if(*it != NULL)
-          delete *it;
+        if(it->_interval != NULL)
+          delete it->_interval;
       }
     _buffer.clear( );
 
     interval_t* i = NULL;
+    long runlength =0;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           ( ( _inputFile && ((*_inputFile) >> i ) ) || ( _nextInputFile < _filenames.size( ) ) ) )
+           (( _inputFile && ((*_inputFile) >> i ) && ((*_inputFile).read((char *)&runlength, sizeof(long)))) ||
+            ( _nextInputFile < _filenames.size( ))))
       {
         if( i == NULL )
           {
@@ -242,7 +290,8 @@ private:
           }
         else
           {
-            _buffer.push_back( i );
+            IntervalRun x(i, runlength);
+            _buffer.push_back( x );
             i = NULL;
           }
       }
