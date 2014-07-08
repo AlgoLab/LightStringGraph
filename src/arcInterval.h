@@ -47,6 +47,11 @@ struct SeedInterval
   const size_t size() const {
 	 return end-begin;
   }
+
+  bool operator==(const SeedInterval& rhs) const
+  {
+    return (this->begin == rhs.begin && this->end == rhs.end);
+  }
   
 };
 
@@ -58,11 +63,17 @@ struct ArcInterval
 
   // Constructor
   ArcInterval(const QInterval& es_interval_,
-				  const SequenceLength& ext_len_,
-				  const SeedInterval& seed_int_)
+              const SequenceLength& ext_len_,
+              const SeedInterval& seed_int_)
 		:es_interval(es_interval_), ext_len(ext_len_), seed_int(seed_int_)
   {}
 
+  bool operator==(const ArcInterval& rhs) const
+  {
+    return (this->es_interval == rhs.es_interval &&
+            this->ext_len == rhs.ext_len         &&
+            this->seed_int == rhs.seed_int);
+  }
 };
 
 #endif
