@@ -41,7 +41,7 @@ using std::vector;
 // #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
 #define QIntervalManager IntervalManager< QInterval >
 #define SameLengthArcIntervalManager IntervalManager< ArcInterval >
-#define SameLengthEdgeLabelIntervalManager IntervalManager< EdgeLabelInterval >
+#define SameLengthEdgeLabelIntervalManager IntervalManagerRLE< EdgeLabelInterval >
 #define BasicArcIntervalManager MultiIntervalManager<ArcInterval>
 
 // As defined in BEETL/src/shared/Tools.hh (ElementType)
