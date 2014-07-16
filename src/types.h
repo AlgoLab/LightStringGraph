@@ -31,14 +31,11 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <map>
 #include <vector>
 #include <cstdint>
 
 using std::vector;
 
-// #define JoinedQIntervalManager IntervalManager< JoinedQInterval >
-// #define EdgeJoinedQIntervalManager IntervalManager< EdgeInterval >
 #define QIntervalManager IntervalManager< QInterval >
 #define SameLengthArcIntervalManager IntervalManager< ArcInterval >
 #define SameLengthEdgeLabelIntervalManager IntervalManagerRLE< EdgeLabelInterval >
@@ -104,27 +101,5 @@ enum Nucleotide
 #define CHAR_BASE_T_LOW 't'
 #define CHAR_BASE_Z_LOW 'z'
 
-
-
-typedef std::vector< BWTPosition > BWTPExtVect;
-typedef std::vector< SequenceNumber > SeqNExtVect;
-
-
-// Other types
-
-typedef std::vector<SequenceNumber> ReadSet;
-
-
-// LEGACY
-// temporary
-// struct SGEdge
-// {
-//   unsigned int first_read;
-//   unsigned int second_read;
-//   EdgeLength len;
-// };
-
-// typedef std::map< unsigned int, SGEdge* > SGraph;
-// typedef std::map< unsigned int, vector< unsigned int > > Precedencies;
 
 #endif

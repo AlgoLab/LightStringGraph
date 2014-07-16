@@ -42,8 +42,6 @@
 #include <climits>
 
 #include "types.h"
-#include "edge_joined_interval.h"
-#include "joined_q_interval.h"
 #include "q_interval.h"
 #include "arcInterval.h"
 #include "edgeLabelInterval.h"
@@ -83,21 +81,9 @@ std::string convert_to_string(const T& el) {
   return stream.str();
 }
 
-// Legacy
-// Check if there is some irreducible edge between the reads pointed
-// by two Q-intervals
-// void checkIfIrreducible( SGraph&, Precedencies&, GSAEntry*, GSAEntry*, EdgeLength& );
-
 // Overloading various operato<< and operator>> ..
 ofstream& operator<<( ofstream&, const QInterval& );
 ifstream& operator>>( ifstream&, QInterval*& );
-
-// ofstream& operator<<( ofstream&, const EdgeInterval& );
-// ifstream& operator>>( ifstream&, EdgeInterval* );
-// ifstream& operator>>( ifstream&, EdgeInterval** );
-
-// ofstream& operator<<( ofstream&, const JoinedQInterval& );
-// ifstream& operator>>( ifstream&, JoinedQInterval* );
 
 ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );

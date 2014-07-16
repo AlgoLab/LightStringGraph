@@ -37,23 +37,14 @@ partialBWTReader::partialBWTReader ( const string& inputFilename,
      _position(0),
      _occurrencesBeforeStart(occurrencesBeforeStart)
 {
-#ifdef HAS_ZLIB
   _fileIn= gzopen(inputFilename.c_str(), "r");
   if (_fileIn == Z_NULL) {
-#else
-  _fileIn= fopen(inputFilename.c_str(), "r");
-  if (_fileIn == NULL) {
-#endif
     DEBUG_LOG("Impossible to open file '" << inputFilename << "' for reading.");
     throw std::logic_error(std::string("Impossible to open file '")
                            + inputFilename + "' for reading.");
   }
   DEBUG_LOG("File '" << inputFilename << "' successfully opened.");
-#ifdef HAS_ZLIB
   _bufferlen= gzread( _fileIn, _buffer, BUFFERSIZE );
-#else
-  _bufferlen= fread( _buffer, 1, BUFFERSIZE, _fileIn);
-#endif
 }
 
 bool partialBWTReader::move_to ( const BWTPosition & p )
@@ -76,11 +67,7 @@ bool partialBWTReader::move_to ( const BWTPosition & p )
       if ( _position == _bufferlen )
         {
           _start += _bufferlen;
-#ifdef HAS_ZLIB
           _bufferlen= gzread( _fileIn, _buffer, BUFFERSIZE );
-#else
-          _bufferlen= fread( _buffer, 1, BUFFERSIZE, _fileIn);
-#endif
           _position = 0;
           if(_bufferlen == 0)
             {
