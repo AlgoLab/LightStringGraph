@@ -63,13 +63,13 @@ void
 show_usage(){
   std::cerr << "Usage: graph2asqg ";
   std::cerr << " -b <basename> ";
-  std::cerr << " -r <read_filename> ";
+  std::cerr << " [-r <read_filename>] ";
   std::cerr << " -l <read_length> ";
   std::cerr << " [-n]";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>        # (required)" << std::endl;
-  std::cerr << "\t-r <read_filename>   # (required) " << std::endl;
+  std::cerr << "\t-r <read_filename>   # (optional, default: <basename>) " << std::endl;
   std::cerr << "\t-l <read_length>     # (required) " << std::endl;
   std::cerr << "\t-n                   # (optional) use numeric IDs instead of FASTA IDs" << std::endl;
   std::cerr << std::endl;
@@ -99,10 +99,7 @@ parse_cmds(const int argc, const char** argv)
 {
   options_t opts;
   opts.initialized= false;
-  if(argc < 7) {
-    show_usage();
-    return opts;
-  }
+
   for(int i=1; i<argc; ++i) {
     const std::string carg(argv[i]);
     if(carg == "-b")
@@ -118,6 +115,15 @@ parse_cmds(const int argc, const char** argv)
       show_usage();
       return opts;
     }
+  }
+
+  if (opts.read_filename == "") {
+    opts.read_filename= opts.basename;
+  }
+
+  if (opts.read_filename == "" || opts.read_length == 0) {
+    show_usage();
+    return opts;
   }
 
   opts.initialized= true;
