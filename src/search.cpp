@@ -174,8 +174,8 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
         //the "prefix"-file contain the lexicographical order of ALL the reads, and not only
         //the ones "involved" in some superblocks.
         //(!stack_e.empty()) &&         // some supeblock is active AND
-        ((use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
-         ((*gsa).sa == read_length) ) //   elem of GSA is a "complete read" )
+        (use_bwt && *bwt == '$') ||  // ( using bwt and the bwt symbol is $  OR
+        (((*gsa).sa == read_length) && (p >= C[BASE_A])) //   elem of GSA is a "complete read" )
         ) {
       ++no_of_$;
       DEBUG_LOG("  Found the " << no_of_$ << "-th read of the lexicographic order.");
