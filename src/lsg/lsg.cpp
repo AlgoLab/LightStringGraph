@@ -107,11 +107,13 @@ int main ( int argc, char** argv )
         }
       } else if (string(argv[i]) == "--read-length" || string(argv[i]) == "-l") {
         stringstream convert(string(argv[++i]));
-        if( !( convert >> readLen ) ) {
+        BWTPosition tmp;
+        if( !( convert >> tmp ) ) {
           std::cerr << "Can't convert " << string( argv[ i ] ) << " to integer (readLen)." << std::endl;
           std::cerr << "Aborting.." << std::endl;
           std::exit( -1 );
         }
+        readLen= static_cast<SequenceLength>(tmp);
       } else {
         std::cerr << "Invalid arguments, please try again.\n";
         return 1;
