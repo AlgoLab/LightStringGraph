@@ -36,12 +36,11 @@
 
 void
 print_vertex(std::ostream& out,
-             const char* name, const char* seq);
+             const std::string& name, const char* seq);
 
 void
 print_edge(std::ostream& out,
-           const std::vector< std::string >& ids,
-           const SequenceNumber source, const SequenceNumber dest,
+           const std::string& source_id, const std::string& dest_id,
            const SequenceLength overlap, const SequenceLength readslen);
 
 

@@ -29,14 +29,13 @@
 
 void
 print_vertex(std::ostream& out,
-             const char* name, const char* seq) {
+             const std::string& name, const char* seq) {
   out << "VT\t" << name << '\t' << seq << '\n';
 }
 
 void
 print_edge(std::ostream& out,
-           const std::vector< std::string >& ids,
-           const SequenceNumber source, const SequenceNumber dest,
+           const std::string& source_id, const std::string& dest_id,
            const SequenceLength overlap, const SequenceLength readslen) {
   // Fields:
   // 0.  string ED
@@ -51,8 +50,8 @@ print_edge(std::ostream& out,
   // 9.  sequence 2 orientation (1 for reversed with respect to sequence 1)
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
   out << "ED "
-      << ids[source] << ' '
-      << ids[dest] << ' '
+      << source_id << ' '
+      << dest_id << ' '
       << PRINT_SL(overlap) << ' '
       << PRINT_SL(readslen-1) << ' '
       << PRINT_SL(readslen) << ' '

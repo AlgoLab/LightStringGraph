@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cassert>
+#include <boost/lexical_cast.hpp>
 
 #include <zlib.h>
 #include "kseq.h"
@@ -64,11 +65,13 @@ show_usage(){
   std::cerr << " -b <basename> ";
   std::cerr << " -r <read_filename> ";
   std::cerr << " -l <read_length> ";
+  std::cerr << " [-n]";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>        # (required)" << std::endl;
   std::cerr << "\t-r <read_filename>   # (required) " << std::endl;
   std::cerr << "\t-l <read_length>     # (required) " << std::endl;
+  std::cerr << "\t-n                   # (optional) use numeric IDs instead of FASTA IDs" << std::endl;
   std::cerr << std::endl;
 }
 
@@ -78,13 +81,15 @@ struct options_t {
   std::string read_filename;
   SequenceLength max_arc_length;
   SequenceLength read_length;
+  bool use_numeric_ids;
 
   options_t()
       :initialized(false),
        basename(""),
        read_filename(""),
        max_arc_length(0),
-       read_length(0)
+       read_length(0),
+       use_numeric_ids(false)
   {};
 };
 
@@ -106,6 +111,8 @@ parse_cmds(const int argc, const char** argv)
       opts.read_filename= std::string(argv[++i]);
     else if(carg == "-l")
       opts.read_length= atoi(argv[++i]);
+    else if(carg == "-n")
+      opts.use_numeric_ids= true;
     else {
       ERROR("Can't parse argument: " << argv[i]);
       show_usage();
@@ -130,6 +137,7 @@ main(const int argc, const char** argv)
   INFO("Basename      : " << opts.basename);
   INFO("Reads file    : " << opts.read_filename);
   INFO("Reads length  : " << PRINT_SL(opts.read_length));
+  INFO("Read IDs      : " << (opts.use_numeric_ids? "numeric" : "fasta"));
 
   LDEBUG("Getting the number of reads...");
 // Get the number of reads
@@ -144,15 +152,26 @@ main(const int argc, const char** argv)
 
   INFO("Writing the string graph in ASQG format...");
   {
+    const std::string read_pref= "r";
     vector< string > reads_ids;
-    reads_ids.reserve(no_of_reads);
+    if (!opts.use_numeric_ids) {
+      reads_ids.reserve(no_of_reads);
+    }
     {
       INFO("Reading sequence IDs from the FASTA file (and writing vertices)...");
       gzFile fp= gzopen(opts.read_filename.c_str(), "r");
       kseq_t *seq= kseq_init(fp);
-      while (kseq_read(seq) >= 0) {
-        reads_ids.push_back(seq->name.s);
-        print_vertex(std::cout, seq->name.s, seq->seq.s);
+      if (opts.use_numeric_ids) {
+        SequenceNumber seq_count= 0;
+        while (kseq_read(seq) >= 0) {
+          print_vertex(std::cout, read_pref + boost::lexical_cast<std::string>(seq_count), seq->seq.s);
+          ++seq_count;
+        }
+      } else {
+        while (kseq_read(seq) >= 0) {
+          reads_ids.push_back(seq->name.s);
+          print_vertex(std::cout, boost::lexical_cast<std::string>(seq->name.s), seq->seq.s);
+        }
       }
       kseq_destroy(seq);
       gzclose(fp);
@@ -164,9 +183,19 @@ main(const int argc, const char** argv)
       SequenceNumber &source= arc[0], &dest= arc[1];
       SequenceLength arclen =0;
       std::ifstream graphin( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
-      while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
-            graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
-        print_edge(std::cout, reads_ids, source, dest, arclen, opts.read_length);
+      if (opts.use_numeric_ids) {
+        while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
+              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
+          print_edge(std::cout,
+                     read_pref+boost::lexical_cast<std::string>(source),
+                     read_pref+boost::lexical_cast<std::string>(dest),
+                     arclen, opts.read_length);
+        }
+      } else {
+        while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
+              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
+          print_edge(std::cout, reads_ids[source], reads_ids[dest], arclen, opts.read_length);
+        }
       }
       graphin.close();
       std::cout.flush();
