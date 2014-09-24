@@ -41,7 +41,8 @@ print_vertex(std::ostream& out,
 void
 print_edge(std::ostream& out,
            const std::string& source_id, const std::string& dest_id,
-           const SequenceLength overlap, const SequenceLength readslen);
+           const SequenceLength overlap, const SequenceLength readslen,
+           const char reverse);
 
 
 #endif

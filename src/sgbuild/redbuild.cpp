@@ -56,6 +56,13 @@
 // no. of reads per bucket if not specified on the command line
 #define DEFAULT_BUCKET_LENGTH 1000000
 
+static inline char
+bool_2_mask(const bool first, const bool second)
+{
+  const char x = (((int)first) | (((int)second) << 1));
+  return x;
+}
+
 typedef InputMultiFileManager bucket_infilemanager_t;
 typedef OutputMultiFileManager bucket_outfilemanager_t;
 
@@ -87,9 +94,10 @@ struct graph_t
   const SequenceNumber base_vertex;
   nodes_t nodes;
   EndPosManager& eomgr;
+  const SequenceNumber no_of_reads;
 
-  graph_t(EndPosManager& eomgr_, const SequenceNumber n_vertices, const SequenceNumber base_vertex_=0)
-      :base_vertex(base_vertex_), nodes(n_vertices), eomgr(eomgr_)
+  graph_t(EndPosManager& eomgr_, const SequenceNumber n_vertices, const SequenceNumber nreads, const SequenceNumber base_vertex_=0)
+    :base_vertex(base_vertex_), nodes(n_vertices), eomgr(eomgr_), no_of_reads(nreads)
   {
   }
 
@@ -102,9 +110,14 @@ struct graph_t
     for(vector< QInterval >::const_iterator qint_it = labels.begin();
         qint_it != labels.end(); ++qint_it) {
       if (label <= *qint_it)
-        return false;
+        {
+          // INFO("Discarded an edge between " << source << " and " << dest);
+          return false;
+        }
     }
+    // INFO("Added an an edge between " << source << " and " << dest << " len " << (int) len);
     nodes[source-base_vertex].succs.push_back(dest);
+    // INFO("succs size is " << nodes[source-base_vertex].succs.size() << " for " << source);
     nodes[source-base_vertex].labels.push_back(label);
     nodes[source-base_vertex].lens.push_back(len);
     return true;
@@ -116,12 +129,24 @@ std::ostream& operator<<(std::ostream& out, const graph_t& graph) {
   SequenceNumber i= graph.base_vertex;
   for(graph_t::nodes_t::const_iterator it= graph.nodes.begin();
       it != graph.nodes.end(); ++it, ++i) {
-    const SequenceNumber reali= graph.eomgr.get_elem(i);
+    const SequenceNumber gathered_i= graph.eomgr.get_elem(i);
+    const bool reversei = (gathered_i >= graph.no_of_reads/2);
+    const SequenceNumber reali = reversei ? gathered_i - graph.no_of_reads/2 : gathered_i;
     for(SequenceNumber j =0; j < it->succs.size(); ++j) {
-      const SequenceNumber realsucc= graph.eomgr.get_elem(it->succs[j]);
-      out.write(reinterpret_cast<const char*>(&realsucc), sizeof(SequenceNumber));
-      out.write(reinterpret_cast<const char*>(&reali), sizeof(SequenceNumber));
-      out.write(reinterpret_cast<const char*>(&(it->lens[j])), sizeof(SequenceLength));
+      const SequenceNumber gathered_succ= graph.eomgr.get_elem(it->succs[j]);
+      const bool reversej = (gathered_succ >= graph.no_of_reads/2);
+      const SequenceNumber realsucc = reversej ? gathered_succ - graph.no_of_reads/2 : gathered_succ;
+// Edges of type 1->1 are equal to an edge 0->0 so we can discard them
+// Edges of type 0->1 s.t. the first index is greater of the
+// second are equal to an edge 1->0 s.t. the first index is
+// smaller of the second
+      if(realsucc < reali) {
+        const char reversed = bool_2_mask(reversej, reversei);
+        out.write(reinterpret_cast<const char*>(&realsucc), sizeof(SequenceNumber));
+        out.write(reinterpret_cast<const char*>(&reali), sizeof(SequenceNumber));
+        out.write(reinterpret_cast<const char*>(&(it->lens[j])), sizeof(SequenceLength));
+        out.write(reinterpret_cast<const char*>(&reversed), sizeof(char));
+      }
     }
   }
   return out;
@@ -217,10 +242,11 @@ void reduce_bucket(EndPosManager& eomgr,
                    std::ofstream& out_graph,
                    long& no_of_edges,
                    const SequenceNumber base_vertex,
-                   const SequenceNumber bucket_length) {
+                   const SequenceNumber bucket_length,
+                   const SequenceNumber no_of_reads) {
   LDEBUG("Reading and reducing bucket...");
 
-  graph_t graph(eomgr, bucket_length, base_vertex);
+  graph_t graph(eomgr, bucket_length, no_of_reads, base_vertex);
   SequenceNumber arc[4];
   BWTPosition label[2];
   SequenceLength l;
@@ -319,7 +345,7 @@ main(const int argc, const char** argv)
       std::ifstream in_bucketfile(opts.basename + ".tmplsg.bucket_" + n2str(bucket_number),
                                   std::ios::binary);
       const SequenceNumber bucket_length= std::min(no_of_reads, base_vertex+real_bucket_length)-base_vertex;
-      reduce_bucket(eomgr, in_bucketfile, out_graph, no_of_edges, base_vertex, bucket_length);
+      reduce_bucket(eomgr, in_bucketfile, out_graph, no_of_edges, base_vertex, bucket_length, no_of_reads);
       base_vertex += bucket_length;
 // Remove bucket file
       remove((opts.basename + ".tmplsg.bucket_" + n2str(bucket_number)).c_str());

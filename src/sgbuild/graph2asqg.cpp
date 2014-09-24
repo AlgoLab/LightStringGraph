@@ -187,20 +187,23 @@ main(const int argc, const char** argv)
       INFO("Writing edges...");
       SequenceNumber arc[2];
       SequenceNumber &source= arc[0], &dest= arc[1];
-      SequenceLength arclen =0;
+      SequenceLength arclen= 0;
+      char reversed= 0;
       std::ifstream graphin( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
       if (opts.use_numeric_ids) {
         while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
-              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
+              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)) &&
+              graphin.read(reinterpret_cast<char*>(&reversed), sizeof(char))) {
           print_edge(std::cout,
                      read_pref+boost::lexical_cast<std::string>(source),
                      read_pref+boost::lexical_cast<std::string>(dest),
-                     arclen, opts.read_length);
+                     arclen, opts.read_length, reversed);
         }
       } else {
         while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
-              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
-          print_edge(std::cout, reads_ids[source], reads_ids[dest], arclen, opts.read_length);
+              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)) &&
+              graphin.read(reinterpret_cast<char*>(&reversed), sizeof(char))) {
+          print_edge(std::cout, reads_ids[source], reads_ids[dest], arclen, opts.read_length, reversed);
         }
       }
       graphin.close();
