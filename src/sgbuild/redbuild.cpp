@@ -222,14 +222,26 @@ void multiplex_intervals(vector<std::ifstream*> in_arc_files,
 {
   SequenceNumber arc[4];
   BWTPosition label[2];
-  SequenceNumber &sourcebegin= arc[2];
+  SequenceNumber &sourcebegin= arc[2], &sourceend= arc[3];
+  SequenceNumber orig_sourceend;
 
   for(SequenceLength l(0); l < max_arc_length; ++l) {
     std::ifstream& in_arcfile= *in_arc_files[l];
     std::ifstream& in_labfile= *in_label_files[l];
     while (in_arcfile.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
            in_labfile.read(reinterpret_cast<char*>(&label), sizeof(label))) {
-      const size_t bucket_no= sourcebegin/max_bucket_length;
+      size_t bucket_no= sourcebegin/max_bucket_length;
+      orig_sourceend= sourceend;
+      sourceend= (bucket_no+1)*max_bucket_length;
+      while (sourceend<orig_sourceend) {
+        out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&arc), sizeof(arc));
+        out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&label), sizeof(label));
+        out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&l), sizeof(l));
+        sourcebegin= sourceend;
+        sourceend += max_bucket_length;
+        ++bucket_no;
+      }
+      sourceend= orig_sourceend;
       out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&arc), sizeof(arc));
       out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&label), sizeof(label));
       out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&l), sizeof(l));
@@ -255,6 +267,7 @@ void reduce_bucket(EndPosManager& eomgr,
   while (in_bucketfile.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
          in_bucketfile.read(reinterpret_cast<char*>(&label), sizeof(label)) &&
          in_bucketfile.read(reinterpret_cast<char*>(&l), sizeof(l))) {
+    _FAIL_IF((sourceend - base_vertex > bucket_length));
     for(SequenceNumber src= sourcebegin; src < sourceend; ++src) {
       for(SequenceNumber dst= destbegin; dst < destend; ++dst) {
         if (graph.add_edge(src, dst, QInterval(label[0], label[1]), l))
