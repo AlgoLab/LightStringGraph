@@ -55,6 +55,7 @@
 
 // no. of reads per bucket if not specified on the command line
 #define DEFAULT_BUCKET_LENGTH 1000000
+#define DEFAULT_HAS_REVERSE_READS true
 
 static inline char
 bool_2_mask(const bool first, const bool second)
@@ -95,9 +96,12 @@ struct graph_t
   nodes_t nodes;
   EndPosManager& eomgr;
   const SequenceNumber no_of_reads;
+  const bool has_reverse_reads;
 
-  graph_t(EndPosManager& eomgr_, const SequenceNumber n_vertices, const SequenceNumber nreads, const SequenceNumber base_vertex_=0)
-    :base_vertex(base_vertex_), nodes(n_vertices), eomgr(eomgr_), no_of_reads(nreads)
+  graph_t(EndPosManager& eomgr_, const SequenceNumber n_vertices, const SequenceNumber nreads,
+	  const SequenceNumber base_vertex_=0, const bool has_rev_reads_=DEFAULT_HAS_REVERSE_READS)
+    :base_vertex(base_vertex_), nodes(n_vertices), eomgr(eomgr_),
+     no_of_reads(nreads), has_reverse_reads(has_rev_reads_)
   {
   }
 
@@ -139,12 +143,12 @@ std::ostream& operator<<(std::ostream& out, const graph_t& graph) {
   for(graph_t::nodes_t::const_iterator it= graph.nodes.begin();
       it != graph.nodes.end(); ++it, ++i) {
     const SequenceNumber gathered_i= graph.eomgr.get_elem(i);
-    const bool reversei = (gathered_i >= graph.no_of_reads/2);
-    const SequenceNumber reali = reversei ? gathered_i - graph.no_of_reads/2 : gathered_i;
+    const bool reversei = (gathered_i >= graph.no_of_reads/ (graph.has_reverse_reads ? 2 : 1));
+    const SequenceNumber reali = reversei ? gathered_i - graph.no_of_reads/ (graph.has_reverse_reads ? 2 : 1) : gathered_i;
     for(SequenceNumber j =0; j < it->succs.size(); ++j) {
       const SequenceNumber gathered_succ= graph.eomgr.get_elem(it->succs[j]);
-      const bool reversej = (gathered_succ >= graph.no_of_reads/2);
-      const SequenceNumber realsucc = reversej ? gathered_succ - graph.no_of_reads/2 : gathered_succ;
+      const bool reversej = (gathered_succ >= graph.no_of_reads/ (graph.has_reverse_reads ? 2 : 1));
+      const SequenceNumber realsucc = reversej ? gathered_succ - graph.no_of_reads/(graph.has_reverse_reads ? 2 : 1) : gathered_succ;
 // Edges of type 1->1 are equal to an edge 0->0 so we can discard them
 // Edges of type 0->1 s.t. the first index is greater of the
 // second are equal to an edge 1->0 s.t. the first index is
@@ -170,11 +174,13 @@ show_usage(){
   std::cerr << " -b <basename> ";
   std::cerr << " -m <max_arc_length> ";
   std::cerr << " [-g <bucket_length>] ";
+  std::cerr << " [-r] ";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>        # (required)" << std::endl;
   std::cerr << "\t-m <max_arc_length>  # (required)" << std::endl;
   std::cerr << "\t[-g <bucket length>] # (optional) % default = " << DEFAULT_BUCKET_LENGTH << std::endl;
+  std::cerr << "\t[-r]                 # (optional) % default = " << DEFAULT_HAS_REVERSE_READS << std::endl;
   std::cerr << std::endl;
 }
 
@@ -183,12 +189,14 @@ struct options_t {
   std::string basename;
   SequenceLength max_arc_length;
   SequenceNumber max_bucket_length;
+  bool has_reverse_reads;
 
   options_t()
       :initialized(false),
        basename(""),
        max_arc_length(0),
-       max_bucket_length(DEFAULT_BUCKET_LENGTH)
+       max_bucket_length(DEFAULT_BUCKET_LENGTH),
+       has_reverse_reads(DEFAULT_HAS_REVERSE_READS)
   {};
 };
 
@@ -208,6 +216,8 @@ parse_cmds(const int argc, const char** argv)
       opts.basename= std::string(argv[++i]);
     else if(carg == "-m")
       opts.max_arc_length= atoi(argv[++i]);
+    else if(carg == "-r")
+      opts.has_reverse_reads= !DEFAULT_HAS_REVERSE_READS;
     else if(carg == "-g") {
       opts.max_bucket_length= atoi(argv[++i]);
       _FAIL_IF(opts.max_bucket_length==0);
