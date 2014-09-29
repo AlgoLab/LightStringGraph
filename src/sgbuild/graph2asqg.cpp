@@ -151,7 +151,7 @@ main(const int argc, const char** argv)
                           std::ios_base::binary);
   SequenceNumber tmp_ = 0;
   eomgr_tmp.read( reinterpret_cast<char*>(&tmp_), sizeof( SequenceNumber ) );
-  const SequenceNumber no_of_reads = tmp_;
+  const SequenceNumber no_of_reads = tmp_/2;
   eomgr_tmp.close();
 
   INFO("Building the string graph of " << no_of_reads << " reads.");
@@ -167,16 +167,17 @@ main(const int argc, const char** argv)
       INFO("Reading sequence IDs from the FASTA file (and writing vertices)...");
       gzFile fp= gzopen(opts.read_filename.c_str(), "r");
       kseq_t *seq= kseq_init(fp);
+      SequenceNumber seq_count= 0;
       if (opts.use_numeric_ids) {
-        SequenceNumber seq_count= 0;
-        while (kseq_read(seq) >= 0) {
+	while((kseq_read(seq) >= 0) && (seq_count < no_of_reads)) {
           print_vertex(std::cout, read_pref + boost::lexical_cast<std::string>(seq_count), seq->seq.s);
           ++seq_count;
         }
       } else {
-        while (kseq_read(seq) >= 0) {
+        while ((kseq_read(seq) >= 0) && (seq_count < no_of_reads)) {
           reads_ids.push_back(seq->name.s);
           print_vertex(std::cout, boost::lexical_cast<std::string>(seq->name.s), seq->seq.s);
+	  ++seq_count;
         }
       }
       kseq_destroy(seq);
@@ -194,6 +195,10 @@ main(const int argc, const char** argv)
         while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
               graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)) &&
               graphin.read(reinterpret_cast<char*>(&reversed), sizeof(char))) {
+	  if(source >= no_of_reads)
+	    source /=2;
+	  if(dest >= no_of_reads)
+	    dest /=2;
           print_edge(std::cout,
                      read_pref+boost::lexical_cast<std::string>(source),
                      read_pref+boost::lexical_cast<std::string>(dest),
@@ -203,6 +208,10 @@ main(const int argc, const char** argv)
         while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
               graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)) &&
               graphin.read(reinterpret_cast<char*>(&reversed), sizeof(char))) {
+	  if(source >= no_of_reads)
+	    source /=2;
+	  if(dest >= no_of_reads)
+	    dest /=2;
           print_edge(std::cout, reads_ids[source], reads_ids[dest], arclen, opts.read_length, reversed);
         }
       }
