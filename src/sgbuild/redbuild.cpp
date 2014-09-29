@@ -109,9 +109,8 @@ struct graph_t
     const vector< QInterval >& labels= nodes[source-base_vertex].labels;
     for(vector< QInterval >::const_iterator qint_it = labels.begin();
         qint_it != labels.end(); ++qint_it) {
-      if (label <= *qint_it)
+      if ((label <= *qint_it) || (same_node(source, dest)))
         {
-          // INFO("Discarded an edge between " << source << " and " << dest);
           return false;
         }
     }
@@ -121,6 +120,16 @@ struct graph_t
     nodes[source-base_vertex].labels.push_back(label);
     nodes[source-base_vertex].lens.push_back(len);
     return true;
+  }
+
+  bool
+  same_node(const SequenceNumber& source,
+	    const SequenceNumber& dest)
+  {
+    if(((source >=  no_of_reads) && (source == dest -no_of_reads)) ||
+       ((dest >= no_of_reads) && (dest == source - no_of_reads)))
+      return true;
+    return false;
   }
 
 };
