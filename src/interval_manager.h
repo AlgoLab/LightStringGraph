@@ -42,24 +42,17 @@
 using std::vector;
 using std::string;
 
-// Class that lets you read and save intervals from and to files.
-
-template< class interval_t > class IntervalManager
+template< class interval_t > class IntervalManagerI
 {
-private:
+protected:
   vector< string >                          _filenames;     // Input filenames
   unsigned short                            _nextInputFile; // Index of next file to open in _filenames
   std::ifstream*                            _inputFile;       // Current input stream
   vector< std::ofstream* >                  _outputFiles;       // New intervals (interval_t) will be
-  vector< interval_t* >                     _buffer;        // current intervals
-  typename vector< interval_t* >::iterator  _nextInterval;     // next interval in buffer
 
 public:
 
-  // Instantiate a Manager over filenames files
-  // TODO: create a new constructor that accept a prefix (string) and
-  //  an int and automagically creates the vector
-  IntervalManager( vector< string >& filenames )
+  IntervalManagerI(vector< string >& filenames)
   {
     if ( filenames.size( ) == 0 )
       {
@@ -97,12 +90,9 @@ public:
         _MY_FAIL;
       }
     _nextInputFile = 0;
-    _populate_buffer( );
-    _init_new_outputfiles( );
-  } // IntervalManager
+  }
 
-  // Destructor
-  ~IntervalManager( )
+  virtual ~IntervalManagerI()
   {
     for ( vector< std::ofstream* >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( ); ++it )
@@ -117,24 +107,15 @@ public:
         delete _inputFile;
         _inputFile = NULL;
       }
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        delete (*it);
-        (*it) = NULL;
-      }
-
     for( typename vector< string >::iterator it = _filenames.begin();
          it != _filenames.end(); ++it)
       {
         remove((*it).c_str());
         remove( std::string((*it) + "_next").c_str());
       }
-  } // ~IntervalManager
+  }
 
-  // Delete current intervals, move files from output to input and create new
-  // output files
-  void swap_files( )
+  virtual void swap_files()
   {
     if( _inputFile != NULL )
       {
@@ -171,7 +152,51 @@ public:
     _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
     _nextInputFile = 1;
     _populate_buffer( );
-  } // swap_files
+  }
+
+  virtual interval_t* get_next_interval() =0;
+  virtual bool add_interval(const interval_t& i, const Nucleotide n) =0;
+
+  // Return _nextInputFile
+  unsigned short get_next_input_file( )
+  {
+    return _nextInputFile;
+  }
+
+protected:
+  virtual void _populate_buffer() =0;
+  virtual void _init_new_outputfiles() =0;
+};
+
+template< class interval_t > class IntervalManager
+  : public IntervalManagerI< interval_t >
+{
+private:
+  vector< interval_t* >                     _buffer;        // current intervals
+  typename vector< interval_t* >::iterator  _nextInterval;     // next interval in buffer
+
+public:
+
+  // Instantiate a Manager over filenames files
+  // TODO: create a new constructor that accept a prefix (string) and
+  //  an int and automagically creates the vector
+  IntervalManager( vector< string >& filenames )
+    : IntervalManagerI<interval_t>(filenames)
+  {
+    _populate_buffer( );
+    _init_new_outputfiles( );
+  } // IntervalManager
+
+  // Destructor
+  ~IntervalManager( )
+  {
+    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
+         it != _buffer.end( ); ++it )
+      {
+        delete (*it);
+        (*it) = NULL;
+      }
+  } // ~IntervalManager
 
   // Get next interval. If no intervals are left, return NULL
   interval_t* get_next_interval ( )
@@ -187,38 +212,19 @@ public:
   // Append i to outputfile[ n ]
   bool add_interval ( const interval_t& i, const Nucleotide n )
   {
-    if ( (unsigned int) n >= _outputFiles.size() )
+    if ( (unsigned int) n >= this->_outputFiles.size() )
       {
         DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
-    (*(_outputFiles[ (int) n ])) << i;
+    (*(this->_outputFiles[ (int) n ])) << i;
     // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
     return true;
   } // add_interval
 
-  // Return _nextInputFile
-  unsigned short get_next_input_file( )
-  {
-    return _nextInputFile;
-  }
-
-private:
-  // Initalize new output files
-  void _init_new_outputfiles ( )
-  {
-    for ( vector< string >::iterator it = _filenames.begin( ); it != _filenames.end( );
-          ++it)
-      {
-        std::ostringstream outfilename;
-        outfilename << (*it) << "_next";
-        _outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
-                                                   std::ios::binary | std::ios::app) );
-      }
-  } // _init_new_outputfiles
-
+protected:
   // Read new intervals and store them in _buffer
-  void _populate_buffer()
+  virtual void _populate_buffer()
   {
     for( typename vector< interval_t* >::iterator it = _buffer.begin( );
          it != _buffer.end( ); ++it )
@@ -230,15 +236,15 @@ private:
 
     interval_t* i = NULL;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           ( ( _inputFile && ((*_inputFile) >> i ) ) || ( _nextInputFile < _filenames.size( ) ) ) )
+           ( ( this->_inputFile && ((*(this->_inputFile)) >> i ) ) || ( this->_nextInputFile < this->_filenames.size( ) ) ) )
       {
         if( i == NULL )
           {
             // end of file
-            _inputFile->close( );
-            delete _inputFile;
-            _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
-                                            std::ios::binary );
+            this->_inputFile->close( );
+            delete this->_inputFile;
+            this->_inputFile = new std::ifstream( this->_filenames[ this->_nextInputFile++ ].c_str( ),
+                                                  std::ios::binary );
           }
         else
           {
@@ -247,60 +253,179 @@ private:
           }
       }
     _nextInterval = _buffer.begin( );
-    // // TODO: Refactor this method, there are too many nested if/else
-    // bool isThereMore = true;
-    // while ( _buffer.size() < BUFFERSIZE && isThereMore)
-    //   {
-    //    if( _inputFile != NULL && _inputFile->eof() )
-    //      {
-    //        _inputFile->close();
-    //        delete _inputFile;
-    //        if( _nextInputFile < _filenames.size() )
-    //          {
-    //      _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str( ),
-    //              std::ios::binary );
-    //      // ++_nextInputFile;
-    //          }
-    //        else
-    //          {
-    //      _inputFile = NULL;
-    //          }
-    //      }
-    //    else
-    //      {
-    //        if( _inputFile != NULL )
-    //          {
-    //      interval_t* intervalRead = new interval_t();
-    //      _inputFile->read( (char *) intervalRead, sizeof( interval_t ) );
-    //      isThereMore = ( _inputFile->gcount() > 0 ) ? true : false ;
-    //      if( !isThereMore )
-    //        {
-    //          delete intervalRead;
-    //          _inputFile->close();
-    //          delete _inputFile;
-    //          _inputFile = NULL;
-    //          // ++_nextInputFile;
-    //          if( _nextInputFile < _filenames.size() )
-    //            {
-    //        _inputFile = new std::ifstream( _filenames[ _nextInputFile++ ].c_str(),
-    //                std::ios::binary );
-    //        isThereMore = true;
-    //            }
-    //        }
-    //      else
-    //        {
-    //          _buffer.push_back( intervalRead );
-    //        }
-    //          }
-    //        else
-    //          {
-    //      isThereMore = false;
-    //          }
-    //      }
-    //   }
-    // _nextInterval = _buffer.begin( );
   }
 
+  virtual void _init_new_outputfiles()
+  {
+    for ( vector< string >::iterator it = this->_filenames.begin( ); it != this->_filenames.end( );
+          ++it)
+      {
+        std::ostringstream outfilename;
+        outfilename << (*it) << "_next";
+        this->_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
+                                                         std::ios::binary | std::ios::app) );
+      }
+  }
+};
+
+
+// Class that lets you read and save intervals from and to files.
+
+template< class interval_t > class IntervalManagerRLE
+  : public IntervalManagerI< interval_t >
+{
+private:
+  struct IntervalRun {
+    interval_t* _interval; // Interval
+    long        _mult;     // Multiplicity
+
+    IntervalRun() : _interval(NULL), _mult(0) {};
+    IntervalRun(interval_t* t) : _interval(t), _mult(1) {};
+    IntervalRun(interval_t* t, long mult) : _interval(t), _mult(mult) {};
+  };
+
+  vector< IntervalRun >                     _buffer;        // current intervals
+  typename vector< IntervalRun >::iterator  _nextInterval;     // next interval in buffer
+  vector< IntervalRun >                     _outIntervals;  // Buffer for intervals to store in external memory
+
+public:
+
+  // Instantiate a Manager over filenames files
+  // TODO: create a new constructor that accept a prefix (string) and
+  //  an int and automagically creates the vector
+  IntervalManagerRLE( vector< string >& filenames )
+    : IntervalManagerI<interval_t>(filenames)
+  {
+    _outIntervals = vector< IntervalRun >(ALPHABET_SIZE);
+    _populate_buffer( );
+    _init_new_outputfiles( );
+  } // IntervalManager
+
+  // Destructor
+  ~IntervalManagerRLE()
+  {
+    for( typename vector< IntervalRun >::iterator it = _buffer.begin( );
+         it != _buffer.end( ); ++it )
+      {
+        delete it->_interval;
+        it->_interval = NULL;
+      }
+  } // ~IntervalManager
+
+  // Delete current intervals, move files from output to input and create new
+  // output files
+  virtual void swap_files( )
+  {
+    for(int n = BASE_A; n != ALPHABET_SIZE; n++)
+      {
+        if(_outIntervals[n]._mult !=0)
+          {
+            (*(this->_outputFiles[n])) << *(this->_outIntervals[n]._interval);
+            (*(this->_outputFiles[n])).write((char*)&(this->_outIntervals[n]._mult), sizeof(long));
+          }
+      }
+    IntervalManagerI<interval_t>::swap_files();
+  } // swap_files
+
+  // Get next interval. If no intervals are left, return NULL
+  interval_t* get_next_interval ( )
+  {
+    if(_nextInterval == _buffer.end( ) )
+      {
+        _populate_buffer( );
+      }
+    interval_t* i = NULL;
+    if(_buffer.size() == 0)
+      i = NULL;
+    else
+      {
+        i = _nextInterval->_interval;
+        if(--(_nextInterval->_mult) == 0)
+          _nextInterval++;
+      }
+    return i;
+  } // get_next_interval
+
+  // Append i to outputfile[ n ]
+  bool add_interval ( const interval_t& i, const Nucleotide n )
+  {
+    if ( (unsigned int) n >= this->_outputFiles.size() )
+      {
+        DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
+        return false;
+      }
+    if(_outIntervals[n]._interval == NULL)
+      {
+        interval_t* t = new interval_t(i);
+        _outIntervals[n] = IntervalRun(t);
+      }
+    else if(i == *(_outIntervals[n]._interval))
+        ++(_outIntervals[n]._mult);
+    else
+      {
+        (*(this->_outputFiles[(int) n])) << *(_outIntervals[n]._interval);
+        (*(this->_outputFiles[(int) n])).write((char *)&(_outIntervals[n]._mult), sizeof(long));
+        delete (_outIntervals[n]._interval);
+        interval_t* t = new interval_t(i);
+        _outIntervals[n] = IntervalRun(t);
+      }
+    return true;
+  } // add_interval
+
+protected:
+  // Initalize new output files
+  virtual void _init_new_outputfiles( )
+  {
+    for ( vector< string >::iterator it = this->_filenames.begin( ); it != this->_filenames.end( );
+          ++it)
+      {
+        std::ostringstream outfilename;
+        outfilename << (*it) << "_next";
+        this->_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
+                                                         std::ios::binary | std::ios::app) );
+      }
+    for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
+      {
+        if(_outIntervals[n]._interval != NULL)
+          delete (_outIntervals[n]._interval);
+        _outIntervals[n] = IntervalRun();
+      }
+  } // _init_new_outputfiles
+
+  // Read new intervals and store them in _buffer
+  virtual void _populate_buffer()
+  {
+    for(typename vector< IntervalRun >::iterator it = _buffer.begin();
+        it != _buffer.end(); ++it)
+      {
+        if(it->_interval != NULL)
+          delete it->_interval;
+      }
+    _buffer.clear( );
+
+    interval_t* i = NULL;
+    long runlength =0;
+    while( _buffer.size( ) < IM_BUFFERSIZE &&
+           (( this->_inputFile && ((*(this->_inputFile)) >> i ) && ((*(this->_inputFile)).read((char *)&runlength, sizeof(long)))) ||
+            ( this->_nextInputFile < this->_filenames.size( ))))
+      {
+        if( i == NULL )
+          {
+            // end of file
+            this->_inputFile->close( );
+            delete this->_inputFile;
+            this->_inputFile = new std::ifstream( this->_filenames[ this->_nextInputFile++ ].c_str( ),
+                                                  std::ios::binary );
+          }
+        else
+          {
+            IntervalRun x(i, runlength);
+            _buffer.push_back( x );
+            i = NULL;
+          }
+      }
+    _nextInterval = _buffer.begin( );
+  }
 };
 
 #endif

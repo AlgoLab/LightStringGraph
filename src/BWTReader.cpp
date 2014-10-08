@@ -56,24 +56,6 @@ BWTReader::BWTReader ( const vector< string >& filenamesIN )
 
 }
 
-bool BWTReader::move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos )
-{
-  for( BWTPosition i = _currentBWT->get_position(); i < p; ++i )
-    {
-      if( move_to( i ) )
-        {
-          if( _currentBWT->get_current_nucleotide_char() == CHAR_BASE_$  )
-            {
-              prefixpos.push_back( i );
-            }
-        }
-      else
-        return false;
-    }
-  return move_to( p );
-}
-
-
 bool BWTReader::move_to ( const BWTPosition & p )
 {
   while( !_currentBWT->move_to( p ) )

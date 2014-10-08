@@ -29,15 +29,25 @@
 
 void
 print_vertex(std::ostream& out,
-             const char* name, const char* seq) {
+             const std::string& name, const char* seq) {
   out << "VT\t" << name << '\t' << seq << '\n';
+}
+
+static void
+print_entry(std::ostream& out,
+	    const SequenceLength start, const SequenceLength end,
+	    const SequenceLength lenseq)
+{
+  out << PRINT_SL(start) << ' '
+      << PRINT_SL(end) << ' '
+      << PRINT_SL(lenseq) << ' ';
 }
 
 void
 print_edge(std::ostream& out,
-           const std::vector< std::string >& ids,
-           const SequenceNumber source, const SequenceNumber dest,
-           const SequenceLength overlap, const SequenceLength readslen) {
+           const std::string& source_id, const std::string& dest_id,
+           const SequenceLength overlap, const SequenceLength readslen,
+           const char reverse) {
   // Fields:
   // 0.  string ED
   // 1.  sequence 1 name
@@ -50,14 +60,22 @@ print_edge(std::ostream& out,
   // 8.  sequence 2 length
   // 9.  sequence 2 orientation (1 for reversed with respect to sequence 1)
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
+  const bool reverse_source = (reverse & 0b1);
+  const bool reverse_dest   = (reverse & 0b10);
   out << "ED "
-      << ids[source] << ' '
-      << ids[dest] << ' '
-      << overlap << ' '
-      << readslen-1 << ' '
-      << readslen << ' '
-      << "0 "
-      << readslen - overlap - 1 << ' '
-      << readslen << ' '
-      << "0 0\n";
+      << source_id << ' '
+      << dest_id << ' ';
+  if(!reverse_source)
+    print_entry(out, overlap, readslen -1, readslen);
+  else
+    print_entry(out, 0, readslen - overlap -1, readslen);
+  if(reverse_dest)
+    print_entry(out, overlap, readslen -1, readslen);
+  else
+    print_entry(out, 0, readslen - overlap -1, readslen);
+
+  if(reverse_source ^ reverse_dest)
+    out << "1 0" << std::endl;
+  else
+    out << "0 0" << std::endl;
 }

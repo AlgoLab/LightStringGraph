@@ -73,8 +73,7 @@ public:
 
   // Equality operator
   bool operator==(const QInterval& rhs ) const {
-    return (_begin == rhs._begin &&
-            _end == rhs._end);
+    return (this->_begin == rhs._begin && this->_end == rhs._end);
   }
 
   // Inequality operator

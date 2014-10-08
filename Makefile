@@ -37,6 +37,9 @@ endif
 # Used for reading the BWT file
 #
 HAS_ZLIB:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lz 2> /dev/null && echo yes || echo no)/
+ifneq ($(HAS_ZLIB), /yes/)
+$(error zlib not found)
+endif
 #####################
 
 #####################
@@ -52,17 +55,11 @@ DEFINES = -DBUFFERSIZE=${BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
 
 CFLAGS	= -g -Wall ${DEFINES} ${DEBUGDEF} ${OPTDEF} -Wno-deprecated -std=gnu++0x -I. -I$(SRC_DIR) #-fopenmp
 CXXFLAGS= ${CFLAGS}
-LIBS 	= #
+LIBS 	= -lz
 
 ifeq ($(HAS_TCMALLOC), /yes/)
 $(info Using TCMalloc)
 LIBS+=-ltcmalloc_minimal
-endif
-
-ifeq ($(HAS_ZLIB), /yes/)
-$(info Using zlib)
-DEFINES+=-DHAS_ZLIB
-LIBS+=-lz
 endif
 
 ifeq ($(HAS_BOOST_IOSTREAMS), /yes/)
@@ -76,19 +73,8 @@ endif
 endif
 
 
-BGSA_DEP= $(OBJ_DIR)partialBWTReader.o \
-	$(OBJ_DIR)BWTReader.o \
-	$(OBJ_DIR)util.o \
-	$(OBJ_DIR)joined_q_interval.o \
-	$(OBJ_DIR)edge_joined_interval.o \
-	$(OBJ_DIR)edgeLabelInterval.o \
-	$(OBJ_DIR)bgsa/bgsa.o
-
 LSG_DEP= $(OBJ_DIR)BWTReader.o \
-	$(OBJ_DIR)partialLCPReader.o \
-	$(OBJ_DIR)LCPReader.o \
 	$(OBJ_DIR)LCPIterator.o \
-	$(OBJ_DIR)GSAReader.o \
 	$(OBJ_DIR)GSAIterator.o \
 	$(OBJ_DIR)search.o \
 	$(OBJ_DIR)util.o \
@@ -98,9 +84,6 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)edgeLabelInterval.o \
 	$(OBJ_DIR)lsg/lsg.o
 
-SGBUILD_DEP= $(OBJ_DIR)sgbuild/sgbuild.o \
-	$(OBJ_DIR)edgeLabelInterval.o
-
 REDBUILD_DEP= $(OBJ_DIR)sgbuild/redbuild.o \
 	$(OBJ_DIR)edgeLabelInterval.o
 
@@ -109,7 +92,7 @@ GRAPH2ASQG_DEP= $(OBJ_DIR)sgbuild/graph2asqg.o \
 	$(OBJ_DIR)edgeLabelInterval.o
 
 .PHONY: all
-all: lsg bgsa sgbuild redbuild graph2asqg
+all: lsg redbuild graph2asqg
 
 ${OBJ_DIR}%.o: $(SRC_DIR)%.cpp
 	@echo '* Compiling $<'
@@ -127,26 +110,6 @@ $(BIN_DIR)lsg: $(LSG_DEP)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) \
 	-o $@ $^ $(LIBS)
-
-.PHONY: bgsa
-bgsa: $(BIN_DIR)bgsa
-	@echo '* $@ OK!'
-
-$(BIN_DIR)bgsa: $(BGSA_DEP)
-	@echo '* Linking $@'
-	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) \
-	-o $@ $^ $(LIBS)
-
-.PHONY: sgbuild
-sgbuild: $(BIN_DIR)sgbuild
-	@echo '* $@ OK!'
-
-$(BIN_DIR)sgbuild: $(SGBUILD_DEP)
-	@echo '* Linking $@'
-	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) \
-	-o $@ $^ $(LIBS) $(LDFLAGS)
 
 .PHONY: redbuild
 redbuild: $(BIN_DIR)redbuild

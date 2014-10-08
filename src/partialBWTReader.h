@@ -35,11 +35,7 @@
 #include <string>
 #include <cstdlib>
 
-#ifdef HAS_ZLIB
 #include <zlib.h>
-#else
-#include <cstdio>
-#endif
 
 #include "types.h"
 #include "util.h"
@@ -53,11 +49,7 @@ using std::string;
 class partialBWTReader
 {
 private:
-#ifdef HAS_ZLIB
   gzFile         _fileIn;         // File from which we want to read;
-#else
-  FILE*          _fileIn;         // File from which we want to read;
-#endif
   char* const    _buffer;         // Current buffer
   BWTPosition    _start;          // Buffer start position in BWT
   BWTPosition    _position;       // Position reached within the buffer
@@ -75,11 +67,7 @@ public:
   ~partialBWTReader ( ) {
     delete[] _buffer;
     if (_fileIn != NULL) {
-#ifdef HAS_ZLIB
       gzclose(_fileIn);
-#else
-      fclose(_fileIn);
-#endif
     }
   }
 

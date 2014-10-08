@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cassert>
+#include <boost/lexical_cast.hpp>
 
 #include <zlib.h>
 #include "kseq.h"
@@ -62,13 +63,15 @@ void
 show_usage(){
   std::cerr << "Usage: graph2asqg ";
   std::cerr << " -b <basename> ";
-  std::cerr << " -r <read_filename> ";
+  std::cerr << " [-r <read_filename>] ";
   std::cerr << " -l <read_length> ";
+  std::cerr << " [-n]";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>        # (required)" << std::endl;
-  std::cerr << "\t-r <read_filename>   # (required) " << std::endl;
+  std::cerr << "\t-r <read_filename>   # (optional, default: <basename>) " << std::endl;
   std::cerr << "\t-l <read_length>     # (required) " << std::endl;
+  std::cerr << "\t-n                   # (optional) use numeric IDs instead of FASTA IDs" << std::endl;
   std::cerr << std::endl;
 }
 
@@ -78,13 +81,15 @@ struct options_t {
   std::string read_filename;
   SequenceLength max_arc_length;
   SequenceLength read_length;
+  bool use_numeric_ids;
 
   options_t()
       :initialized(false),
        basename(""),
        read_filename(""),
        max_arc_length(0),
-       read_length(0)
+       read_length(0),
+       use_numeric_ids(false)
   {};
 };
 
@@ -94,10 +99,7 @@ parse_cmds(const int argc, const char** argv)
 {
   options_t opts;
   opts.initialized= false;
-  if(argc < 7) {
-    show_usage();
-    return opts;
-  }
+
   for(int i=1; i<argc; ++i) {
     const std::string carg(argv[i]);
     if(carg == "-b")
@@ -106,11 +108,22 @@ parse_cmds(const int argc, const char** argv)
       opts.read_filename= std::string(argv[++i]);
     else if(carg == "-l")
       opts.read_length= atoi(argv[++i]);
+    else if(carg == "-n")
+      opts.use_numeric_ids= true;
     else {
       ERROR("Can't parse argument: " << argv[i]);
       show_usage();
       return opts;
     }
+  }
+
+  if (opts.read_filename == "") {
+    opts.read_filename= opts.basename;
+  }
+
+  if (opts.read_filename == "" || opts.read_length == 0) {
+    show_usage();
+    return opts;
   }
 
   opts.initialized= true;
@@ -129,29 +142,43 @@ main(const int argc, const char** argv)
   INFO("graph2asqg - Starting...");
   INFO("Basename      : " << opts.basename);
   INFO("Reads file    : " << opts.read_filename);
-  INFO("Reads length  : " << opts.read_length);
+  INFO("Reads length  : " << PRINT_SL(opts.read_length));
+  INFO("Read IDs      : " << (opts.use_numeric_ids? "numeric" : "fasta"));
 
   LDEBUG("Getting the number of reads...");
 // Get the number of reads
-  std::ifstream pmgr_tmp((opts.basename + ".outlsg.lexorder").c_str(),
-                         std::ios_base::binary);
-  pmgr_tmp.seekg(0, std::ios_base::end);
-  const SequenceNumber no_of_reads = pmgr_tmp.tellg()/sizeof(SequenceNumber);
-  pmgr_tmp.close();
+  std::ifstream eomgr_tmp((opts.basename + "-end-pos").c_str(),
+                          std::ios_base::binary);
+  SequenceNumber tmp_ = 0;
+  eomgr_tmp.read( reinterpret_cast<char*>(&tmp_), sizeof( SequenceNumber ) );
+  const SequenceNumber no_of_reads = tmp_/2;
+  eomgr_tmp.close();
 
   INFO("Building the string graph of " << no_of_reads << " reads.");
 
   INFO("Writing the string graph in ASQG format...");
   {
+    const std::string read_pref= "r";
     vector< string > reads_ids;
-    reads_ids.reserve(no_of_reads);
+    if (!opts.use_numeric_ids) {
+      reads_ids.reserve(no_of_reads);
+    }
     {
       INFO("Reading sequence IDs from the FASTA file (and writing vertices)...");
       gzFile fp= gzopen(opts.read_filename.c_str(), "r");
       kseq_t *seq= kseq_init(fp);
-      while (kseq_read(seq) >= 0) {
-        reads_ids.push_back(seq->name.s);
-        print_vertex(std::cout, seq->name.s, seq->seq.s);
+      SequenceNumber seq_count= 0;
+      if (opts.use_numeric_ids) {
+	while((kseq_read(seq) >= 0) && (seq_count < no_of_reads)) {
+          print_vertex(std::cout, read_pref + boost::lexical_cast<std::string>(seq_count), seq->seq.s);
+          ++seq_count;
+        }
+      } else {
+        while ((kseq_read(seq) >= 0) && (seq_count < no_of_reads)) {
+          reads_ids.push_back(seq->name.s);
+          print_vertex(std::cout, boost::lexical_cast<std::string>(seq->name.s), seq->seq.s);
+	  ++seq_count;
+        }
       }
       kseq_destroy(seq);
       gzclose(fp);
@@ -161,11 +188,32 @@ main(const int argc, const char** argv)
       INFO("Writing edges...");
       SequenceNumber arc[2];
       SequenceNumber &source= arc[0], &dest= arc[1];
-      SequenceLength arclen =0;
+      SequenceLength arclen= 0;
+      char reversed= 0;
       std::ifstream graphin( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
-      while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
-            graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength))) {
-        print_edge(std::cout, reads_ids, source, dest, arclen, opts.read_length);
+      if (opts.use_numeric_ids) {
+        while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
+              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)) &&
+              graphin.read(reinterpret_cast<char*>(&reversed), sizeof(char))) {
+	  if(source >= no_of_reads)
+	    source /=2;
+	  if(dest >= no_of_reads)
+	    dest /=2;
+          print_edge(std::cout,
+                     read_pref+boost::lexical_cast<std::string>(source),
+                     read_pref+boost::lexical_cast<std::string>(dest),
+                     arclen, opts.read_length, reversed);
+        }
+      } else {
+        while(graphin.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
+              graphin.read(reinterpret_cast<char*>(&arclen), sizeof(SequenceLength)) &&
+              graphin.read(reinterpret_cast<char*>(&reversed), sizeof(char))) {
+	  if(source >= no_of_reads)
+	    source /=2;
+	  if(dest >= no_of_reads)
+	    dest /=2;
+          print_edge(std::cout, reads_ids[source], reads_ids[dest], arclen, opts.read_length, reversed);
+        }
       }
       graphin.close();
       std::cout.flush();

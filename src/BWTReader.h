@@ -76,13 +76,6 @@ public:
   // - false otherwise
   bool move_to ( const BWTPosition& p );
 
-  // Move to position p in this BWT, update nucleotide occurrences accordingly, and save
-  // indexes of the occurrences of BASE_$ in prefixpos.
-  // Return value:
-  // - true if p can be reached
-  // - false otherwise
-  bool move_to_storing_sent( BWTPosition p, BWTPExtVect& prefixpos );
-
   // Return PI vector (occurrences of every nucleotide before current position).
   const vector< NucleoCounter >& get_Pi ( ) const {
     return _currentBWT->get_Pi ( );

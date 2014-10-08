@@ -34,7 +34,7 @@
 
 #include "types.h"
 #include "util.h"
-#include "PrefixManager.h"
+#include "EndPosManager.h"
 #include "edgeLabelInterval.h"
 
 
@@ -55,6 +55,14 @@
 
 // no. of reads per bucket if not specified on the command line
 #define DEFAULT_BUCKET_LENGTH 1000000
+#define DEFAULT_HAS_REVERSE_READS true
+
+static inline char
+bool_2_mask(const bool first, const bool second)
+{
+  const char x = (((int)first) | (((int)second) << 1));
+  return x;
+}
 
 typedef InputMultiFileManager bucket_infilemanager_t;
 typedef OutputMultiFileManager bucket_outfilemanager_t;
@@ -86,10 +94,14 @@ struct graph_t
 
   const SequenceNumber base_vertex;
   nodes_t nodes;
-  PrefixManager& pmgr;
+  EndPosManager& eomgr;
+  const SequenceNumber no_of_reads;
+  const bool has_reverse_reads;
 
-  graph_t(PrefixManager& pmgr_, const SequenceNumber n_vertices, const SequenceNumber base_vertex_=0)
-      :base_vertex(base_vertex_), nodes(n_vertices), pmgr(pmgr_)
+  graph_t(EndPosManager& eomgr_, const SequenceNumber n_vertices, const SequenceNumber nreads,
+	  const SequenceNumber base_vertex_=0, const bool has_rev_reads_=DEFAULT_HAS_REVERSE_READS)
+    :base_vertex(base_vertex_), nodes(n_vertices), eomgr(eomgr_),
+     no_of_reads(nreads), has_reverse_reads(has_rev_reads_)
   {
   }
 
@@ -101,13 +113,27 @@ struct graph_t
     const vector< QInterval >& labels= nodes[source-base_vertex].labels;
     for(vector< QInterval >::const_iterator qint_it = labels.begin();
         qint_it != labels.end(); ++qint_it) {
-      if (label <= *qint_it)
-        return false;
+      if ((label <= *qint_it) || (same_node(source, dest)))
+        {
+          return false;
+        }
     }
+    // INFO("Added an an edge between " << source << " and " << dest << " len " << (int) len);
     nodes[source-base_vertex].succs.push_back(dest);
+    // INFO("succs size is " << nodes[source-base_vertex].succs.size() << " for " << source);
     nodes[source-base_vertex].labels.push_back(label);
     nodes[source-base_vertex].lens.push_back(len);
     return true;
+  }
+
+  bool
+  same_node(const SequenceNumber& source,
+	    const SequenceNumber& dest)
+  {
+    if(((source >=  no_of_reads) && (source == dest -no_of_reads)) ||
+       ((dest >= no_of_reads) && (dest == source - no_of_reads)))
+      return true;
+    return false;
   }
 
 };
@@ -116,12 +142,24 @@ std::ostream& operator<<(std::ostream& out, const graph_t& graph) {
   SequenceNumber i= graph.base_vertex;
   for(graph_t::nodes_t::const_iterator it= graph.nodes.begin();
       it != graph.nodes.end(); ++it, ++i) {
-    const SequenceNumber reali= graph.pmgr.get_elem(i);
+    const SequenceNumber gathered_i= graph.eomgr.get_elem(i);
+    const bool reversei = (gathered_i >= graph.no_of_reads/ (graph.has_reverse_reads ? 2 : 1));
+    const SequenceNumber reali = reversei ? gathered_i - graph.no_of_reads/ (graph.has_reverse_reads ? 2 : 1) : gathered_i;
     for(SequenceNumber j =0; j < it->succs.size(); ++j) {
-      const SequenceNumber realsucc= graph.pmgr.get_elem(it->succs[j]);
-      out.write(reinterpret_cast<const char*>(&realsucc), sizeof(SequenceNumber));
-      out.write(reinterpret_cast<const char*>(&reali), sizeof(SequenceNumber));
-      out.write(reinterpret_cast<const char*>(&(it->lens[j])), sizeof(SequenceLength));
+      const SequenceNumber gathered_succ= graph.eomgr.get_elem(it->succs[j]);
+      const bool reversej = (gathered_succ >= graph.no_of_reads/ (graph.has_reverse_reads ? 2 : 1));
+      const SequenceNumber realsucc = reversej ? gathered_succ - graph.no_of_reads/(graph.has_reverse_reads ? 2 : 1) : gathered_succ;
+// Edges of type 1->1 are equal to an edge 0->0 so we can discard them
+// Edges of type 0->1 s.t. the first index is greater of the
+// second are equal to an edge 1->0 s.t. the first index is
+// smaller of the second
+      if(realsucc < reali) {
+        const char reversed = bool_2_mask(reversej, reversei);
+        out.write(reinterpret_cast<const char*>(&realsucc), sizeof(SequenceNumber));
+        out.write(reinterpret_cast<const char*>(&reali), sizeof(SequenceNumber));
+        out.write(reinterpret_cast<const char*>(&(it->lens[j])), sizeof(SequenceLength));
+        out.write(reinterpret_cast<const char*>(&reversed), sizeof(char));
+      }
     }
   }
   return out;
@@ -136,11 +174,13 @@ show_usage(){
   std::cerr << " -b <basename> ";
   std::cerr << " -m <max_arc_length> ";
   std::cerr << " [-g <bucket_length>] ";
+  std::cerr << " [-r] ";
   std::cerr << std::endl;
   std::cerr << std::endl << "Parameters:" << std::endl;
   std::cerr << "\t-b <basename>        # (required)" << std::endl;
   std::cerr << "\t-m <max_arc_length>  # (required)" << std::endl;
   std::cerr << "\t[-g <bucket length>] # (optional) % default = " << DEFAULT_BUCKET_LENGTH << std::endl;
+  std::cerr << "\t[-r]                 # (optional) % default = " << DEFAULT_HAS_REVERSE_READS << std::endl;
   std::cerr << std::endl;
 }
 
@@ -148,13 +188,15 @@ struct options_t {
   bool initialized;
   std::string basename;
   SequenceLength max_arc_length;
-  SequenceLength max_bucket_length;
+  SequenceNumber max_bucket_length;
+  bool has_reverse_reads;
 
   options_t()
       :initialized(false),
        basename(""),
        max_arc_length(0),
-       max_bucket_length(DEFAULT_BUCKET_LENGTH)
+       max_bucket_length(DEFAULT_BUCKET_LENGTH),
+       has_reverse_reads(DEFAULT_HAS_REVERSE_READS)
   {};
 };
 
@@ -174,6 +216,8 @@ parse_cmds(const int argc, const char** argv)
       opts.basename= std::string(argv[++i]);
     else if(carg == "-m")
       opts.max_arc_length= atoi(argv[++i]);
+    else if(carg == "-r")
+      opts.has_reverse_reads= !DEFAULT_HAS_REVERSE_READS;
     else if(carg == "-g") {
       opts.max_bucket_length= atoi(argv[++i]);
       _FAIL_IF(opts.max_bucket_length==0);
@@ -193,18 +237,30 @@ void multiplex_intervals(vector<std::ifstream*> in_arc_files,
                          vector<std::ifstream*> in_label_files,
                          bucket_outfilemanager_t& out_bucketfiles,
                          const SequenceLength max_arc_length,
-                         const SequenceLength max_bucket_length)
+                         const SequenceNumber max_bucket_length)
 {
   SequenceNumber arc[4];
   BWTPosition label[2];
-  SequenceNumber &sourcebegin= arc[2];
+  SequenceNumber &sourcebegin= arc[2], &sourceend= arc[3];
+  SequenceNumber orig_sourceend;
 
   for(SequenceLength l(0); l < max_arc_length; ++l) {
     std::ifstream& in_arcfile= *in_arc_files[l];
     std::ifstream& in_labfile= *in_label_files[l];
     while (in_arcfile.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
            in_labfile.read(reinterpret_cast<char*>(&label), sizeof(label))) {
-      const size_t bucket_no= sourcebegin/max_bucket_length;
+      size_t bucket_no= sourcebegin/max_bucket_length;
+      orig_sourceend= sourceend;
+      sourceend= (bucket_no+1)*max_bucket_length;
+      while (sourceend<orig_sourceend) {
+        out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&arc), sizeof(arc));
+        out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&label), sizeof(label));
+        out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&l), sizeof(l));
+        sourcebegin= sourceend;
+        sourceend += max_bucket_length;
+        ++bucket_no;
+      }
+      sourceend= orig_sourceend;
       out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&arc), sizeof(arc));
       out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&label), sizeof(label));
       out_bucketfiles[bucket_no].write(reinterpret_cast<const char*>(&l), sizeof(l));
@@ -212,15 +268,16 @@ void multiplex_intervals(vector<std::ifstream*> in_arc_files,
   }
 }
 
-void reduce_bucket(PrefixManager& pmgr,
+void reduce_bucket(EndPosManager& eomgr,
                    std::ifstream& in_bucketfile,
                    std::ofstream& out_graph,
                    long& no_of_edges,
                    const SequenceNumber base_vertex,
-                   const SequenceNumber bucket_length) {
+                   const SequenceNumber bucket_length,
+                   const SequenceNumber no_of_reads) {
   LDEBUG("Reading and reducing bucket...");
 
-  graph_t graph(pmgr, bucket_length, base_vertex);
+  graph_t graph(eomgr, bucket_length, no_of_reads, base_vertex);
   SequenceNumber arc[4];
   BWTPosition label[2];
   SequenceLength l;
@@ -229,6 +286,7 @@ void reduce_bucket(PrefixManager& pmgr,
   while (in_bucketfile.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
          in_bucketfile.read(reinterpret_cast<char*>(&label), sizeof(label)) &&
          in_bucketfile.read(reinterpret_cast<char*>(&l), sizeof(l))) {
+    _FAIL_IF((sourceend - base_vertex > bucket_length));
     for(SequenceNumber src= sourcebegin; src < sourceend; ++src) {
       for(SequenceNumber dst= destbegin; dst < destend; ++dst) {
         if (graph.add_edge(src, dst, QInterval(label[0], label[1]), l))
@@ -261,16 +319,17 @@ main(const int argc, const char** argv)
 
   INFO("redbuild - Starting...");
   INFO("Basename      : " << opts.basename);
-  INFO("Max arc len   : " << opts.max_arc_length);
+  INFO("Max arc len   : " << PRINT_SL(opts.max_arc_length));
   INFO("Max bucket len: " << opts.max_bucket_length);
 
   LDEBUG("Getting the number of reads...");
 // Get the number of reads
-  std::ifstream pmgr_tmp((opts.basename + ".outlsg.lexorder").c_str(),
-                         std::ios_base::binary);
-  pmgr_tmp.seekg(0, std::ios_base::end);
-  const SequenceNumber no_of_reads = pmgr_tmp.tellg()/sizeof(SequenceNumber);
-  pmgr_tmp.close();
+  std::ifstream eomgr_tmp((opts.basename + "-end-pos").c_str(),
+                          std::ios_base::binary);
+  SequenceNumber tmp_ = 0;
+  eomgr_tmp.read( reinterpret_cast<char*>(&tmp_), sizeof( SequenceNumber ) );
+  const SequenceNumber no_of_reads = tmp_;
+  eomgr_tmp.close();
 
   INFO("Building the string graph of " << no_of_reads << " reads.");
 
@@ -287,7 +346,7 @@ main(const int argc, const char** argv)
     vector< std::ifstream* > labelFiles;
     bucket_outfilemanager_t out_bucketfiles(opts.basename, ".tmplsg.bucket_");
     for(SequenceLength j(0); j < opts.max_arc_length; ++j) {
-      const std::string jstr(n2str(j));
+      const std::string jstr(n2str(PRINT_SL(j)));
       arcsFiles.push_back(new std::ifstream((opts.basename + ".outlsg.arcs_"  + jstr).c_str(),
                                             std::ios_base::in | std::ios_base::binary));
       labelFiles.push_back(new std::ifstream((opts.basename + ".outlsg.labels_"  + jstr).c_str(),
@@ -307,7 +366,7 @@ main(const int argc, const char** argv)
   INFO("Starting reduction of each bucket...");
   long no_of_edges= 0;
   {
-    PrefixManager pmgr(opts.basename + ".outlsg.lexorder");
+    EndPosManager eomgr(opts.basename + "-end-pos");
     std::ofstream out_graph( opts.basename + ".outlsg.reduced.graph", std::ios_base::binary);
     SequenceNumber base_vertex= 0;
     for (size_t bucket_number= 0;
@@ -318,7 +377,7 @@ main(const int argc, const char** argv)
       std::ifstream in_bucketfile(opts.basename + ".tmplsg.bucket_" + n2str(bucket_number),
                                   std::ios::binary);
       const SequenceNumber bucket_length= std::min(no_of_reads, base_vertex+real_bucket_length)-base_vertex;
-      reduce_bucket(pmgr, in_bucketfile, out_graph, no_of_edges, base_vertex, bucket_length);
+      reduce_bucket(eomgr, in_bucketfile, out_graph, no_of_edges, base_vertex, bucket_length, no_of_reads);
       base_vertex += bucket_length;
 // Remove bucket file
       remove((opts.basename + ".tmplsg.bucket_" + n2str(bucket_number)).c_str());
