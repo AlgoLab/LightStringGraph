@@ -34,6 +34,8 @@
 
 #include "types.h"
 
+#define ASQG_FIELD_SEP '\t'
+
 void
 print_vertex(std::ostream& out,
              const std::string& name, const char* seq);

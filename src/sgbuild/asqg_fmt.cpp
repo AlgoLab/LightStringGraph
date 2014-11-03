@@ -30,7 +30,7 @@
 void
 print_vertex(std::ostream& out,
              const std::string& name, const char* seq) {
-  out << "VT\t" << name << '\t' << seq << '\n';
+  out << "VT" << ASQG_FIELD_SEP << name << ASQG_FIELD_SEP << seq << '\n';
 }
 
 static void
@@ -62,7 +62,7 @@ print_edge(std::ostream& out,
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
   const bool reverse_source = (reverse & 0b1);
   const bool reverse_dest   = (reverse & 0b10);
-  out << "ED "
+  out << "ED" << ASQG_FIELD_SEP
       << source_id << ' '
       << dest_id << ' ';
   if(!reverse_source)
