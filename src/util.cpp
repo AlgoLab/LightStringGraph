@@ -51,13 +51,70 @@ NuclConv::NuclConv() {
   _ntoc[BASE_Z]= CHAR_BASE_Z;
 }
 
+
+template <int bytenum>
+struct integer_type {
+};
+
+template <>
+struct integer_type<1> {
+  typedef uint8_t type;
+};
+
+template <>
+struct integer_type<2> {
+  typedef uint16_t type;
+};
+template <>
+struct integer_type<4> {
+  typedef uint32_t type;
+};
+// Shift 64 is war
+// template <>
+// struct integer_type<8> {
+//   typedef uint64_t type;
+// };
+
+template <int byte_num>
+void writelen(ofstream& out, BWTPosition len)
+{
+  const uint8_t shift_amount= (byte_num * 8 -1);
+  const BWTPosition mask= ((1ull << shift_amount) -1);
+  while(len)
+    {
+      typename integer_type<byte_num>::type towrite=(len & mask);
+      len >>= shift_amount;
+      if (len)
+        towrite |= (1ull << shift_amount);
+      out.write((char *)&towrite, byte_num);
+    }
+}
+
+template <int byte_num>
+BWTPosition readlen(ifstream& in)
+{
+  const unsigned int shift_amount= (byte_num * 8 -1);
+  const BWTPosition mask= ((1ull << shift_amount) -1);
+  BWTPosition p =0;
+  typename integer_type<byte_num>::type partialread =0;
+  uint8_t iter=0;
+  do{
+    partialread =0;
+    in.read((char *)&partialread, byte_num);
+    if(in.gcount() < byte_num)
+      return 0;
+    p |= ((partialread & mask) << (shift_amount * iter));
+    ++iter;
+  }while(partialread & (1ull << shift_amount));
+  return p;
+}
+
 ofstream& operator<<( ofstream& out, const QInterval& i )
 {
   BWTPosition begin = i.get_begin( );
   BWTPosition end = i.get_end( );
   out.write( (char *) &begin, sizeof( BWTPosition ) );
-  out.write( (char *) &end, sizeof( BWTPosition ) );
-
+  writelen<2>(out, end-begin);
   return out;
 }
 
@@ -66,24 +123,21 @@ ifstream& operator>>( ifstream& in, QInterval*& i )
   BWTPosition begin =0, end=0;
   in.read((char *) &begin, sizeof( BWTPosition ) );
   if(in.gcount() == 0) { i = NULL; return in; }
-  in.read((char *) &end, sizeof( BWTPosition ) );
-  if(in.gcount() == 0) { i = NULL; return in; }
-  i = new QInterval( begin, end );
+  end = begin + readlen<2>(in);
+  if(end == begin) i = NULL;
+  else i = new QInterval( begin, end );
   return in;
 }
 
 ofstream& operator<<( ofstream& out, const GSAEntry& g )
 {
   out.write( (char *) &g.sa, sizeof( SequenceLength ) );
-//  out.write( (char *) &g.numSeq, sizeof( SequenceNumber ) );
-
   return out;
 }
 
 ifstream& operator>>( ifstream& in, GSAEntry& g )
 {
   in.read( (char *) &g.sa, sizeof( SequenceLength ) );
-//  in.read( (char *) &g.numSeq, sizeof( SequenceNumber ) );
   return in;
 }
 
@@ -127,7 +181,7 @@ std::string now( const char* format = "%c" )
 ofstream& operator<<( ofstream& out, const SeedInterval& s )
 {
   out.write( reinterpret_cast<const char*>(&s.begin), sizeof( SequenceNumber ) );
-  out.write( reinterpret_cast<const char*>(&s.end), sizeof( SequenceNumber ) );
+  writelen<1>(out, s.end-s.begin);
   return out;
 }
 
@@ -136,9 +190,9 @@ ifstream& operator>>( ifstream& in, SeedInterval*& s )
   SequenceNumber begin =0, end=0;
   in.read(reinterpret_cast<char*>(&begin), sizeof( SequenceNumber ) );
   if(in.gcount() == 0) { s = NULL; return in; }
-  in.read(reinterpret_cast<char*>(&end), sizeof( SequenceNumber ) );
-  if(in.gcount() == 0) { s = NULL; return in; }
-  s = new SeedInterval( begin, end );
+  end = begin + readlen<1>(in);
+  if(end == begin) s = NULL;
+  else s = new SeedInterval( begin, end );
   return in;
 }
 
