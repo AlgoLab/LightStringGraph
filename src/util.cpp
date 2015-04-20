@@ -27,6 +27,8 @@
  **/
 #include "util.h"
 
+#include <cstring>
+
 const NuclConv NuclConv::_conv;
 
 NuclConv::NuclConv() {
@@ -78,16 +80,20 @@ struct integer_type<4> {
 template <int byte_num>
 void writelen(ofstream& out, BWTPosition len)
 {
+  static char intbuff[byte_num*64];
   const uint8_t shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
+  unsigned int bpos= 0;
   while(len)
     {
       typename integer_type<byte_num>::type towrite=(len & mask);
       len >>= shift_amount;
       if (len)
         towrite |= (1ull << shift_amount);
-      out.write((char *)&towrite, byte_num);
+      memcpy(intbuff+bpos, (char *)&towrite, byte_num);
+      bpos += byte_num;
     }
+  out.write(intbuff, bpos);
 }
 
 template <int byte_num>
