@@ -28,6 +28,7 @@
 #include "util.h"
 
 #include <cstring>
+#include <cstdio>
 
 const NuclConv NuclConv::_conv;
 
@@ -78,7 +79,7 @@ struct integer_type<4> {
 // };
 
 template <int byte_num>
-void writelen(ofstream& out, BWTPosition len)
+void writelen(FILE* fout, BWTPosition len)
 {
   static char intbuff[byte_num*64];
   const uint8_t shift_amount= (byte_num * 8 -1);
@@ -93,7 +94,7 @@ void writelen(ofstream& out, BWTPosition len)
       memcpy(intbuff+bpos, (char *)&towrite, byte_num);
       bpos += byte_num;
     }
-  out.write(intbuff, bpos);
+  fwrite(intbuff, sizeof(char), bpos, fout);
 }
 
 template <int byte_num>
@@ -115,13 +116,13 @@ BWTPosition readlen(ifstream& in)
   return p;
 }
 
-ofstream& operator<<( ofstream& out, const QInterval& i )
+void
+write_interval(FILE* fout, const QInterval& i )
 {
   BWTPosition begin = i.get_begin( );
   BWTPosition end = i.get_end( );
-  out.write( (char *) &begin, sizeof( BWTPosition ) );
-  writelen<2>(out, end-begin);
-  return out;
+  fwrite((char *) &begin, sizeof(BWTPosition), 1, fout);
+  writelen<2>(fout, end-begin);
 }
 
 ifstream& operator>>( ifstream& in, QInterval*& i )
@@ -147,13 +148,11 @@ ifstream& operator>>( ifstream& in, GSAEntry& g )
   return in;
 }
 
-ofstream& operator<<( ofstream& out, const ArcInterval& a )
+void write_interval( FILE* out, const ArcInterval& a )
 {
-  out << a.es_interval;
-  out.write( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ) );
-  out << a.seed_int;
-
-  return out;
+  write_interval(out, a.es_interval);
+  fwrite( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ), 1, out);
+  write_interval(out, a.seed_int);
 }
 
 ifstream& operator>>( ifstream& in, ArcInterval*& a )
@@ -184,11 +183,11 @@ std::string now( const char* format = "%c" )
   return cstr ;
 }
 
-ofstream& operator<<( ofstream& out, const SeedInterval& s )
+void
+write_interval(FILE* fout, const SeedInterval& s )
 {
-  out.write( reinterpret_cast<const char*>(&s.begin), sizeof( SequenceNumber ) );
-  writelen<1>(out, s.end-s.begin);
-  return out;
+  fwrite( reinterpret_cast<const char*>(&s.begin), sizeof(SequenceNumber), 1, fout);
+  writelen<1>(fout, s.end-s.begin);
 }
 
 ifstream& operator>>( ifstream& in, SeedInterval*& s )
@@ -202,11 +201,10 @@ ifstream& operator>>( ifstream& in, SeedInterval*& s )
   return in;
 }
 
-ofstream& operator<<( ofstream& out, const EdgeLabelInterval& e )
+void write_interval( FILE* out, const EdgeLabelInterval& e )
 {
-  out << e.get_label( );
-  out << e.get_reverse_label( );
-  return out;
+  write_interval( out, e.get_label( ) );
+  write_interval( out, e.get_reverse_label( ) );
 }
 
 ifstream& operator>>( ifstream& in, EdgeLabelInterval*& e )

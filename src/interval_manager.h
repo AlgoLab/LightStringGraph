@@ -36,6 +36,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <cstdio>
 
 #include "util.h"
 
@@ -48,7 +49,7 @@ protected:
   vector< string >                          _filenames;     // Input filenames
   unsigned short                            _nextInputFile; // Index of next file to open in _filenames
   std::ifstream*                            _inputFile;       // Current input stream
-  vector< std::ofstream* >                  _outputFiles;       // New intervals (interval_t) will be
+  vector< FILE* >                  _outputFiles;       // New intervals (interval_t) will be
 
 public:
 
@@ -94,11 +95,10 @@ public:
 
   virtual ~IntervalManagerI()
   {
-    for ( vector< std::ofstream* >::iterator it = _outputFiles.begin( );
+    for ( vector< FILE* >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( ); ++it )
       {
-        (*it)->close( );
-        delete (*it);
+        fclose(*it);
         (*it) = NULL;
       }
     if( _inputFile != NULL )
@@ -123,13 +123,12 @@ public:
         delete _inputFile;
         _inputFile = NULL;
       }
-    for ( vector< std::ofstream* >::iterator it = _outputFiles.begin( );
+    for ( vector< FILE* >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( );
           ++it)
       {
-        (*it)->flush();
-        (*it)->close();
-        delete (*it);
+        fflush(*it);
+        fclose(*it);
       }
     _outputFiles.clear();
     for ( vector< string >::iterator it = _filenames.begin( );
@@ -217,7 +216,7 @@ public:
         DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
-    (*(this->_outputFiles[ (int) n ])) << i;
+    write_interval(this->_outputFiles[ (int) n ], i);
     // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
     return true;
   } // add_interval
@@ -262,8 +261,7 @@ protected:
       {
         std::ostringstream outfilename;
         outfilename << (*it) << "_next";
-        this->_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
-                                                         std::ios::binary | std::ios::app) );
+        this->_outputFiles.push_back( fopen( outfilename.str().c_str(), "wb") );
       }
   }
 };
@@ -320,8 +318,8 @@ public:
       {
         if(_outIntervals[n]._mult !=0)
           {
-            (*(this->_outputFiles[n])) << *(this->_outIntervals[n]._interval);
-            (*(this->_outputFiles[n])).write((char*)&(this->_outIntervals[n]._mult), sizeof(long));
+            write_interval(this->_outputFiles[n], *(this->_outIntervals[n]._interval));
+            fwrite((char*)&(this->_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[n]);
           }
       }
     IntervalManagerI<interval_t>::swap_files();
@@ -363,8 +361,8 @@ public:
         ++(_outIntervals[n]._mult);
     else
       {
-        (*(this->_outputFiles[(int) n])) << *(_outIntervals[n]._interval);
-        (*(this->_outputFiles[(int) n])).write((char *)&(_outIntervals[n]._mult), sizeof(long));
+        write_interval(this->_outputFiles[(int) n], *(_outIntervals[n]._interval));
+        fwrite((char *)&(_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[(int) n]);
         delete (_outIntervals[n]._interval);
         interval_t* t = new interval_t(i);
         _outIntervals[n] = IntervalRun(t);
@@ -381,8 +379,7 @@ protected:
       {
         std::ostringstream outfilename;
         outfilename << (*it) << "_next";
-        this->_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
-                                                         std::ios::binary | std::ios::app) );
+        this->_outputFiles.push_back( fopen( outfilename.str().c_str(), "wb") );
       }
     for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
       {

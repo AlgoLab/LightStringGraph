@@ -40,6 +40,7 @@
 #include <ctime>
 #include <stdexcept>
 #include <climits>
+#include <cstdio>
 
 #include "types.h"
 #include "q_interval.h"
@@ -82,19 +83,19 @@ std::string convert_to_string(const T& el) {
 }
 
 // Overloading various operato<< and operator>> ..
-ofstream& operator<<( ofstream&, const QInterval& );
+void write_interval(FILE* fout, const QInterval& );
 ifstream& operator>>( ifstream&, QInterval*& );
 
 ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
 
-ofstream& operator<<( ofstream&, const ArcInterval& );
+void write_interval( FILE*, const ArcInterval& );
 ifstream& operator>>( ifstream&, ArcInterval*& );
 
-ofstream& operator<<( ofstream&, const SeedInterval& );
+void write_interval( FILE*, const SeedInterval& );
 ifstream& operator>>( ifstream&, SeedInterval*& );
 
-ofstream& operator<<( ofstream&, const EdgeLabelInterval& );
+void write_interval( FILE*, const EdgeLabelInterval& );
 ifstream& operator>>( ifstream&, EdgeLabelInterval*& );
 
 // Return a string representing the current tim
