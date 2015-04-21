@@ -42,6 +42,8 @@
 #include <climits>
 #include <cstdio>
 
+#include <boost/lexical_cast.hpp>
+
 #include "types.h"
 #include "q_interval.h"
 #include "arcInterval.h"
@@ -77,26 +79,24 @@ private:
 
 template <typename T>
 std::string convert_to_string(const T& el) {
-  std::stringstream stream;
-  stream << el;
-  return stream.str();
+  return boost::lexical_cast<std::string>(el);
 }
 
 // Overloading various operato<< and operator>> ..
-void write_interval(FILE* fout, const QInterval& );
-ifstream& operator>>( ifstream&, QInterval*& );
+void write_interval( FILE* , const QInterval& );
+bool read_interval ( FILE* , QInterval& );
 
 ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
 
-void write_interval( FILE*, const ArcInterval& );
-ifstream& operator>>( ifstream&, ArcInterval*& );
+void write_interval( FILE* , const ArcInterval& );
+bool read_interval ( FILE* , ArcInterval*& );
 
-void write_interval( FILE*, const SeedInterval& );
-ifstream& operator>>( ifstream&, SeedInterval*& );
+void write_interval( FILE* , const SeedInterval& );
+bool read_interval ( FILE* , SeedInterval& );
 
-void write_interval( FILE*, const EdgeLabelInterval& );
-ifstream& operator>>( ifstream&, EdgeLabelInterval*& );
+void write_interval( FILE* , const EdgeLabelInterval& );
+bool read_interval ( FILE* , EdgeLabelInterval*& );
 
 // Return a string representing the current tim
 std::string now( const char* format );

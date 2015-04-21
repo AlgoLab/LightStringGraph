@@ -40,34 +40,59 @@ private:
 
 public:
   // Constructor
-  EdgeLabelInterval( const QInterval&, const QInterval& );
+  EdgeLabelInterval( const QInterval& forward, const QInterval& reverse )
+    : _forward_interval( forward ), _reverse_interval( reverse )
+  { };
 
   // Destructor
-  ~EdgeLabelInterval( );
+  ~EdgeLabelInterval( )
+  { };
 
   EdgeLabelInterval( const EdgeLabelInterval& other )
-    : _forward_interval(other.get_label()), _reverse_interval(other.get_reverse_label())
+    : _forward_interval(other.get_label()),
+      _reverse_interval(other.get_reverse_label())
   { };
 
   // get label
-  const QInterval& get_label( ) const;
-  const QInterval& get_reverse_label( ) const;
+  const QInterval& get_label( ) const {
+    return _forward_interval;
+  }
+
+  const QInterval& get_reverse_label( ) const {
+    return _reverse_interval;
+  }
 
   // Equality operator
-  bool operator==(const EdgeLabelInterval& rhs ) const;
+  bool operator==(const EdgeLabelInterval& rhs ) const {
+    return ((_forward_interval == rhs.get_label()) &&
+            (_reverse_interval == rhs.get_reverse_label()));
+  }
 
   // Inequality operator
-  bool operator!=(const EdgeLabelInterval& rhs) const;
+  bool operator!=(const EdgeLabelInterval& rhs) const {
+    return (!((*this) == rhs));
+  }
 
   // Assignement operator
-  EdgeLabelInterval& operator= ( const EdgeLabelInterval& other );
+  EdgeLabelInterval& operator= ( const EdgeLabelInterval& other ) {
+    _forward_interval = other.get_label();
+    _reverse_interval = other.get_reverse_label();
+    return *this;
+  }
 
-  bool operator>(const EdgeLabelInterval& rhs) const;
-  bool operator<(const EdgeLabelInterval& rhs) const;
+  bool operator>(const EdgeLabelInterval& rhs) const {
+    return (_forward_interval.begin < rhs.get_label().begin ||
+            (_forward_interval.begin == rhs.get_label().begin &&
+             _forward_interval.end >= rhs.get_label().end));
+  }
+
+  bool operator<(const EdgeLabelInterval& rhs) const {
+    return rhs > *this;
+  }
 
 private:
   // No need of copu ctor nor assigment operator
-  EdgeLabelInterval( ) : _forward_interval(0,0), _reverse_interval(0, 0) { };
+  EdgeLabelInterval( );
 };
 
 #endif

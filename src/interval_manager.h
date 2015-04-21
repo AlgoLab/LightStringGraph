@@ -46,25 +46,25 @@ using std::string;
 template< class interval_t > class IntervalManagerI
 {
 protected:
-  vector< string >                          _filenames;     // Input filenames
-  unsigned short                            _nextInputFile; // Index of next file to open in _filenames
-  std::ifstream*                            _inputFile;       // Current input stream
-  vector< FILE* >                  _outputFiles;       // New intervals (interval_t) will be
+  const vector< string >  _filenames;      // Input filenames
+  unsigned short          _nextInputFile;  // Index of next file to open in _filenames
+  FILE*                   _inputFile;      // Current input stream
+  vector< FILE* >         _outputFiles;    // New intervals (interval_t) will be
 
 public:
 
-  IntervalManagerI(vector< string >& filenames)
+  IntervalManagerI(const vector< string >& filenames)
+    : _filenames(filenames)
   {
-    if ( filenames.size( ) == 0 )
+    if ( filenames.empty() )
       {
         std::cerr << "ERROR: Can't initialize an interval manager without any "
                   << "filename." << std::endl;
         _MY_FAIL;
       }
-    for ( vector< string >::iterator it = filenames.begin( );
+    for ( vector< string >::const_iterator it = filenames.begin( );
           it != filenames.end( ); ++it )
       {
-        _filenames.push_back( *it );
         // touch files
         std::ifstream t((*it).c_str(), std::ios::binary);
         if(!t.good())
@@ -81,13 +81,11 @@ public:
         t.close();
       }
 
-    _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
-    if( _inputFile->fail() )
+    _inputFile = fopen( _filenames[ 0 ].c_str( ), "rb" );
+    if( !_inputFile )
       {
         std::cerr << "ERROR: Can't open file : " << _filenames[ 0 ] << std::endl
                   << "Aborting..." << std::endl;
-        delete _inputFile;
-        _inputFile = NULL;
         _MY_FAIL;
       }
     _nextInputFile = 0;
@@ -103,15 +101,14 @@ public:
       }
     if( _inputFile != NULL )
       {
-        _inputFile->close( );
-        delete _inputFile;
+        fclose(_inputFile);
         _inputFile = NULL;
       }
-    for( typename vector< string >::iterator it = _filenames.begin();
+    for( vector< string >::const_iterator it = _filenames.begin();
          it != _filenames.end(); ++it)
       {
         remove((*it).c_str());
-        remove( std::string((*it) + "_next").c_str());
+        remove( ((*it) + "_next").c_str());
       }
   }
 
@@ -119,36 +116,33 @@ public:
   {
     if( _inputFile != NULL )
       {
-        _inputFile->close();
-        delete _inputFile;
+        fclose(_inputFile);
         _inputFile = NULL;
       }
     for ( vector< FILE* >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( );
           ++it)
       {
-        fflush(*it);
         fclose(*it);
       }
     _outputFiles.clear();
-    for ( vector< string >::iterator it = _filenames.begin( );
+    for ( vector< string >::const_iterator it = _filenames.begin( );
           it != _filenames.end( );
           ++it)
       {
-        std::ostringstream nextfile;
-        nextfile << (*it) << "_next";
-        remove( (*it).c_str() );
-        if( rename( nextfile.str().c_str(), (*it).c_str() ) )
+        remove( it->c_str() );
+        string nextfile(*it + string("_next"));
+        if( rename( nextfile.c_str(), it->c_str() ) )
           {
-            std::cerr << "ERROR: Can't rename " << nextfile.str() << " to " << *it
+            std::cerr << "ERROR: Can't rename " << nextfile << " to " << *it
                       << std::endl << "Aborting..." << std::endl;
             _MY_FAIL;
           }
-        remove( nextfile.str().c_str() );
-        DEBUG_LOG_VERBOSE( "Renamed file " << nextfile.str() << " to " << *it);
+        remove( nextfile.c_str() );
+        DEBUG_LOG_VERBOSE( "Renamed file " << nextfile << " to " << *it);
       }
     _init_new_outputfiles( );
-    _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
+    _inputFile = fopen( _filenames[ 0 ].c_str( ), "rb" );
     _nextInputFile = 1;
     _populate_buffer( );
   }
@@ -235,15 +229,16 @@ protected:
 
     interval_t* i = NULL;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           ( ( this->_inputFile && ((*(this->_inputFile)) >> i ) ) || ( this->_nextInputFile < this->_filenames.size( ) ) ) )
+           (    ( !feof(this->_inputFile) && read_interval( this->_inputFile, i ) )
+             || ( this->_nextInputFile < this->_filenames.size( ) ) )
+           )
       {
         if( i == NULL )
           {
             // end of file
-            this->_inputFile->close( );
-            delete this->_inputFile;
-            this->_inputFile = new std::ifstream( this->_filenames[ this->_nextInputFile++ ].c_str( ),
-                                                  std::ios::binary );
+            fclose(this->_inputFile);
+            this->_inputFile = fopen( this->_filenames[ this->_nextInputFile ].c_str( ), "rb" );
+            this->_nextInputFile++;
           }
         else
           {
@@ -256,12 +251,11 @@ protected:
 
   virtual void _init_new_outputfiles()
   {
-    for ( vector< string >::iterator it = this->_filenames.begin( ); it != this->_filenames.end( );
+    for ( vector< string >::const_iterator it = this->_filenames.begin( );
+          it != this->_filenames.end( );
           ++it)
       {
-        std::ostringstream outfilename;
-        outfilename << (*it) << "_next";
-        this->_outputFiles.push_back( fopen( outfilename.str().c_str(), "wb") );
+        this->_outputFiles.push_back( fopen( ((*it)+ "_next").c_str(), "wb") );
       }
   }
 };
@@ -374,12 +368,11 @@ protected:
   // Initalize new output files
   virtual void _init_new_outputfiles( )
   {
-    for ( vector< string >::iterator it = this->_filenames.begin( ); it != this->_filenames.end( );
+    for ( vector< string >::const_iterator it = this->_filenames.begin( );
+          it != this->_filenames.end( );
           ++it)
       {
-        std::ostringstream outfilename;
-        outfilename << (*it) << "_next";
-        this->_outputFiles.push_back( fopen( outfilename.str().c_str(), "wb") );
+        this->_outputFiles.push_back( fopen( (*it +"_next").c_str(), "wb") );
       }
     for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
       {
@@ -403,16 +396,17 @@ protected:
     interval_t* i = NULL;
     long runlength =0;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           (( this->_inputFile && ((*(this->_inputFile)) >> i ) && ((*(this->_inputFile)).read((char *)&runlength, sizeof(long)))) ||
-            ( this->_nextInputFile < this->_filenames.size( ))))
+           (   (    !feof(this->_inputFile)
+                 && read_interval(this->_inputFile, i )
+                 && fread( reinterpret_cast<char *>(&runlength),
+                           sizeof(long), 1, this->_inputFile) == sizeof(long))
+            || ( this->_nextInputFile < this->_filenames.size( ))))
       {
         if( i == NULL )
           {
             // end of file
-            this->_inputFile->close( );
-            delete this->_inputFile;
-            this->_inputFile = new std::ifstream( this->_filenames[ this->_nextInputFile++ ].c_str( ),
-                                                  std::ios::binary );
+            fclose(this->_inputFile);
+            this->_inputFile = fopen( this->_filenames[ this->_nextInputFile++ ].c_str( ), "rb");
           }
         else
           {

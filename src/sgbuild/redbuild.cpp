@@ -71,10 +71,11 @@ using std::string;
 using std::vector;
 
 // Returns true if first is contained in second
+static
 bool operator<=(const QInterval& first, const QInterval& second) {
   // Works only for non-overlapping intervals.
-  return (second.get_begin() <= first.get_begin()
-          && second.get_end() >= first.get_end());
+  return (second.begin <= first.begin
+          && second.end >= first.end);
 }
 
 struct node_t

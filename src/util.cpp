@@ -98,7 +98,7 @@ void writelen(FILE* fout, BWTPosition len)
 }
 
 template <int byte_num>
-BWTPosition readlen(ifstream& in)
+BWTPosition readlen(FILE* fin)
 {
   const unsigned int shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
@@ -107,8 +107,8 @@ BWTPosition readlen(ifstream& in)
   uint8_t iter=0;
   do{
     partialread =0;
-    in.read((char *)&partialread, byte_num);
-    if(in.gcount() < byte_num)
+    const size_t gcount= fread((char *)(&partialread), byte_num, 1, fin);
+    if(gcount == 0)
       return 0;
     p |= ((partialread & mask) << (shift_amount * iter));
     ++iter;
@@ -117,23 +117,19 @@ BWTPosition readlen(ifstream& in)
 }
 
 void
-write_interval(FILE* fout, const QInterval& i )
+write_interval( FILE* fout, const QInterval& i )
 {
-  BWTPosition begin = i.get_begin( );
-  BWTPosition end = i.get_end( );
-  fwrite((char *) &begin, sizeof(BWTPosition), 1, fout);
-  writelen<2>(fout, end-begin);
+  fwrite((char *) &i.begin, sizeof(BWTPosition), 1, fout);
+  writelen<2>(fout, i.size());
 }
 
-ifstream& operator>>( ifstream& in, QInterval*& i )
+bool
+read_interval ( FILE* fin, QInterval& i )
 {
-  BWTPosition begin =0, end=0;
-  in.read((char *) &begin, sizeof( BWTPosition ) );
-  if(in.gcount() == 0) { i = NULL; return in; }
-  end = begin + readlen<2>(in);
-  if(end == begin) i = NULL;
-  else i = new QInterval( begin, end );
-  return in;
+  const size_t gcount= fread( (char *)&i.begin, sizeof( BWTPosition ), 1, fin);
+  if (gcount != 1) { return false; }
+  i.end = i.begin + readlen<2>(fin);
+  return i.size() > 0;
 }
 
 ofstream& operator<<( ofstream& out, const GSAEntry& g )
@@ -148,31 +144,32 @@ ifstream& operator>>( ifstream& in, GSAEntry& g )
   return in;
 }
 
-void write_interval( FILE* out, const ArcInterval& a )
+void
+write_interval( FILE* fout, const ArcInterval& a )
 {
-  write_interval(out, a.es_interval);
-  fwrite( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ), 1, out);
-  write_interval(out, a.seed_int);
+  write_interval(fout, a.es_interval);
+  fwrite( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ), 1, fout);
+  write_interval(fout, a.seed_int);
 }
 
-ifstream& operator>>( ifstream& in, ArcInterval*& a )
+bool
+read_interval ( FILE* fin, ArcInterval*& a )
 {
-  QInterval* es_int= NULL;
-  in >> es_int;
-  if(es_int == NULL) { a = NULL; return in; }
+  QInterval es_int(0, 0);
+  bool ok= read_interval(fin, es_int);
+  if (!ok) { a = NULL; return false; }
 
   SequenceLength len=0;
-  in.read( reinterpret_cast<char *>(&len), sizeof( SequenceLength ) );
-  if(in.gcount() == 0) { a = NULL; return in; }
+  const size_t readbytes= fread( reinterpret_cast<char *>(&len),
+                                 sizeof( SequenceLength ), 1, fin );
+  if (readbytes != 1 ) { a = NULL; return false; }
 
-  SeedInterval* s= NULL;
-  in >> s;
-  if(s == NULL) { a = NULL; return in; }
+  SeedInterval s(0, 0);
+  ok= read_interval(fin, s);
+  if (!ok) { a = NULL; return false; }
 
-  a = new ArcInterval( *es_int, len, *s );
-  delete es_int;
-  delete s;
-  return in;
+  a = new ArcInterval( es_int, len, s );
+  return true;
 }
 
 std::string now( const char* format = "%c" )
@@ -190,32 +187,32 @@ write_interval(FILE* fout, const SeedInterval& s )
   writelen<1>(fout, s.end-s.begin);
 }
 
-ifstream& operator>>( ifstream& in, SeedInterval*& s )
+bool
+read_interval ( FILE* fin, SeedInterval& s )
 {
-  SequenceNumber begin =0, end=0;
-  in.read(reinterpret_cast<char*>(&begin), sizeof( SequenceNumber ) );
-  if(in.gcount() == 0) { s = NULL; return in; }
-  end = begin + readlen<1>(in);
-  if(end == begin) s = NULL;
-  else s = new SeedInterval( begin, end );
-  return in;
+  const size_t gcount= fread( reinterpret_cast<char *>(&s.begin), sizeof( SequenceNumber ), 1, fin);
+  if (gcount != 1) { return false; }
+  s.end = s.begin + readlen<1>(fin);
+  return s.size() > 0;
 }
 
-void write_interval( FILE* out, const EdgeLabelInterval& e )
+void
+write_interval( FILE* fout, const EdgeLabelInterval& e )
 {
-  write_interval( out, e.get_label( ) );
-  write_interval( out, e.get_reverse_label( ) );
+  write_interval( fout, e.get_label( ) );
+  write_interval( fout, e.get_reverse_label( ) );
 }
 
-ifstream& operator>>( ifstream& in, EdgeLabelInterval*& e )
+bool
+read_interval ( FILE* fin, EdgeLabelInterval*& e )
 {
-  QInterval *label=NULL, *reverse=NULL;
-  in >> label;
-  if(!label) { e =NULL; return in; }
-  in >> reverse;
-  if(!reverse){ e = NULL; return in; }
-  e = new EdgeLabelInterval( *label, *reverse );
-  delete label;
-  delete reverse;
-  return in;
+  QInterval label(0, 0), reverse(0, 0);
+  if (!read_interval(fin, label)) {
+    e= NULL; return false;
+  }
+  if (!read_interval(fin, reverse)) {
+    e= NULL; return false;
+  }
+  e = new EdgeLabelInterval( label, reverse );
+  return true;
 }

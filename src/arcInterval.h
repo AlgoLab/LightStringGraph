@@ -34,26 +34,7 @@
 #include "types.h"
 #include "q_interval.h"
 
-struct SeedInterval
-{
-  const SequenceNumber begin;
-  const SequenceNumber end;
-
-  SeedInterval(const SequenceNumber& begin_,
-					const SequenceNumber& end_)
-		:begin(begin_), end(end_)
-  {}
-
-  const size_t size() const {
-	 return end-begin;
-  }
-
-  bool operator==(const SeedInterval& rhs) const
-  {
-    return (this->begin == rhs.begin && this->end == rhs.end);
-  }
-  
-};
+typedef base_interval<SequenceNumber> SeedInterval;
 
 struct ArcInterval
 {

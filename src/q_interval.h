@@ -34,60 +34,51 @@
 #include "types.h"
 
 /* Basic class that represent Q-Intervals. */
-class QInterval
+template <typename Type>
+struct base_interval
 {
-private:
-  BWTPosition   _begin,
-    _end;
-public:
+  Type begin,
+    end;
+
   // Constructor
-  QInterval ( const BWTPosition& begin,
-              const BWTPosition& end)
-      :_begin(begin), _end(end)
+  base_interval ( const Type& begin_,
+              const Type& end_)
+      :begin(begin_), end(end_)
   {}
 
   // Copy ctor
-  QInterval ( const QInterval& other )
-      :_begin(other._begin), _end(other._end)
+  base_interval ( const base_interval<Type>& other )
+      :begin(other.begin), end(other.end)
   {}
 
   // Destructor
-  //~QInterval ( );
+  //~base_interval ( );
 
   // Get the size of the Q-interval
   // size equals to end - begin
-  BWTPosition get_size ( ) const {
-    return ( _end - _begin );
+  Type size ( ) const {
+    return ( end - begin );
   }
-
-  // Get the begin position of the Q-interval
-  BWTPosition get_begin ( ) const {
-    return _begin;
-  }
-
-  // Get the end position of the Q-interval
-  BWTPosition get_end ( ) const {
-    return _end;
-  }
-
 
   // Equality operator
-  bool operator==(const QInterval& rhs ) const {
-    return (this->_begin == rhs._begin && this->_end == rhs._end);
+  bool operator==(const base_interval<Type>& rhs ) const {
+    return (this->begin == rhs.begin && this->end == rhs.end);
   }
 
   // Inequality operator
-  bool operator!=(const QInterval& rhs) const {
+  bool operator!=(const base_interval<Type>& rhs) const {
     return !(*this==rhs);
   }
 
   // Assignment operator
-  QInterval& operator= ( const QInterval& other ) {
-    _begin = other._begin;
-    _end = other._end;
+  base_interval<Type>& operator= ( const base_interval<Type>& other ) {
+    begin = other.begin;
+    end = other.end;
     return *this;
   }
 
 };
+
+typedef base_interval<BWTPosition> QInterval;
 
 #endif

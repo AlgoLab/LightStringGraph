@@ -81,15 +81,12 @@ LSG_DEP= $(OBJ_DIR)BWTReader.o \
 	$(OBJ_DIR)partialBWTReader.o \
 	$(OBJ_DIR)edgeLabelIntervalManager.o \
 	$(OBJ_DIR)extend_symbol_pile.o \
-	$(OBJ_DIR)edgeLabelInterval.o \
 	$(OBJ_DIR)lsg/lsg.o
 
-REDBUILD_DEP= $(OBJ_DIR)sgbuild/redbuild.o \
-	$(OBJ_DIR)edgeLabelInterval.o
+REDBUILD_DEP= $(OBJ_DIR)sgbuild/redbuild.o
 
 GRAPH2ASQG_DEP= $(OBJ_DIR)sgbuild/graph2asqg.o \
-	$(OBJ_DIR)sgbuild/asqg_fmt.o \
-	$(OBJ_DIR)edgeLabelInterval.o
+	$(OBJ_DIR)sgbuild/asqg_fmt.o
 
 .PHONY: all
 all: lsg redbuild graph2asqg
