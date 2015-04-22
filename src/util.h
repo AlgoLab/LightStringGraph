@@ -90,13 +90,13 @@ ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
 
 void write_interval( FILE* , const ArcInterval& );
-bool read_interval ( FILE* , ArcInterval*& );
+bool read_interval ( FILE* , ArcInterval& );
 
 void write_interval( FILE* , const SeedInterval& );
 bool read_interval ( FILE* , SeedInterval& );
 
 void write_interval( FILE* , const EdgeLabelInterval& );
-bool read_interval ( FILE* , EdgeLabelInterval*& );
+bool read_interval ( FILE* , EdgeLabelInterval& );
 
 // Return a string representing the current tim
 std::string now( const char* format );

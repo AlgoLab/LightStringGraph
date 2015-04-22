@@ -147,7 +147,8 @@ public:
     _populate_buffer( );
   }
 
-  virtual interval_t* get_next_interval() =0;
+  virtual bool has_next_interval() =0;
+  virtual interval_t get_next_interval() =0;
   virtual bool add_interval(const interval_t& i, const Nucleotide n) =0;
 
   // Return _nextInputFile
@@ -165,8 +166,8 @@ template< class interval_t > class IntervalManager
   : public IntervalManagerI< interval_t >
 {
 private:
-  vector< interval_t* >                     _buffer;        // current intervals
-  typename vector< interval_t* >::iterator  _nextInterval;     // next interval in buffer
+  vector< interval_t >                     _buffer;        // current intervals
+  typename vector< interval_t >::iterator  _nextInterval;     // next interval in buffer
 
 public:
 
@@ -183,23 +184,21 @@ public:
   // Destructor
   ~IntervalManager( )
   {
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        delete (*it);
-        (*it) = NULL;
-      }
   } // ~IntervalManager
 
-  // Get next interval. If no intervals are left, return NULL
-  interval_t* get_next_interval ( )
-  {
+  // True if next call of get_next_interval () gives a valid interval
+  bool has_next_interval() {
     if( _nextInterval == _buffer.end( ) )
       {
         _populate_buffer( );
       }
-    interval_t* i = ( _buffer.size( ) == 0 ) ? NULL : *_nextInterval++;
-    return i;
+    return _nextInterval != _buffer.end( );
+  }
+
+  // Get next interval. Valid iff previous call to has_next_interval returned true
+  interval_t get_next_interval ( )
+  {
+    return *_nextInterval++;
   } // get_next_interval
 
   // Append i to outputfile[ n ]
@@ -211,7 +210,6 @@ public:
         return false;
       }
     write_interval(this->_outputFiles[ (int) n ], i);
-    // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
     return true;
   } // add_interval
 
@@ -219,21 +217,17 @@ protected:
   // Read new intervals and store them in _buffer
   virtual void _populate_buffer()
   {
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        if(*it != NULL)
-          delete *it;
-      }
     _buffer.clear( );
 
-    interval_t* i = NULL;
+    interval_t i;
+    bool interval_read= false;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           (    ( !feof(this->_inputFile) && read_interval( this->_inputFile, i ) )
+           (    (    !feof(this->_inputFile)
+                  && (interval_read= read_interval( this->_inputFile, i )) )
              || ( this->_nextInputFile < this->_filenames.size( ) ) )
            )
       {
-        if( i == NULL )
+        if( !interval_read )
           {
             // end of file
             fclose(this->_inputFile);
@@ -243,7 +237,6 @@ protected:
         else
           {
             _buffer.push_back( i );
-            i = NULL;
           }
       }
     _nextInterval = _buffer.begin( );
@@ -268,27 +261,29 @@ template< class interval_t > class IntervalManagerRLE
 {
 private:
   struct IntervalRun {
-    interval_t* _interval; // Interval
+    interval_t  _interval; // Interval
     long        _mult;     // Multiplicity
 
-    IntervalRun() : _interval(NULL), _mult(0) {};
-    IntervalRun(interval_t* t) : _interval(t), _mult(1) {};
-    IntervalRun(interval_t* t, long mult) : _interval(t), _mult(mult) {};
+    IntervalRun() : _interval(), _mult(0) {};
+    IntervalRun(const interval_t& t) : _interval(t), _mult(1) {};
+    IntervalRun(const interval_t& t, long mult) : _interval(t), _mult(mult) {};
   };
 
-  vector< IntervalRun >                     _buffer;        // current intervals
-  typename vector< IntervalRun >::iterator  _nextInterval;     // next interval in buffer
-  vector< IntervalRun >                     _outIntervals;  // Buffer for intervals to store in external memory
+  typedef vector< IntervalRun > buffer_t;
+
+  buffer_t                     _buffer;        // current intervals
+  typename buffer_t::iterator  _nextInterval;     // next interval in buffer
+  buffer_t                     _outIntervals;  // Buffer for intervals to store in external memory
 
 public:
 
   // Instantiate a Manager over filenames files
   // TODO: create a new constructor that accept a prefix (string) and
   //  an int and automagically creates the vector
-  IntervalManagerRLE( vector< string >& filenames )
-    : IntervalManagerI<interval_t>(filenames)
+  IntervalManagerRLE( const vector< string >& filenames )
+    : IntervalManagerI<interval_t>(filenames),
+      _outIntervals(ALPHABET_SIZE)
   {
-    _outIntervals = vector< IntervalRun >(ALPHABET_SIZE);
     _populate_buffer( );
     _init_new_outputfiles( );
   } // IntervalManager
@@ -296,12 +291,6 @@ public:
   // Destructor
   ~IntervalManagerRLE()
   {
-    for( typename vector< IntervalRun >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        delete it->_interval;
-        it->_interval = NULL;
-      }
   } // ~IntervalManager
 
   // Delete current intervals, move files from output to input and create new
@@ -312,29 +301,28 @@ public:
       {
         if(_outIntervals[n]._mult !=0)
           {
-            write_interval(this->_outputFiles[n], *(this->_outIntervals[n]._interval));
+            write_interval(this->_outputFiles[n], this->_outIntervals[n]._interval);
             fwrite((char*)&(this->_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[n]);
           }
       }
     IntervalManagerI<interval_t>::swap_files();
   } // swap_files
 
-  // Get next interval. If no intervals are left, return NULL
-  interval_t* get_next_interval ( )
+  bool has_next_interval ( )
   {
     if(_nextInterval == _buffer.end( ) )
       {
         _populate_buffer( );
       }
-    interval_t* i = NULL;
-    if(_buffer.size() == 0)
-      i = NULL;
-    else
-      {
-        i = _nextInterval->_interval;
-        if(--(_nextInterval->_mult) == 0)
-          _nextInterval++;
-      }
+    return _nextInterval != _buffer.end( );
+  }
+
+  // Get next interval. If no intervals are left, return NULL
+  interval_t get_next_interval ( )
+  {
+    interval_t i(_nextInterval->_interval);
+    if(--(_nextInterval->_mult) == 0)
+      _nextInterval++;
     return i;
   } // get_next_interval
 
@@ -346,20 +334,15 @@ public:
         DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
-    if(_outIntervals[n]._interval == NULL)
-      {
-        interval_t* t = new interval_t(i);
-        _outIntervals[n] = IntervalRun(t);
-      }
-    else if(i == *(_outIntervals[n]._interval))
-        ++(_outIntervals[n]._mult);
+    if (i == _outIntervals[n]._interval)
+      ++(_outIntervals[n]._mult);
     else
       {
-        write_interval(this->_outputFiles[(int) n], *(_outIntervals[n]._interval));
-        fwrite((char *)&(_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[(int) n]);
-        delete (_outIntervals[n]._interval);
-        interval_t* t = new interval_t(i);
-        _outIntervals[n] = IntervalRun(t);
+        if (_outIntervals[n]._mult > 0) {
+          write_interval(this->_outputFiles[(int) n], _outIntervals[n]._interval);
+          fwrite((char *)&(_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[(int) n]);
+        }
+        _outIntervals[n] = IntervalRun(i);
       }
     return true;
   } // add_interval
@@ -376,8 +359,6 @@ protected:
       }
     for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
       {
-        if(_outIntervals[n]._interval != NULL)
-          delete (_outIntervals[n]._interval);
         _outIntervals[n] = IntervalRun();
       }
   } // _init_new_outputfiles
@@ -385,24 +366,19 @@ protected:
   // Read new intervals and store them in _buffer
   virtual void _populate_buffer()
   {
-    for(typename vector< IntervalRun >::iterator it = _buffer.begin();
-        it != _buffer.end(); ++it)
-      {
-        if(it->_interval != NULL)
-          delete it->_interval;
-      }
     _buffer.clear( );
 
-    interval_t* i = NULL;
+    interval_t i;
     long runlength =0;
+    bool interval_read= false;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
            (   (    !feof(this->_inputFile)
-                 && read_interval(this->_inputFile, i )
+                    && (interval_read= read_interval(this->_inputFile, i ))
                  && fread( reinterpret_cast<char *>(&runlength),
                            sizeof(long), 1, this->_inputFile) == sizeof(long))
             || ( this->_nextInputFile < this->_filenames.size( ))))
       {
-        if( i == NULL )
+        if( !interval_read )
           {
             // end of file
             fclose(this->_inputFile);
@@ -410,9 +386,8 @@ protected:
           }
         else
           {
-            IntervalRun x(i, runlength);
-            _buffer.push_back( x );
-            i = NULL;
+            ;
+            _buffer.push_back( IntervalRun(i, runlength) );
           }
       }
     _nextInterval = _buffer.begin( );

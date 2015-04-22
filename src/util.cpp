@@ -153,22 +153,16 @@ write_interval( FILE* fout, const ArcInterval& a )
 }
 
 bool
-read_interval ( FILE* fin, ArcInterval*& a )
+read_interval ( FILE* fin, ArcInterval& a )
 {
-  QInterval es_int(0, 0);
-  bool ok= read_interval(fin, es_int);
-  if (!ok) { a = NULL; return false; }
+  if (!read_interval(fin, a.es_interval)) return false;
 
-  SequenceLength len=0;
-  const size_t readbytes= fread( reinterpret_cast<char *>(&len),
+  const size_t readbytes= fread( reinterpret_cast<char *>(&a.ext_len),
                                  sizeof( SequenceLength ), 1, fin );
-  if (readbytes != 1 ) { a = NULL; return false; }
+  if (readbytes == 0 ) { return false; }
 
-  SeedInterval s(0, 0);
-  ok= read_interval(fin, s);
-  if (!ok) { a = NULL; return false; }
+  if (!read_interval(fin, a.seed_int)) { return false; }
 
-  a = new ArcInterval( es_int, len, s );
   return true;
 }
 
@@ -199,20 +193,14 @@ read_interval ( FILE* fin, SeedInterval& s )
 void
 write_interval( FILE* fout, const EdgeLabelInterval& e )
 {
-  write_interval( fout, e.get_label( ) );
-  write_interval( fout, e.get_reverse_label( ) );
+  write_interval( fout, e.label );
+  write_interval( fout, e.reverse_label );
 }
 
 bool
-read_interval ( FILE* fin, EdgeLabelInterval*& e )
+read_interval ( FILE* fin, EdgeLabelInterval& e )
 {
-  QInterval label(0, 0), reverse(0, 0);
-  if (!read_interval(fin, label)) {
-    e= NULL; return false;
-  }
-  if (!read_interval(fin, reverse)) {
-    e= NULL; return false;
-  }
-  e = new EdgeLabelInterval( label, reverse );
+  if (!read_interval(fin, e.label)) return false;
+  if (!read_interval(fin, e.reverse_label)) return false;
   return true;
 }

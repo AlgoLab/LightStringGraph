@@ -42,19 +42,17 @@
 using std::vector;
 using std::string;
 
-struct EdgeLabelEntry;
-
 struct EdgeLabelEntry
 {
   EdgeLabelInterval _interval;
   EdgeLength _len;
 
   EdgeLabelEntry( )
-    : _interval(QInterval(0,0), QInterval(0,0)), _len(0)
+    : _interval(), _len(0)
   {
   }
 
-  EdgeLabelEntry( EdgeLabelInterval& i, EdgeLength l)
+  EdgeLabelEntry( const EdgeLabelInterval& i, EdgeLength l)
     :_interval(i), _len(l)
   {
   }
@@ -63,7 +61,7 @@ struct EdgeLabelEntry
   {
   }
 
-  struct EdgeLabelEntry& operator=(const struct EdgeLabelEntry& other)
+  EdgeLabelEntry& operator=(const EdgeLabelEntry& other)
   {
     if(this == &other) return *this;
     _interval = other._interval;
@@ -71,7 +69,7 @@ struct EdgeLabelEntry
     return *this;
   }
 
-  bool operator<(const struct EdgeLabelEntry& rhs) const
+  bool operator<(const EdgeLabelEntry& rhs) const
   {
     return (_interval < rhs._interval);
   }
@@ -80,16 +78,16 @@ struct EdgeLabelEntry
 class EdgeLabelIntervalManager
 {
 public:
-  typedef std::priority_queue< struct EdgeLabelEntry > EdgeLabel_PQ;
+  typedef std::priority_queue< EdgeLabelEntry > EdgeLabel_PQ;
 
 private:
-  vector< vector< string > > _filenamesIN;
+  const vector< vector< string > > _filenamesIN;
   vector< SameLengthEdgeLabelIntervalManager* > _edgeManagerVect;
   EdgeLabel_PQ _pq;
 
 public:
   // Constructor
-  EdgeLabelIntervalManager( vector< vector< string > >& );
+  EdgeLabelIntervalManager( const vector< vector< string > >& );
   
   // Destructor
   ~EdgeLabelIntervalManager( );

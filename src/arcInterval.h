@@ -38,11 +38,14 @@ typedef base_interval<SequenceNumber> SeedInterval;
 
 struct ArcInterval
 {
-  const QInterval es_interval;
-  const SequenceLength ext_len;
-  const SeedInterval seed_int;
+  QInterval es_interval;
+  SequenceLength ext_len;
+  SeedInterval seed_int;
 
-  // Constructor
+  // Constructors
+  ArcInterval()
+    : es_interval(), ext_len(), seed_int()
+  { }
   ArcInterval(const QInterval& es_interval_,
               const SequenceLength& ext_len_,
               const SeedInterval& seed_int_)

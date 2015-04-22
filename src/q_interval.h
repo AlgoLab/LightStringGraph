@@ -40,7 +40,11 @@ struct base_interval
   Type begin,
     end;
 
-  // Constructor
+  // Constructors
+  base_interval ( )
+    :begin(), end()
+  { }
+
   base_interval ( const Type& begin_,
               const Type& end_)
       :begin(begin_), end(end_)

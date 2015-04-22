@@ -235,26 +235,30 @@ void extend_arc_intervals( const int length,
   unsigned long int nwintmgr=0;    // Intrvals read from qmgr
   unsigned long int nwintnwmgr =0; // Intervals from neqmgr
 
-  ArcInterval *qint, *newqint;
-  qint = qmgr.get_next_interval( );
-  newqint = newqmgr.get_next_interval( );
+  bool has_qint= qmgr.has_next_interval( ),
+    has_newqint= newqmgr.has_next_interval( );
+  ArcInterval qint, newqint;
+  if (has_qint)
+    qint= qmgr.get_next_interval( );
+  if (has_newqint)
+    newqint= newqmgr.get_next_interval( );
 
-  QInterval lastInterval(0,0);
+  QInterval lastInterval;
 
   vector< NucleoCounter > PI;
   vector< NucleoCounter > pi;
 
   bool $_extension = false;
 
-  while((qint != NULL) || (newqint != NULL))
+  while(has_qint || has_newqint )
     {
-      ArcInterval         *currentInterval;
+      ArcInterval          currentInterval;
       bool                 is_new_interval = false;
       bool                 from_qmgr = true;
       vector< Nucleotide > extendsymbols;
 
-      if((newqint == NULL && qint != NULL) ||
-         (qint != NULL && qint->es_interval.begin < newqint->es_interval.begin))
+      if((!has_newqint && has_qint ) ||
+         (has_qint && qint.es_interval.begin < newqint.es_interval.begin))
         {
           currentInterval = qint;
           from_qmgr = true;
@@ -268,45 +272,45 @@ void extend_arc_intervals( const int length,
           ++nwintnwmgr;
         }
 
-      DEBUG_LOG("Read Interval [" << currentInterval->es_interval.begin
-                << "," << currentInterval->es_interval.end << ") from_qmgr?" << from_qmgr);
+      DEBUG_LOG("Read Interval [" << currentInterval.es_interval.begin
+                << "," << currentInterval.es_interval.end << ") from_qmgr?" << from_qmgr);
 
-      if(currentInterval->es_interval != lastInterval)
+      if(currentInterval.es_interval != lastInterval)
         {
           // New qinterval
-          lastInterval = currentInterval->es_interval;
+          lastInterval = currentInterval.es_interval;
           $_extension = false;
-          for(BWTPosition i(br.get_position()); i <= currentInterval->es_interval.begin; ++i)
+          for(BWTPosition i(br.get_position()); i <= currentInterval.es_interval.begin; ++i)
               br.move_to( i );
 
           PI = vector< NucleoCounter >( br.get_Pi() );
 
-          for(BWTPosition currentPosition=currentInterval->es_interval.begin;
-              currentPosition < currentInterval->es_interval.end;
+          for(BWTPosition currentPosition=currentInterval.es_interval.begin;
+              currentPosition < currentInterval.es_interval.end;
               ++currentPosition)
             {
               br.move_to(currentPosition);
               if(br.get_current_nucleotide() == BASE_$)
                 $_extension = true;
             }
-          br.move_to(currentInterval->es_interval.end);
+          br.move_to(currentInterval.es_interval.end);
         }
 
       pi = vector< NucleoCounter >( br.get_Pi() );
 
-      if($_extension && currentInterval->ext_len>0)
+      if($_extension && currentInterval.ext_len>0)
         {
           const SequenceNumber begin$pos = (SequenceNumber)PI[BASE_$],
             end$pos = (SequenceNumber)pi[BASE_$];
 
-          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&begin$pos),
+          arcsOut[currentInterval.ext_len].write(reinterpret_cast<const char*>(&begin$pos),
                                                   sizeof(SequenceNumber));
-          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&end$pos),
+          arcsOut[currentInterval.ext_len].write(reinterpret_cast<const char*>(&end$pos),
                                                   sizeof(SequenceNumber));
-          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(currentInterval->seed_int.begin)),
+          arcsOut[currentInterval.ext_len].write(reinterpret_cast<const char*>(&(currentInterval.seed_int.begin)),
                                                   sizeof(SequenceNumber));
-          const SequenceNumber seedend = currentInterval->seed_int.begin + currentInterval->seed_int.end;
-          arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(seedend)),
+          const SequenceNumber seedend = currentInterval.seed_int.begin + currentInterval.seed_int.end;
+          arcsOut[currentInterval.ext_len].write(reinterpret_cast<const char*>(&(seedend)),
                                                   sizeof(SequenceNumber));
           ++nwarcs;
           DEBUG_LOG("Add BASE_$");
@@ -334,19 +338,27 @@ void extend_arc_intervals( const int length,
                 }
               QInterval new_q_interval(new_begin, new_end);
               ArcInterval new_arc_interval(new_q_interval,
-                                           currentInterval->ext_len +1,
-                                           currentInterval->seed_int);
+                                           currentInterval.ext_len +1,
+                                           currentInterval.seed_int);
               DEBUG_LOG("Add interval [" << new_begin << "," << new_end
                         << ") to qmgr with ext_len = "
-                        << currentInterval->ext_len +1);
+                        << currentInterval.ext_len +1);
               qmgr.add_interval(new_arc_interval, (Nucleotide)base);
             }
         }
 
       if(extendsymbols.size() > 0)
-          extsym_p.add_extend_symbol(extendsymbols, currentInterval->ext_len);
+          extsym_p.add_extend_symbol(extendsymbols, currentInterval.ext_len);
 
-      from_qmgr ? qint = qmgr.get_next_interval() : newqint = newqmgr.get_next_interval();
+      if (from_qmgr) {
+        has_qint= qmgr.has_next_interval( );
+        if (has_qint)
+          qint= qmgr.get_next_interval( );
+      } else {
+        has_newqint= newqmgr.has_next_interval( );
+        if (has_newqint)
+          newqint= newqmgr.get_next_interval( );
+      }
     }
   DEBUG_LOG( "--> Got " << nwintmgr << " new intervals from qmgr" );
   DEBUG_LOG( "--> Got " << nwintnwmgr << " new intervals from nwqmgr" );
@@ -399,14 +411,14 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
     {
       DEBUG_LOG("position       : " << br.get_position());
       if(edgeread)
-        DEBUG_LOG("currentInterval: " << currentEdge._interval.get_label().begin
-                  << ", " << currentEdge._interval.get_label().end);
+        DEBUG_LOG("currentInterval: " << currentEdge._interval.label.begin
+                  << ", " << currentEdge._interval.label.end);
       while(edgestack.size() > 0 &&
-            ((edgeread && currentEdge._interval.get_label().begin >= edgestack.top()._elem._interval.get_label().end) ||
+            ((edgeread && currentEdge._interval.label.begin >= edgestack.top()._elem._interval.label.end) ||
              (!edgeread)))
         {
           // Move to edgestack.top().end()
-          br.move_to(edgestack.top()._elem._interval.get_label().end);
+          br.move_to(edgestack.top()._elem._interval.label.end);
           const vector< Nucleotide >& extend_symbols = extsym_p.get_next_symbol(edgestack.top()._elem._len);
           std::copy(br.get_Pi().begin(), br.get_Pi().end(), pi.begin());
           // Extend edgestack.top
@@ -419,8 +431,8 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
               // Output if end of arc
               if(extension == BASE_$)
                 {
-                  const BWTPosition labbegin = edgestack.top()._elem._interval.get_reverse_label().begin;
-                  const BWTPosition labend   = edgestack.top()._elem._interval.get_reverse_label().end;
+                  const BWTPosition labbegin = edgestack.top()._elem._interval.reverse_label.begin;
+                  const BWTPosition labend   = edgestack.top()._elem._interval.reverse_label.end;
                   edgeOut[edgestack.top()._elem._len].write(reinterpret_cast<const char*>(&labbegin),
                                                   sizeof(BWTPosition));
                   edgeOut[edgestack.top()._elem._len].write(reinterpret_cast<const char*>(&labend),
@@ -432,7 +444,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                 {
                   const BWTPosition new_begin = C[ extension ] + EPI._occs[ EPI_p[ edgestack.top()._elem._len ] ][extension];
                   const BWTPosition new_end   = C[ extension ] + pi[ extension ];
-                  const BWTPosition old_rev_begin = edgestack.top()._elem._interval.get_reverse_label().begin;
+                  const BWTPosition old_rev_begin = edgestack.top()._elem._interval.reverse_label.begin;
                   BWTPosition new_rev_begin, new_rev_end;
                   if(edgestack.top()._elem._len == 0)
                     {
@@ -470,7 +482,7 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
             edgestack.top()._mult++;
           else
             {
-              br.move_to(currentEdge._interval.get_label().begin);
+              br.move_to(currentEdge._interval.label.begin);
               std::copy(br.get_Pi().begin(), br.get_Pi().end(), EPI._occs[EPI._next].begin());
               EPI_p[currentEdge._len] = EPI._next;
               ++EPI._next;
