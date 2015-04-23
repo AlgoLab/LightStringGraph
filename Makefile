@@ -74,8 +74,6 @@ endif
 
 
 LSG_DEP= $(OBJ_DIR)BWTReader.o \
-	$(OBJ_DIR)LCPIterator.o \
-	$(OBJ_DIR)GSAIterator.o \
 	$(OBJ_DIR)search.o \
 	$(OBJ_DIR)util.o \
 	$(OBJ_DIR)partialBWTReader.o \

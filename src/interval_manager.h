@@ -386,7 +386,6 @@ protected:
           }
         else
           {
-            ;
             _buffer.push_back( IntervalRun(i, runlength) );
           }
       }

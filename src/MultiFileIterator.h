@@ -31,28 +31,24 @@
 #ifndef MULTI_FILE_ITERATOR_H
 #define MULTI_FILE_ITERATOR_H
 
-#include <iostream>
 #include <vector>
 #include <string>
-#include <iterator>
 
 #include "types.h"
 #include "util.h"
 #include "SingleFileIterator.h"
 
 template <typename TFileValue,
-			 typename TValue=TFileValue,
-			 typename TGetValue=get_value<TFileValue,TValue> >
+          typename TValue=TFileValue,
+          typename TReader=read_value_t<gzFile, TFileValue, TValue> >
 class MultiFileIterator
-  : public std::iterator< std::input_iterator_tag,
-								  TValue >
 {
 private:
-  typedef SingleFileIterator<TFileValue, TValue, TGetValue> file_iterator_t;
+  typedef SingleFileIterator<TFileValue, TValue, TReader> file_iterator_t;
   typedef std::vector< file_iterator_t* > file_iterators_t;
 
   file_iterators_t  _iterators;
-  typename file_iterators_t::iterator _current_iterator;
+  typename file_iterators_t::const_iterator _current_iterator;
 
   BWTPosition _current_position;
   bool _terminated;
@@ -63,7 +59,7 @@ public:
 
   // Destructor
   ~MultiFileIterator() {
-    for (typename file_iterators_t::iterator it= _iterators.begin();
+    for (typename file_iterators_t::const_iterator it= _iterators.begin();
         it != _iterators.end();
         ++it) {
         delete *it;
@@ -81,16 +77,16 @@ public:
 	 return _current_position;
   }
 
-  bool operator==(const MultiFileIterator<TFileValue,TValue,TGetValue>& rhs) const {
+  bool operator==(const MultiFileIterator<TFileValue,TValue,TReader>& rhs) const {
 	 return _terminated && rhs._terminated;
   }
 
-  bool operator!=(const MultiFileIterator<TFileValue,TValue,TGetValue>& rhs) const {
+  bool operator!=(const MultiFileIterator<TFileValue,TValue,TReader>& rhs) const {
 	 return !_terminated || !rhs._terminated;
   }
 
   void reset() {
-	 for (typename file_iterators_t::iterator it= _iterators.begin();
+	 for (typename file_iterators_t::const_iterator it= _iterators.begin();
 			it != _iterators.end();
 			++it) {
 		(**it).reset();
@@ -105,8 +101,8 @@ public:
   }
 
 // This static method returns a sentinel MultiFileIterator used for testing if the streams are finished.
-  static const MultiFileIterator<TFileValue,TValue,TGetValue>& end() {
-	 static const MultiFileIterator<TFileValue,TValue,TGetValue> _end;
+  static const MultiFileIterator<TFileValue,TValue,TReader>& end() {
+    static const MultiFileIterator<TFileValue,TValue,TReader> _end;
 	 return _end;
   }
 
@@ -114,15 +110,15 @@ public:
 private:
   // no need of copy ctor nor assignment operator
   MultiFileIterator(): _terminated(true) { }
-  MultiFileIterator(const MultiFileIterator<TFileValue,TValue,TGetValue>& other) { }
-  MultiFileIterator& operator=(const MultiFileIterator<TFileValue,TValue,TGetValue>& other) { return *this; }
+  MultiFileIterator(const MultiFileIterator<TFileValue,TValue,TReader>& );
+  MultiFileIterator& operator=(const MultiFileIterator<TFileValue,TValue,TReader>& );
 
 };
 
 #include "util.h"
 
-template <typename TFileValue, typename TValue, typename TGetValue >
-MultiFileIterator<TFileValue,TValue,TGetValue>::\
+template <typename TFileValue, typename TValue, typename TReader>
+MultiFileIterator<TFileValue,TValue,TReader>::     \
 MultiFileIterator(const std::vector< std::string >& filenames)
 	 : _current_position(0)
 {
@@ -144,9 +140,9 @@ MultiFileIterator(const std::vector< std::string >& filenames)
   }
 }
 
-template <typename TFileValue, typename TValue, typename TGetValue >
-MultiFileIterator<TFileValue,TValue,TGetValue>&
-MultiFileIterator<TFileValue,TValue,TGetValue>::\
+template <typename TFileValue, typename TValue, typename TReader>
+MultiFileIterator<TFileValue,TValue,TReader>&
+MultiFileIterator<TFileValue,TValue,TReader>::  \
 operator++() {
   if (!_terminated) {
 	 ++_current_position;
