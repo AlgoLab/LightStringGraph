@@ -34,6 +34,6 @@
 #include "types.h"
 #include "SingleFileIterator.h"
 
-typedef SingleFileIterator<GSAEntry> GSAIterator;
+typedef SingleFileIterator<GSAEntry, auto_file_t> GSAIterator;
 
 #endif

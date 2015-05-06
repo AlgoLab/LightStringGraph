@@ -39,6 +39,7 @@
 #include <cstdio>
 
 #include "util.h"
+#include "file_abstractions.h"
 
 using std::vector;
 using std::string;
@@ -48,8 +49,8 @@ template< class interval_t > class IntervalManagerI
 protected:
   const vector< string >  _filenames;      // Input filenames
   unsigned short          _nextInputFile;  // Index of next file to open in _filenames
-  FILE*                   _inputFile;      // Current input stream
-  vector< FILE* >         _outputFiles;    // New intervals (interval_t) will be
+  gzFile                   _inputFile;      // Current input stream
+  vector< gzFile >         _outputFiles;    // New intervals (interval_t) will be
 
 public:
 
@@ -81,27 +82,21 @@ public:
         t.close();
       }
 
-    _inputFile = fopen( _filenames[ 0 ].c_str( ), "rb" );
-    if( !_inputFile )
-      {
-        std::cerr << "ERROR: Can't open file : " << _filenames[ 0 ] << std::endl
-                  << "Aborting..." << std::endl;
-        _MY_FAIL;
-      }
+    _inputFile = gzip_file_t::gzfile_open( _filenames[ 0 ], false );
     _nextInputFile = 0;
   }
 
   virtual ~IntervalManagerI()
   {
-    for ( vector< FILE* >::iterator it = _outputFiles.begin( );
+    for ( vector< gzFile >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( ); ++it )
       {
-        fclose(*it);
+        gzclose(*it);
         (*it) = NULL;
       }
     if( _inputFile != NULL )
       {
-        fclose(_inputFile);
+        gzclose(_inputFile);
         _inputFile = NULL;
       }
     for( vector< string >::const_iterator it = _filenames.begin();
@@ -116,14 +111,15 @@ public:
   {
     if( _inputFile != NULL )
       {
-        fclose(_inputFile);
+        gzclose(_inputFile);
         _inputFile = NULL;
       }
-    for ( vector< FILE* >::iterator it = _outputFiles.begin( );
+    for ( vector< gzFile >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( );
           ++it)
       {
-        fclose(*it);
+        _FAIL_IF(*it == NULL);
+        gzclose(*it);
       }
     _outputFiles.clear();
     for ( vector< string >::const_iterator it = _filenames.begin( );
@@ -142,7 +138,7 @@ public:
         DEBUG_LOG_VERBOSE( "Renamed file " << nextfile << " to " << *it);
       }
     _init_new_outputfiles( );
-    _inputFile = fopen( _filenames[ 0 ].c_str( ), "rb" );
+    _inputFile = gzip_file_t::gzfile_open( _filenames[ 0 ], false );
     _nextInputFile = 1;
     _populate_buffer( );
   }
@@ -222,7 +218,7 @@ protected:
     interval_t i;
     bool interval_read= false;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           (    (    !feof(this->_inputFile)
+           (    (    !gzeof(this->_inputFile)
                   && (interval_read= read_interval( this->_inputFile, i )) )
              || ( this->_nextInputFile < this->_filenames.size( ) ) )
            )
@@ -230,8 +226,8 @@ protected:
         if( !interval_read )
           {
             // end of file
-            fclose(this->_inputFile);
-            this->_inputFile = fopen( this->_filenames[ this->_nextInputFile ].c_str( ), "rb" );
+            gzclose(this->_inputFile);
+            this->_inputFile = gzip_file_t::gzfile_open( this->_filenames[ this->_nextInputFile ], false );
             this->_nextInputFile++;
           }
         else
@@ -248,7 +244,8 @@ protected:
           it != this->_filenames.end( );
           ++it)
       {
-        this->_outputFiles.push_back( fopen( ((*it)+ "_next").c_str(), "wb") );
+        gzFile outfile= gzip_file_t::gzfile_open( (*it +"_next"), true );
+        this->_outputFiles.push_back(  outfile );
       }
   }
 };
@@ -302,7 +299,7 @@ public:
         if(_outIntervals[n]._mult !=0)
           {
             write_interval(this->_outputFiles[n], this->_outIntervals[n]._interval);
-            fwrite((char*)&(this->_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[n]);
+            gzwrite(this->_outputFiles[n], (char*)&(this->_outIntervals[n]._mult), sizeof(long));
           }
       }
     IntervalManagerI<interval_t>::swap_files();
@@ -340,7 +337,7 @@ public:
       {
         if (_outIntervals[n]._mult > 0) {
           write_interval(this->_outputFiles[(int) n], _outIntervals[n]._interval);
-          fwrite((char *)&(_outIntervals[n]._mult), sizeof(long), 1, this->_outputFiles[(int) n]);
+          gzwrite(this->_outputFiles[(int) n], (char *)&(_outIntervals[n]._mult), sizeof(long));
         }
         _outIntervals[n] = IntervalRun(i);
       }
@@ -355,7 +352,8 @@ protected:
           it != this->_filenames.end( );
           ++it)
       {
-        this->_outputFiles.push_back( fopen( (*it +"_next").c_str(), "wb") );
+        gzFile outfile= gzip_file_t::gzfile_open( (*it +"_next"), true);
+        this->_outputFiles.push_back(  outfile );
       }
     for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
       {
@@ -372,17 +370,17 @@ protected:
     long runlength =0;
     bool interval_read= false;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           (   (    !feof(this->_inputFile)
+           (   (    !gzeof(this->_inputFile)
                     && (interval_read= read_interval(this->_inputFile, i ))
-                 && fread( reinterpret_cast<char *>(&runlength),
-                           sizeof(long), 1, this->_inputFile) == sizeof(long))
+                    && gzread( this->_inputFile, reinterpret_cast<char *>(&runlength),
+                           sizeof(long)) == sizeof(long))
             || ( this->_nextInputFile < this->_filenames.size( ))))
       {
         if( !interval_read )
           {
             // end of file
-            fclose(this->_inputFile);
-            this->_inputFile = fopen( this->_filenames[ this->_nextInputFile++ ].c_str( ), "rb");
+            gzclose(this->_inputFile);
+            this->_inputFile = gzip_file_t::gzfile_open( this->_filenames[ this->_nextInputFile++ ], false);
           }
         else
           {

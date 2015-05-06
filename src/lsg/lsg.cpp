@@ -184,13 +184,13 @@ int main ( int argc, char** argv )
 
   std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;
 
-  BWTIterator bwtit( BWTInputFilenames );
   LCPIterator lcpit( LCPInputFilenames );
+  BWTIterator bwtit( BWTInputFilenames );
   GSAIterator gsait( gsaInputFileName );
 
   BasicArcIntervalManager baimgr(basicArcIntervalFilenames, "-LEN_");
 
-  SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, readLen, TAU, c, baimgr);
+  const SequenceLength max_len = build_basic_arc_intervals(bwtit, lcpit, gsait, readLen, TAU, c, baimgr);
 
   for(SequenceLength j(0); j < max_len; ++j)
     {
@@ -216,7 +216,7 @@ int main ( int argc, char** argv )
 
   for( int i( 1 ); i <= CYCNUM; ++i )
     {
-      LCPIterator lcpit( LCPInputFilenames );
+      lcpit.reset();
       ExtendSymbolPile extsym_p(extendSymbolFilenames);
 
       std::cerr << "@ " << now( "%I:%M:%S %p %Z" ) << std::endl;

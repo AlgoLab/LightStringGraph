@@ -79,7 +79,7 @@ struct integer_type<4> {
 // };
 
 template <int byte_num>
-void writelen(FILE* fout, BWTPosition len)
+void writelen(gzFile fout, BWTPosition len)
 {
   static char intbuff[byte_num*64];
   const uint8_t shift_amount= (byte_num * 8 -1);
@@ -94,11 +94,11 @@ void writelen(FILE* fout, BWTPosition len)
       memcpy(intbuff+bpos, (char *)&towrite, byte_num);
       bpos += byte_num;
     }
-  fwrite(intbuff, sizeof(char), bpos, fout);
+  gzwrite(fout, intbuff, sizeof(char)*bpos);
 }
 
 template <int byte_num>
-BWTPosition readlen(FILE* fin)
+BWTPosition readlen(gzFile fin)
 {
   const unsigned int shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
@@ -107,8 +107,8 @@ BWTPosition readlen(FILE* fin)
   uint8_t iter=0;
   do{
     partialread =0;
-    const size_t gcount= fread((char *)(&partialread), byte_num, 1, fin);
-    if(gcount == 0)
+    const size_t gcount= gzread(fin, (char *)(&partialread), byte_num);
+    if(gcount != byte_num)
       return 0;
     p |= ((partialread & mask) << (shift_amount * iter));
     ++iter;
@@ -117,17 +117,17 @@ BWTPosition readlen(FILE* fin)
 }
 
 void
-write_interval( FILE* fout, const QInterval& i )
+write_interval( gzFile fout, const QInterval& i )
 {
-  fwrite((char *) &i.begin, sizeof(BWTPosition), 1, fout);
+  gzwrite(fout, (char *) &i.begin, sizeof(BWTPosition));
   writelen<2>(fout, i.size());
 }
 
 bool
-read_interval ( FILE* fin, QInterval& i )
+read_interval ( gzFile fin, QInterval& i )
 {
-  const size_t gcount= fread( (char *)&i.begin, sizeof( BWTPosition ), 1, fin);
-  if (gcount != 1) { return false; }
+  const size_t gcount= gzread( fin, (char *)&i.begin, sizeof( BWTPosition ));
+  if (gcount != sizeof( BWTPosition) ) { return false; }
   i.end = i.begin + readlen<2>(fin);
   return i.size() > 0;
 }
@@ -145,21 +145,21 @@ ifstream& operator>>( ifstream& in, GSAEntry& g )
 }
 
 void
-write_interval( FILE* fout, const ArcInterval& a )
+write_interval( gzFile fout, const ArcInterval& a )
 {
   write_interval(fout, a.es_interval);
-  fwrite( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ), 1, fout);
+  gzwrite( fout, reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ));
   write_interval(fout, a.seed_int);
 }
 
 bool
-read_interval ( FILE* fin, ArcInterval& a )
+read_interval ( gzFile fin, ArcInterval& a )
 {
   if (!read_interval(fin, a.es_interval)) return false;
 
-  const size_t readbytes= fread( reinterpret_cast<char *>(&a.ext_len),
-                                 sizeof( SequenceLength ), 1, fin );
-  if (readbytes == 0 ) { return false; }
+  const size_t readbytes= gzread( fin, reinterpret_cast<char *>(&a.ext_len),
+                                 sizeof( SequenceLength ));
+  if (readbytes != sizeof(SequenceLength) ) { return false; }
 
   if (!read_interval(fin, a.seed_int)) { return false; }
 
@@ -175,30 +175,30 @@ std::string now( const char* format = "%c" )
 }
 
 void
-write_interval(FILE* fout, const SeedInterval& s )
+write_interval(gzFile fout, const SeedInterval& s )
 {
-  fwrite( reinterpret_cast<const char*>(&s.begin), sizeof(SequenceNumber), 1, fout);
+  gzwrite( fout, reinterpret_cast<const char*>(&s.begin), sizeof(SequenceNumber));
   writelen<1>(fout, s.end-s.begin);
 }
 
 bool
-read_interval ( FILE* fin, SeedInterval& s )
+read_interval ( gzFile fin, SeedInterval& s )
 {
-  const size_t gcount= fread( reinterpret_cast<char *>(&s.begin), sizeof( SequenceNumber ), 1, fin);
-  if (gcount != 1) { return false; }
+  const size_t gcount= gzread( fin, reinterpret_cast<char *>(&s.begin), sizeof( SequenceNumber ));
+  if (gcount != sizeof(SequenceNumber)) { return false; }
   s.end = s.begin + readlen<1>(fin);
   return s.size() > 0;
 }
 
 void
-write_interval( FILE* fout, const EdgeLabelInterval& e )
+write_interval( gzFile fout, const EdgeLabelInterval& e )
 {
   write_interval( fout, e.label );
   write_interval( fout, e.reverse_label );
 }
 
 bool
-read_interval ( FILE* fin, EdgeLabelInterval& e )
+read_interval ( gzFile fin, EdgeLabelInterval& e )
 {
   if (!read_interval(fin, e.label)) return false;
   if (!read_interval(fin, e.reverse_label)) return false;

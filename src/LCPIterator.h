@@ -34,6 +34,6 @@
 #include "types.h"
 #include "MultiFileIterator.h"
 
-typedef MultiFileIterator<LCPValue> LCPIterator;
+typedef MultiFileIterator<LCPValue, auto_file_t> LCPIterator;
 
 #endif

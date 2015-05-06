@@ -32,22 +32,25 @@
 #define SINGLE_FILE_ITERATOR_H
 
 #include <string>
-#include <cstdlib>
 
-#include <zlib.h>
+#include "file_abstractions.h"
 
 template <typename TFile,
-          typename TFileValue,
-          typename TValue>
-struct read_value_t;
+          typename TFileValue>
+struct read_value_t {
 
-template <typename TFileValue,
-          typename TValue>
-struct read_value_t<gzFile, TFileValue, TValue> {
-  bool operator()(gzFile _file, TValue& value) const {
+  template <typename TValue>
+  bool operator()(TFile& _file, TValue& value,
+                  typename std::enable_if< std::is_same<TValue,TFileValue>::value>::type* dummy=0) const {
+    return _file.read(value);
+  }
+
+  template <typename TValue>
+  bool operator()(TFile& _file, TValue& value,
+                  typename std::enable_if< !std::is_same<TValue,TFileValue>::value>::type* dummy=0) const {
     TFileValue val;
-    const int byteread= gzread( _file, &val, sizeof(val) );
-    if (byteread == sizeof(val)) {
+    const bool result= _file.read(val);
+    if (result) {
       value= val;
       return true;
     }
@@ -56,12 +59,14 @@ struct read_value_t<gzFile, TFileValue, TValue> {
 };
 
 template <typename TFileValue,
+          typename TFile,
           typename TValue=TFileValue,
-          typename TReader=read_value_t<gzFile, TFileValue, TValue> >
+          typename TReader=read_value_t<TFile, TFileValue> >
 class SingleFileIterator
 {
 public:
   typedef TFileValue filevalue_t;
+  typedef TFile file_t;
   typedef TValue value_t;
   typedef TReader reader_t;
 
@@ -69,7 +74,7 @@ private:
 
   const reader_t _reader;
   const std::string _filename;
-  gzFile _file;
+  file_t _file;
   value_t _current_value;
 
   BWTPosition _current_position;
@@ -79,7 +84,7 @@ private:
 public:
   // Constructors
   SingleFileIterator(const std::string& filename)
-    :_reader(), _filename(filename), _file(NULL)
+    :_reader(), _filename(filename)
   {
 	 open();
   }
@@ -92,17 +97,16 @@ public:
 
 
   SingleFileIterator& operator++() {
-    if (!_terminated) {
-      ++_current_position;
-      const bool valid = _reader(_file, _current_value);
-      _terminated = !valid;
-    }
+    _FAIL_IF_DBG(_terminated);
+    ++_current_position;
+    const bool valid = _reader(_file, _current_value);
+    _terminated = !valid;
     return *this;
   }
 
 
-  TValue operator*() {
-    _FAIL_IF(_terminated);
+  TValue operator*() const {
+    _FAIL_IF_DBG(_terminated);
     return _current_value;
   }
 
@@ -118,42 +122,26 @@ public:
   }
 
 
-// This static method returns a sentinel SingleFileIterator used for testing if the stream is finished.
-  static const SingleFileIterator<TFileValue,TValue,TReader>&
-  end() {
-    static const SingleFileIterator<TFileValue,TValue,TReader> _end;
-    return _end;
+  bool terminated() const {
+    return _terminated;
   }
-
-
-  bool
-  operator==(const SingleFileIterator<TFileValue,TValue,TReader>& rhs) const {
-	 return _terminated && rhs._terminated;
-  }
-
-
-  bool
-  operator!=(const SingleFileIterator<TFileValue,TValue,TReader>& rhs) const {
-	 return !_terminated || !rhs._terminated;
-  }
-
 
 private:
   // no need of copy ctor nor assignment operator
-  SingleFileIterator(): _reader(),_terminated(true) { }
-  SingleFileIterator(const SingleFileIterator<TFileValue,TValue,TReader>&);
+  SingleFileIterator();
+  SingleFileIterator(const SingleFileIterator<TFileValue,TFile,TValue,TReader>&);
   SingleFileIterator<TFileValue,TValue>&
-  operator=(const SingleFileIterator<TFileValue,TValue,TReader>&);
+  operator=(const SingleFileIterator<TFileValue,TFile,TValue,TReader>&);
 
   void open() {
     DEBUG_LOG_VERBOSE("Initializing SingleFileIterator on file: " << _filename);
-    _file= gzopen(_filename.c_str(), "rb");
-    if (_file == Z_NULL) {
+    const bool result= _file.open(_filename);
+    if (!result) {
       DEBUG_LOG("Impossible to open file '" << _filename << "' for reading.");
       throw std::logic_error(std::string("Impossible to open file '")
                              + _filename + "' for reading.");
     }
-    DEBUG_LOG("File '" << _filename << "' successfully opened.");
+    DEBUG_LOG_VERBOSE("File '" << _filename << "' successfully opened.");
     const bool valid = _reader(_file, _current_value);
     _current_position= 0;
     _terminated = !valid;
@@ -161,10 +149,7 @@ private:
 
   void close() {
     DEBUG_LOG_VERBOSE("Closing SingleFileIterator on file: " << _filename);
-    if (_file != Z_NULL) {
-      gzclose(_file);
-      _file = Z_NULL;
-    }
+    _file.close();
     _current_position= 0;
     _terminated= true;
   }

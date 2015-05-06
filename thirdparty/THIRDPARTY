@@ -2,6 +2,8 @@
 
 - `kseq.h` from the [`seqtk` project](https://github.com/lh3/seqtk) by
   Heng Li (and collaborators) released under the MIT license
+- [`zlib 1.2.8`](http://www.zlib.net/) by Jean-loup Gailly (compression) and
+  Mark Adler (decompression) released under the zlib license
 
 `LightStringGraph` is intended to use with the results produced by
 [`BEETL`](https://github.com/BEETL/BEETL), written by Bauer, Cox, Rosone

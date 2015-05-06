@@ -42,6 +42,8 @@
 #include <climits>
 #include <cstdio>
 
+#include <zlib.h>
+
 #include <boost/lexical_cast.hpp>
 
 #include "types.h"
@@ -82,21 +84,21 @@ std::string convert_to_string(const T& el) {
   return boost::lexical_cast<std::string>(el);
 }
 
-// Overloading various operato<< and operator>> ..
-void write_interval( FILE* , const QInterval& );
-bool read_interval ( FILE* , QInterval& );
+// Overloading various writing and reading functions
+void write_interval( gzFile , const QInterval& );
+bool read_interval ( gzFile , QInterval& );
 
 ofstream& operator<<( ofstream&, const GSAEntry& );
 ifstream& operator>>( ifstream&, GSAEntry& );
 
-void write_interval( FILE* , const ArcInterval& );
-bool read_interval ( FILE* , ArcInterval& );
+void write_interval( gzFile , const ArcInterval& );
+bool read_interval ( gzFile , ArcInterval& );
 
-void write_interval( FILE* , const SeedInterval& );
-bool read_interval ( FILE* , SeedInterval& );
+void write_interval( gzFile , const SeedInterval& );
+bool read_interval ( gzFile , SeedInterval& );
 
-void write_interval( FILE* , const EdgeLabelInterval& );
-bool read_interval ( FILE* , EdgeLabelInterval& );
+void write_interval( gzFile , const EdgeLabelInterval& );
+bool read_interval ( gzFile , EdgeLabelInterval& );
 
 // Return a string representing the current tim
 std::string now( const char* format );
@@ -153,6 +155,16 @@ std::string now( const char* format );
 
 #ifdef DEBUG  // DEBUG is ON
 
+#define _FAIL_IF_DBG( _TEST_ )                \
+  do {                                        \
+    if (_TEST_) {                             \
+      DEBUG_LOG("Condition '" <<              \
+                EXPAND_AND_QUOTE(_TEST_) <<   \
+                "' verified.");               \
+      _MY_FAIL;                               \
+    }                                         \
+  } while (0)
+
 #define PERFORM_AND_CHECK( TEST )                    \
   do {                                               \
     bool __test_perform_##__LINE__ = TEST;           \
@@ -164,6 +176,10 @@ std::string now( const char* format );
   } while(0)
 
 #else // DEBUG is OFF
+
+#define _FAIL_IF_DBG( _TEST_ )                \
+  do {                                        \
+  } while (0)
 
 #define PERFORM_AND_CHECK( TEST )  \
   do {                             \

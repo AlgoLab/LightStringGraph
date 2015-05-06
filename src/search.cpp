@@ -43,7 +43,7 @@ BWTPosition OccLT( vector< NucleoCounter >& occ, Nucleotide base )
 }
 
 #define _LOG_RECORD                                                     \
-  DEBUG_LOG("  pos: " << p                                              \
+  DEBUG_LOG_VERBOSE("  pos: " << p                                      \
             << "  sigma: " << NuclConv::ntoc((Nucleotide)Ci)            \
             << "  c_lcp: " << PRINT_SL(lcur)                            \
             << "  n_lcp: " << PRINT_SL(lnext)                           \
@@ -66,7 +66,7 @@ static void next_record(BWTIterator& bwt,
 								) {
   ++p;    // Position
   ++gsa;  // Generalized Suffix Array
-  if (gsa==GSAIterator::end())
+  if (gsa.terminated())
 	 return;
   max_len= std::max(max_len, (*gsa).sa);
   if (use_bwt) ++bwt;  // BWT (if used)
@@ -74,7 +74,7 @@ static void next_record(BWTIterator& bwt,
   // LCP (current and next)
   lcur= *lcp;
   ++lcp;
-  lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
+  lnext= (lcp.terminated()) ? 0 : *lcp;
 
   // starting symbol
   while ((prev_Ci + 1 < C.size()) && (p > C[prev_Ci+1])) ++prev_Ci;
@@ -124,7 +124,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
 
   LCPValue lcur= *lcp;
   ++lcp;
-  LCPValue lnext= (lcp == LCPIterator::end()) ? 0 : *lcp;
+  LCPValue lnext= (lcp.terminated()) ? 0 : *lcp;
 
   vector< NucleoCounter >::size_type Ci= 0;
   vector< NucleoCounter >::size_type prev_Ci= 0;
@@ -138,7 +138,7 @@ SequenceLength build_basic_arc_intervals( BWTIterator& bwt,
   LCPValue suff_len= 0;
   SequenceNumber no_of_$= 0;
   SequenceNumber no_of_$_at_block_begin= 0;
-  while (gsa != GSAIterator::end()) {
+  while (!gsa.terminated()) {
     if (opening_block && (((*gsa).sa != suff_len) || (lcur != suff_len))) {
       opening_block= false;
       ob_e= p;

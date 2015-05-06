@@ -39,12 +39,13 @@
 #include "SingleFileIterator.h"
 
 template <typename TFileValue,
+          typename TFile,
           typename TValue=TFileValue,
-          typename TReader=read_value_t<gzFile, TFileValue, TValue> >
+          typename TReader=read_value_t<TFile, TFileValue> >
 class MultiFileIterator
 {
 private:
-  typedef SingleFileIterator<TFileValue, TValue, TReader> file_iterator_t;
+  typedef SingleFileIterator<TFileValue, TFile, TValue, TReader> file_iterator_t;
   typedef std::vector< file_iterator_t* > file_iterators_t;
 
   file_iterators_t  _iterators;
@@ -66,23 +67,24 @@ public:
     }
   }
 
-  MultiFileIterator& operator++();
+  MultiFileIterator& operator++() {
+    _FAIL_IF_DBG(_terminated);
+    ++_current_position;
+    ++(**_current_iterator);
+    while (!_terminated && (*_current_iterator)->terminated()) {
+      ++_current_iterator;
+      _terminated |= (_current_iterator == _iterators.end());
+    }
+    return *this;
+  }
 
-  TValue operator*() {
-    _FAIL_IF(_terminated);
-	 return ***_current_iterator;
+  TValue operator*() const {
+    _FAIL_IF_DBG(_terminated);
+    return ***_current_iterator;
   }
 
   BWTPosition get_position() const {
 	 return _current_position;
-  }
-
-  bool operator==(const MultiFileIterator<TFileValue,TValue,TReader>& rhs) const {
-	 return _terminated && rhs._terminated;
-  }
-
-  bool operator!=(const MultiFileIterator<TFileValue,TValue,TReader>& rhs) const {
-	 return !_terminated || !rhs._terminated;
   }
 
   void reset() {
@@ -93,34 +95,32 @@ public:
 	 }
 	 _current_iterator= _iterators.begin();
 	 _terminated= (_current_iterator == _iterators.end());
-	 while (!_terminated && (**_current_iterator) == file_iterator_t::end()) {
+	 while (!_terminated && (*_current_iterator)->terminated()) {
 		++_current_iterator;
 		_terminated |= (_current_iterator == _iterators.end());
 	 }
 	 _current_position= 0;
   }
 
-// This static method returns a sentinel MultiFileIterator used for testing if the streams are finished.
-  static const MultiFileIterator<TFileValue,TValue,TReader>& end() {
-    static const MultiFileIterator<TFileValue,TValue,TReader> _end;
-	 return _end;
+  bool terminated() const {
+    return _terminated;
   }
 
 
 private:
   // no need of copy ctor nor assignment operator
-  MultiFileIterator(): _terminated(true) { }
-  MultiFileIterator(const MultiFileIterator<TFileValue,TValue,TReader>& );
-  MultiFileIterator& operator=(const MultiFileIterator<TFileValue,TValue,TReader>& );
+  MultiFileIterator();
+  MultiFileIterator(const MultiFileIterator<TFileValue,TFile,TValue,TReader>& );
+  MultiFileIterator& operator=(const MultiFileIterator<TFileValue,TFile,TValue,TReader>& );
 
 };
 
 #include "util.h"
 
-template <typename TFileValue, typename TValue, typename TReader>
-MultiFileIterator<TFileValue,TValue,TReader>::     \
+template <typename TFileValue, typename TFile, typename TValue, typename TReader>
+MultiFileIterator<TFileValue,TFile,TValue,TReader>::     \
 MultiFileIterator(const std::vector< std::string >& filenames)
-	 : _current_position(0)
+  : _current_position(0)
 {
   if (filenames.empty()) {
 	 _FAIL_AND_LOG("Can't initialize a MultiFileIterator without filenames.");
@@ -134,25 +134,10 @@ MultiFileIterator(const std::vector< std::string >& filenames)
 
   _current_iterator= _iterators.begin();
   _terminated= (_current_iterator == _iterators.end());
-  while (!_terminated && (**_current_iterator) == file_iterator_t::end()) {
+  while (!_terminated && (*_current_iterator)->terminated()) {
 	 ++_current_iterator;
 	 _terminated |= (_current_iterator == _iterators.end());
   }
-}
-
-template <typename TFileValue, typename TValue, typename TReader>
-MultiFileIterator<TFileValue,TValue,TReader>&
-MultiFileIterator<TFileValue,TValue,TReader>::  \
-operator++() {
-  if (!_terminated) {
-	 ++_current_position;
-	 ++(**_current_iterator);
-	 while (!_terminated && (**_current_iterator) == file_iterator_t::end()) {
-		++_current_iterator;
-		_terminated |= (_current_iterator == _iterators.end());
-	 }
-  }
-  return *this;
 }
 
 
