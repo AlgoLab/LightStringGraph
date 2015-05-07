@@ -85,7 +85,7 @@ void writelen(gzFile fout, BWTPosition len)
   const uint8_t shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
   unsigned int bpos= 0;
-  while(len)
+  do
     {
       typename integer_type<byte_num>::type towrite=(len & mask);
       len >>= shift_amount;
@@ -94,6 +94,7 @@ void writelen(gzFile fout, BWTPosition len)
       memcpy(intbuff+bpos, (char *)&towrite, byte_num);
       bpos += byte_num;
     }
+  while(len);
   gzwrite(fout, intbuff, sizeof(char)*bpos);
 }
 
@@ -178,7 +179,7 @@ void
 write_interval(gzFile fout, const SeedInterval& s )
 {
   gzwrite( fout, reinterpret_cast<const char*>(&s.begin), sizeof(SequenceNumber));
-  writelen<1>(fout, s.end-s.begin);
+  writelen<1>(fout, s.len);
 }
 
 bool
@@ -186,8 +187,8 @@ read_interval ( gzFile fin, SeedInterval& s )
 {
   const size_t gcount= gzread( fin, reinterpret_cast<char *>(&s.begin), sizeof( SequenceNumber ));
   if (gcount != sizeof(SequenceNumber)) { return false; }
-  s.end = s.begin + readlen<1>(fin);
-  return s.size() > 0;
+  s.len = readlen<1>(fin);
+  return true;
 }
 
 void
