@@ -36,8 +36,10 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <cstdio>
 
 #include "util.h"
+#include "file_abstractions.h"
 
 using std::vector;
 using std::string;
@@ -45,25 +47,25 @@ using std::string;
 template< class interval_t > class IntervalManagerI
 {
 protected:
-  vector< string >                          _filenames;     // Input filenames
-  unsigned short                            _nextInputFile; // Index of next file to open in _filenames
-  std::ifstream*                            _inputFile;       // Current input stream
-  vector< std::ofstream* >                  _outputFiles;       // New intervals (interval_t) will be
+  const vector< string >  _filenames;      // Input filenames
+  unsigned short          _nextInputFile;  // Index of next file to open in _filenames
+  gzFile                   _inputFile;      // Current input stream
+  vector< gzFile >         _outputFiles;    // New intervals (interval_t) will be
 
 public:
 
-  IntervalManagerI(vector< string >& filenames)
+  IntervalManagerI(const vector< string >& filenames)
+    : _filenames(filenames)
   {
-    if ( filenames.size( ) == 0 )
+    if ( filenames.empty() )
       {
         std::cerr << "ERROR: Can't initialize an interval manager without any "
                   << "filename." << std::endl;
         _MY_FAIL;
       }
-    for ( vector< string >::iterator it = filenames.begin( );
+    for ( vector< string >::const_iterator it = filenames.begin( );
           it != filenames.end( ); ++it )
       {
-        _filenames.push_back( *it );
         // touch files
         std::ifstream t((*it).c_str(), std::ios::binary);
         if(!t.good())
@@ -80,38 +82,28 @@ public:
         t.close();
       }
 
-    _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
-    if( _inputFile->fail() )
-      {
-        std::cerr << "ERROR: Can't open file : " << _filenames[ 0 ] << std::endl
-                  << "Aborting..." << std::endl;
-        delete _inputFile;
-        _inputFile = NULL;
-        _MY_FAIL;
-      }
+    _inputFile = gzip_file_t::gzfile_open( _filenames[ 0 ], false );
     _nextInputFile = 0;
   }
 
   virtual ~IntervalManagerI()
   {
-    for ( vector< std::ofstream* >::iterator it = _outputFiles.begin( );
+    for ( vector< gzFile >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( ); ++it )
       {
-        (*it)->close( );
-        delete (*it);
+        gzclose(*it);
         (*it) = NULL;
       }
     if( _inputFile != NULL )
       {
-        _inputFile->close( );
-        delete _inputFile;
+        gzclose(_inputFile);
         _inputFile = NULL;
       }
-    for( typename vector< string >::iterator it = _filenames.begin();
+    for( vector< string >::const_iterator it = _filenames.begin();
          it != _filenames.end(); ++it)
       {
         remove((*it).c_str());
-        remove( std::string((*it) + "_next").c_str());
+        remove( ((*it) + "_next").c_str());
       }
   }
 
@@ -119,42 +111,40 @@ public:
   {
     if( _inputFile != NULL )
       {
-        _inputFile->close();
-        delete _inputFile;
+        gzclose(_inputFile);
         _inputFile = NULL;
       }
-    for ( vector< std::ofstream* >::iterator it = _outputFiles.begin( );
+    for ( vector< gzFile >::iterator it = _outputFiles.begin( );
           it != _outputFiles.end( );
           ++it)
       {
-        (*it)->flush();
-        (*it)->close();
-        delete (*it);
+        _FAIL_IF(*it == NULL);
+        gzclose(*it);
       }
     _outputFiles.clear();
-    for ( vector< string >::iterator it = _filenames.begin( );
+    for ( vector< string >::const_iterator it = _filenames.begin( );
           it != _filenames.end( );
           ++it)
       {
-        std::ostringstream nextfile;
-        nextfile << (*it) << "_next";
-        remove( (*it).c_str() );
-        if( rename( nextfile.str().c_str(), (*it).c_str() ) )
+        remove( it->c_str() );
+        string nextfile(*it + string("_next"));
+        if( rename( nextfile.c_str(), it->c_str() ) )
           {
-            std::cerr << "ERROR: Can't rename " << nextfile.str() << " to " << *it
+            std::cerr << "ERROR: Can't rename " << nextfile << " to " << *it
                       << std::endl << "Aborting..." << std::endl;
             _MY_FAIL;
           }
-        remove( nextfile.str().c_str() );
-        DEBUG_LOG_VERBOSE( "Renamed file " << nextfile.str() << " to " << *it);
+        remove( nextfile.c_str() );
+        DEBUG_LOG_VERBOSE( "Renamed file " << nextfile << " to " << *it);
       }
     _init_new_outputfiles( );
-    _inputFile = new std::ifstream( _filenames[ 0 ].c_str( ), std::ios::binary );
+    _inputFile = gzip_file_t::gzfile_open( _filenames[ 0 ], false );
     _nextInputFile = 1;
     _populate_buffer( );
   }
 
-  virtual interval_t* get_next_interval() =0;
+  virtual bool has_next_interval() =0;
+  virtual interval_t get_next_interval() =0;
   virtual bool add_interval(const interval_t& i, const Nucleotide n) =0;
 
   // Return _nextInputFile
@@ -172,8 +162,8 @@ template< class interval_t > class IntervalManager
   : public IntervalManagerI< interval_t >
 {
 private:
-  vector< interval_t* >                     _buffer;        // current intervals
-  typename vector< interval_t* >::iterator  _nextInterval;     // next interval in buffer
+  vector< interval_t >                     _buffer;        // current intervals
+  typename vector< interval_t >::iterator  _nextInterval;     // next interval in buffer
 
 public:
 
@@ -190,23 +180,21 @@ public:
   // Destructor
   ~IntervalManager( )
   {
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        delete (*it);
-        (*it) = NULL;
-      }
   } // ~IntervalManager
 
-  // Get next interval. If no intervals are left, return NULL
-  interval_t* get_next_interval ( )
-  {
+  // True if next call of get_next_interval () gives a valid interval
+  bool has_next_interval() {
     if( _nextInterval == _buffer.end( ) )
       {
         _populate_buffer( );
       }
-    interval_t* i = ( _buffer.size( ) == 0 ) ? NULL : *_nextInterval++;
-    return i;
+    return _nextInterval != _buffer.end( );
+  }
+
+  // Get next interval. Valid iff previous call to has_next_interval returned true
+  interval_t get_next_interval ( )
+  {
+    return *_nextInterval++;
   } // get_next_interval
 
   // Append i to outputfile[ n ]
@@ -217,8 +205,7 @@ public:
         DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
-    (*(this->_outputFiles[ (int) n ])) << i;
-    // (*(_outputFiles[ (int) n ])).write( (char *) (&i), sizeof( interval_t ) );
+    write_interval(this->_outputFiles[ (int) n ], i);
     return true;
   } // add_interval
 
@@ -226,30 +213,26 @@ protected:
   // Read new intervals and store them in _buffer
   virtual void _populate_buffer()
   {
-    for( typename vector< interval_t* >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        if(*it != NULL)
-          delete *it;
-      }
     _buffer.clear( );
 
-    interval_t* i = NULL;
+    interval_t i;
+    bool interval_read= false;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           ( ( this->_inputFile && ((*(this->_inputFile)) >> i ) ) || ( this->_nextInputFile < this->_filenames.size( ) ) ) )
+           (    (    !gzeof(this->_inputFile)
+                  && (interval_read= read_interval( this->_inputFile, i )) )
+             || ( this->_nextInputFile < this->_filenames.size( ) ) )
+           )
       {
-        if( i == NULL )
+        if( !interval_read )
           {
             // end of file
-            this->_inputFile->close( );
-            delete this->_inputFile;
-            this->_inputFile = new std::ifstream( this->_filenames[ this->_nextInputFile++ ].c_str( ),
-                                                  std::ios::binary );
+            gzclose(this->_inputFile);
+            this->_inputFile = gzip_file_t::gzfile_open( this->_filenames[ this->_nextInputFile ], false );
+            this->_nextInputFile++;
           }
         else
           {
             _buffer.push_back( i );
-            i = NULL;
           }
       }
     _nextInterval = _buffer.begin( );
@@ -257,13 +240,12 @@ protected:
 
   virtual void _init_new_outputfiles()
   {
-    for ( vector< string >::iterator it = this->_filenames.begin( ); it != this->_filenames.end( );
+    for ( vector< string >::const_iterator it = this->_filenames.begin( );
+          it != this->_filenames.end( );
           ++it)
       {
-        std::ostringstream outfilename;
-        outfilename << (*it) << "_next";
-        this->_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
-                                                         std::ios::binary | std::ios::app) );
+        gzFile outfile= gzip_file_t::gzfile_open( (*it +"_next"), true );
+        this->_outputFiles.push_back(  outfile );
       }
   }
 };
@@ -276,27 +258,29 @@ template< class interval_t > class IntervalManagerRLE
 {
 private:
   struct IntervalRun {
-    interval_t* _interval; // Interval
+    interval_t  _interval; // Interval
     long        _mult;     // Multiplicity
 
-    IntervalRun() : _interval(NULL), _mult(0) {};
-    IntervalRun(interval_t* t) : _interval(t), _mult(1) {};
-    IntervalRun(interval_t* t, long mult) : _interval(t), _mult(mult) {};
+    IntervalRun() : _interval(), _mult(0) {};
+    IntervalRun(const interval_t& t) : _interval(t), _mult(1) {};
+    IntervalRun(const interval_t& t, long mult) : _interval(t), _mult(mult) {};
   };
 
-  vector< IntervalRun >                     _buffer;        // current intervals
-  typename vector< IntervalRun >::iterator  _nextInterval;     // next interval in buffer
-  vector< IntervalRun >                     _outIntervals;  // Buffer for intervals to store in external memory
+  typedef vector< IntervalRun > buffer_t;
+
+  buffer_t                     _buffer;        // current intervals
+  typename buffer_t::iterator  _nextInterval;     // next interval in buffer
+  buffer_t                     _outIntervals;  // Buffer for intervals to store in external memory
 
 public:
 
   // Instantiate a Manager over filenames files
   // TODO: create a new constructor that accept a prefix (string) and
   //  an int and automagically creates the vector
-  IntervalManagerRLE( vector< string >& filenames )
-    : IntervalManagerI<interval_t>(filenames)
+  IntervalManagerRLE( const vector< string >& filenames )
+    : IntervalManagerI<interval_t>(filenames),
+      _outIntervals(ALPHABET_SIZE)
   {
-    _outIntervals = vector< IntervalRun >(ALPHABET_SIZE);
     _populate_buffer( );
     _init_new_outputfiles( );
   } // IntervalManager
@@ -304,12 +288,6 @@ public:
   // Destructor
   ~IntervalManagerRLE()
   {
-    for( typename vector< IntervalRun >::iterator it = _buffer.begin( );
-         it != _buffer.end( ); ++it )
-      {
-        delete it->_interval;
-        it->_interval = NULL;
-      }
   } // ~IntervalManager
 
   // Delete current intervals, move files from output to input and create new
@@ -320,29 +298,28 @@ public:
       {
         if(_outIntervals[n]._mult !=0)
           {
-            (*(this->_outputFiles[n])) << *(this->_outIntervals[n]._interval);
-            (*(this->_outputFiles[n])).write((char*)&(this->_outIntervals[n]._mult), sizeof(long));
+            write_interval(this->_outputFiles[n], this->_outIntervals[n]._interval);
+            gzwrite(this->_outputFiles[n], (char*)&(this->_outIntervals[n]._mult), sizeof(long));
           }
       }
     IntervalManagerI<interval_t>::swap_files();
   } // swap_files
 
-  // Get next interval. If no intervals are left, return NULL
-  interval_t* get_next_interval ( )
+  bool has_next_interval ( )
   {
     if(_nextInterval == _buffer.end( ) )
       {
         _populate_buffer( );
       }
-    interval_t* i = NULL;
-    if(_buffer.size() == 0)
-      i = NULL;
-    else
-      {
-        i = _nextInterval->_interval;
-        if(--(_nextInterval->_mult) == 0)
-          _nextInterval++;
-      }
+    return _nextInterval != _buffer.end( );
+  }
+
+  // Get next interval. If no intervals are left, return NULL
+  interval_t get_next_interval ( )
+  {
+    interval_t i(_nextInterval->_interval);
+    if(--(_nextInterval->_mult) == 0)
+      _nextInterval++;
     return i;
   } // get_next_interval
 
@@ -354,20 +331,15 @@ public:
         DEBUG_LOG( "ERROR: Can't add interval_t to file #" << n );
         return false;
       }
-    if(_outIntervals[n]._interval == NULL)
-      {
-        interval_t* t = new interval_t(i);
-        _outIntervals[n] = IntervalRun(t);
-      }
-    else if(i == *(_outIntervals[n]._interval))
-        ++(_outIntervals[n]._mult);
+    if (i == _outIntervals[n]._interval)
+      ++(_outIntervals[n]._mult);
     else
       {
-        (*(this->_outputFiles[(int) n])) << *(_outIntervals[n]._interval);
-        (*(this->_outputFiles[(int) n])).write((char *)&(_outIntervals[n]._mult), sizeof(long));
-        delete (_outIntervals[n]._interval);
-        interval_t* t = new interval_t(i);
-        _outIntervals[n] = IntervalRun(t);
+        if (_outIntervals[n]._mult > 0) {
+          write_interval(this->_outputFiles[(int) n], _outIntervals[n]._interval);
+          gzwrite(this->_outputFiles[(int) n], (char *)&(_outIntervals[n]._mult), sizeof(long));
+        }
+        _outIntervals[n] = IntervalRun(i);
       }
     return true;
   } // add_interval
@@ -376,18 +348,15 @@ protected:
   // Initalize new output files
   virtual void _init_new_outputfiles( )
   {
-    for ( vector< string >::iterator it = this->_filenames.begin( ); it != this->_filenames.end( );
+    for ( vector< string >::const_iterator it = this->_filenames.begin( );
+          it != this->_filenames.end( );
           ++it)
       {
-        std::ostringstream outfilename;
-        outfilename << (*it) << "_next";
-        this->_outputFiles.push_back( new std::ofstream( outfilename.str().c_str(),
-                                                         std::ios::binary | std::ios::app) );
+        gzFile outfile= gzip_file_t::gzfile_open( (*it +"_next"), true);
+        this->_outputFiles.push_back(  outfile );
       }
     for(int n = BASE_A; n != ALPHABET_SIZE; ++n)
       {
-        if(_outIntervals[n]._interval != NULL)
-          delete (_outIntervals[n]._interval);
         _outIntervals[n] = IntervalRun();
       }
   } // _init_new_outputfiles
@@ -395,33 +364,27 @@ protected:
   // Read new intervals and store them in _buffer
   virtual void _populate_buffer()
   {
-    for(typename vector< IntervalRun >::iterator it = _buffer.begin();
-        it != _buffer.end(); ++it)
-      {
-        if(it->_interval != NULL)
-          delete it->_interval;
-      }
     _buffer.clear( );
 
-    interval_t* i = NULL;
+    interval_t i;
     long runlength =0;
+    bool interval_read= false;
     while( _buffer.size( ) < IM_BUFFERSIZE &&
-           (( this->_inputFile && ((*(this->_inputFile)) >> i ) && ((*(this->_inputFile)).read((char *)&runlength, sizeof(long)))) ||
-            ( this->_nextInputFile < this->_filenames.size( ))))
+           (   (    !gzeof(this->_inputFile)
+                    && (interval_read= read_interval(this->_inputFile, i ))
+                    && gzread( this->_inputFile, reinterpret_cast<char *>(&runlength),
+                           sizeof(long)) == sizeof(long))
+            || ( this->_nextInputFile < this->_filenames.size( ))))
       {
-        if( i == NULL )
+        if( !interval_read )
           {
             // end of file
-            this->_inputFile->close( );
-            delete this->_inputFile;
-            this->_inputFile = new std::ifstream( this->_filenames[ this->_nextInputFile++ ].c_str( ),
-                                                  std::ios::binary );
+            gzclose(this->_inputFile);
+            this->_inputFile = gzip_file_t::gzfile_open( this->_filenames[ this->_nextInputFile++ ], false);
           }
         else
           {
-            IntervalRun x(i, runlength);
-            _buffer.push_back( x );
-            i = NULL;
+            _buffer.push_back( IntervalRun(i, runlength) );
           }
       }
     _nextInterval = _buffer.begin( );

@@ -30,22 +30,21 @@
 
 #include "edgeLabelIntervalManager.h"
 
-EdgeLabelIntervalManager::EdgeLabelIntervalManager( vector< vector< string > >& filenamesIN )
+EdgeLabelIntervalManager::EdgeLabelIntervalManager( const vector< vector< string > >& filenamesIN )
   : _filenamesIN( filenamesIN )
 {
   DEBUG_LOG_VERBOSE("EdgeLabelIntervalManager::Init");
-  for( vector< vector< string > >::iterator it = _filenamesIN.begin();
+  for( vector< vector< string > >::const_iterator it = _filenamesIN.begin();
        it != _filenamesIN.end(); ++it)
     {
       _edgeManagerVect.push_back( new SameLengthEdgeLabelIntervalManager( (*it) ) );
     }
-  for( vector< SameLengthEdgeLabelIntervalManager* >::size_type i(0); i < _edgeManagerVect.size(); ++i )
+  for( vector< SameLengthEdgeLabelIntervalManager* >::size_type i(0);
+       i < _edgeManagerVect.size(); ++i )
     {
-      EdgeLabelInterval* x = _edgeManagerVect[i]->get_next_interval( );
-      if( x != NULL )
+      if (_edgeManagerVect[i]->has_next_interval())
         {
-          EdgeLabelEntry elbe(*x, i);
-          _pq.push( elbe );
+          _pq.push(EdgeLabelEntry(_edgeManagerVect[i]->get_next_interval( ), i) );
         }
     }
 }
@@ -82,13 +81,12 @@ void EdgeLabelIntervalManager::swap_files( )
   while(!_pq.empty())
       _pq.pop();
 
-  for( vector< SameLengthEdgeLabelIntervalManager* >::size_type i(0); i < _edgeManagerVect.size(); ++i )
+  for( vector< SameLengthEdgeLabelIntervalManager* >::size_type i(0);
+       i < _edgeManagerVect.size(); ++i )
     {
-      EdgeLabelInterval* x = _edgeManagerVect[i]->get_next_interval( );
-      if( x != NULL )
+      if (_edgeManagerVect[i]->has_next_interval())
         {
-          EdgeLabelEntry elbe(*x, i);
-          _pq.push( elbe );
+          _pq.push(EdgeLabelEntry(_edgeManagerVect[i]->get_next_interval( ), i) );
         }
     }
 }
@@ -103,12 +101,8 @@ bool EdgeLabelIntervalManager::get_next_interval( EdgeLabelEntry& e )
   _pq.pop();
 
   // Replace the element
-  EdgeLabelInterval* ei_replacement = _edgeManagerVect[e._len]->get_next_interval();
-  if( ei_replacement != NULL )
-    {
-      EdgeLabelEntry elbe(*ei_replacement, e._len);
-      _pq.push(elbe);
-      ei_replacement = NULL;
-    }
+  if (_edgeManagerVect[e._len]->has_next_interval()) {
+    _pq.push(EdgeLabelEntry(_edgeManagerVect[e._len]->get_next_interval(), e._len));
+  }
   return true;
 }

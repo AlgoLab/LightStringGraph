@@ -89,8 +89,6 @@ void extend_arc_labels( EdgeLabelIntervalManager& edgemgr,
                         const SequenceLength max_len,
                         OutputMultiFileManager& labelOut);
 
-bool equalFirstInterval( const QInterval&, const QInterval& );
-
 struct EPI_t
 {
   vector< vector< NucleoCounter > > _occs;

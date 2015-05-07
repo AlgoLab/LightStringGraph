@@ -27,6 +27,9 @@
  **/
 #include "util.h"
 
+#include <cstring>
+#include <cstdio>
+
 const NuclConv NuclConv::_conv;
 
 NuclConv::NuclConv() {
@@ -76,23 +79,27 @@ struct integer_type<4> {
 // };
 
 template <int byte_num>
-void writelen(ofstream& out, BWTPosition len)
+void writelen(gzFile fout, BWTPosition len)
 {
+  static char intbuff[byte_num*64];
   const uint8_t shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
+  unsigned int bpos= 0;
   do
     {
       typename integer_type<byte_num>::type towrite=(len & mask);
       len >>= shift_amount;
       if (len)
         towrite |= (1ull << shift_amount);
-      out.write((char *)&towrite, byte_num);
+      memcpy(intbuff+bpos, (char *)&towrite, byte_num);
+      bpos += byte_num;
     }
   while(len);
+  gzwrite(fout, intbuff, sizeof(char)*bpos);
 }
 
 template <int byte_num>
-BWTPosition readlen(ifstream& in)
+BWTPosition readlen(gzFile fin)
 {
   const unsigned int shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
@@ -101,8 +108,8 @@ BWTPosition readlen(ifstream& in)
   uint8_t iter=0;
   do{
     partialread =0;
-    in.read((char *)&partialread, byte_num);
-    if(in.gcount() < byte_num)
+    const size_t gcount= gzread(fin, (char *)(&partialread), byte_num);
+    if(gcount != byte_num)
       return 0;
     p |= ((partialread & mask) << (shift_amount * iter));
     ++iter;
@@ -110,24 +117,20 @@ BWTPosition readlen(ifstream& in)
   return p;
 }
 
-ofstream& operator<<( ofstream& out, const QInterval& i )
+void
+write_interval( gzFile fout, const QInterval& i )
 {
-  BWTPosition begin = i.get_begin( );
-  BWTPosition end = i.get_end( );
-  out.write( (char *) &begin, sizeof( BWTPosition ) );
-  writelen<2>(out, end-begin);
-  return out;
+  gzwrite(fout, (char *) &i.begin, sizeof(BWTPosition));
+  writelen<2>(fout, i.size());
 }
 
-ifstream& operator>>( ifstream& in, QInterval*& i )
+bool
+read_interval ( gzFile fin, QInterval& i )
 {
-  BWTPosition begin =0, end=0;
-  in.read((char *) &begin, sizeof( BWTPosition ) );
-  if(in.gcount() == 0) { i = NULL; return in; }
-  end = begin + readlen<2>(in);
-  if(end == begin) i = NULL;
-  else i = new QInterval( begin, end );
-  return in;
+  const size_t gcount= gzread( fin, (char *)&i.begin, sizeof( BWTPosition ));
+  if (gcount != sizeof( BWTPosition) ) { return false; }
+  i.end = i.begin + readlen<2>(fin);
+  return i.size() > 0;
 }
 
 ofstream& operator<<( ofstream& out, const GSAEntry& g )
@@ -142,33 +145,26 @@ ifstream& operator>>( ifstream& in, GSAEntry& g )
   return in;
 }
 
-ofstream& operator<<( ofstream& out, const ArcInterval& a )
+void
+write_interval( gzFile fout, const ArcInterval& a )
 {
-  out << a.es_interval;
-  out.write( reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ) );
-  out << a.seed_int;
-
-  return out;
+  write_interval(fout, a.es_interval);
+  gzwrite( fout, reinterpret_cast<const char *>(&a.ext_len), sizeof( a.ext_len ));
+  write_interval(fout, a.seed_int);
 }
 
-ifstream& operator>>( ifstream& in, ArcInterval*& a )
+bool
+read_interval ( gzFile fin, ArcInterval& a )
 {
-  QInterval* es_int= NULL;
-  in >> es_int;
-  if(es_int == NULL) { a = NULL; return in; }
+  if (!read_interval(fin, a.es_interval)) return false;
 
-  SequenceLength len=0;
-  in.read( reinterpret_cast<char *>(&len), sizeof( SequenceLength ) );
-  if(in.gcount() == 0) { a = NULL; return in; }
+  const size_t readbytes= gzread( fin, reinterpret_cast<char *>(&a.ext_len),
+                                 sizeof( SequenceLength ));
+  if (readbytes != sizeof(SequenceLength) ) { return false; }
 
-  SeedInterval* s= NULL;
-  in >> s;
-  if(s == NULL) { a = NULL; return in; }
+  if (!read_interval(fin, a.seed_int)) { return false; }
 
-  a = new ArcInterval( *es_int, len, *s );
-  delete es_int;
-  delete s;
-  return in;
+  return true;
 }
 
 std::string now( const char* format = "%c" )
@@ -179,39 +175,33 @@ std::string now( const char* format = "%c" )
   return cstr ;
 }
 
-ofstream& operator<<( ofstream& out, const SeedInterval& s )
+void
+write_interval(gzFile fout, const SeedInterval& s )
 {
-  out.write( reinterpret_cast<const char*>(&s.begin), sizeof( SequenceNumber ) );
-  writelen<1>(out, s.len);
-  return out;
+  gzwrite( fout, reinterpret_cast<const char*>(&s.begin), sizeof(SequenceNumber));
+  writelen<1>(fout, s.len);
 }
 
-ifstream& operator>>( ifstream& in, SeedInterval*& s )
+bool
+read_interval ( gzFile fin, SeedInterval& s )
 {
-  SequenceNumber begin =0, len=0;
-  in.read(reinterpret_cast<char*>(&begin), sizeof( SequenceNumber ) );
-  if(in.gcount() == 0) { s = NULL; return in; }
-  len = readlen<1>(in);
-  s = new SeedInterval( begin, len );
-  return in;
+  const size_t gcount= gzread( fin, reinterpret_cast<char *>(&s.begin), sizeof( SequenceNumber ));
+  if (gcount != sizeof(SequenceNumber)) { return false; }
+  s.len = readlen<1>(fin);
+  return true;
 }
 
-ofstream& operator<<( ofstream& out, const EdgeLabelInterval& e )
+void
+write_interval( gzFile fout, const EdgeLabelInterval& e )
 {
-  out << e.get_label( );
-  out << e.get_reverse_label( );
-  return out;
+  write_interval( fout, e.label );
+  write_interval( fout, e.reverse_label );
 }
 
-ifstream& operator>>( ifstream& in, EdgeLabelInterval*& e )
+bool
+read_interval ( gzFile fin, EdgeLabelInterval& e )
 {
-  QInterval *label=NULL, *reverse=NULL;
-  in >> label;
-  if(!label) { e =NULL; return in; }
-  in >> reverse;
-  if(!reverse){ e = NULL; return in; }
-  e = new EdgeLabelInterval( *label, *reverse );
-  delete label;
-  delete reverse;
-  return in;
+  if (!read_interval(fin, e.label)) return false;
+  if (!read_interval(fin, e.reverse_label)) return false;
+  return true;
 }

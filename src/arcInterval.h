@@ -36,8 +36,12 @@
 
 struct SeedInterval
 {
-  const SequenceNumber begin;
-  const SequenceNumber len;
+  SequenceNumber begin;
+  SequenceNumber len;
+
+  SeedInterval()
+    :begin(), len()
+  {}
 
   SeedInterval(const SequenceNumber& begin_,
 					const SequenceNumber& len_)
@@ -48,16 +52,24 @@ struct SeedInterval
   {
     return (this->begin == rhs.begin && this->len == rhs.len);
   }
-  
+
+  SeedInterval& operator= ( const SeedInterval& other ) {
+    begin = other.begin;
+    len = other.len;
+    return *this;
+  }
 };
 
 struct ArcInterval
 {
-  const QInterval es_interval;
-  const SequenceLength ext_len;
-  const SeedInterval seed_int;
+  QInterval es_interval;
+  SequenceLength ext_len;
+  SeedInterval seed_int;
 
-  // Constructor
+  // Constructors
+  ArcInterval()
+    : es_interval(), ext_len(), seed_int()
+  { }
   ArcInterval(const QInterval& es_interval_,
               const SequenceLength& ext_len_,
               const SeedInterval& seed_int_)

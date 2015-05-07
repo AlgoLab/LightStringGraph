@@ -31,35 +31,51 @@
 #ifndef SINGLE_FILE_ITERATOR_H
 #define SINGLE_FILE_ITERATOR_H
 
-#include <fstream>
 #include <string>
-#include <iterator>
 
+#include "file_abstractions.h"
 
-template <typename TFileValue,
-			 typename TValue=TFileValue>
-struct get_value {
-  TValue operator()(const TFileValue& v) {
-	 return TValue(v);
+template <typename TFile,
+          typename TFileValue>
+struct read_value_t {
+
+  template <typename TValue>
+  bool operator()(TFile& _file, TValue& value,
+                  typename std::enable_if< std::is_same<TValue,TFileValue>::value>::type* dummy=0) const {
+    return _file.read(value);
+  }
+
+  template <typename TValue>
+  bool operator()(TFile& _file, TValue& value,
+                  typename std::enable_if< !std::is_same<TValue,TFileValue>::value>::type* dummy=0) const {
+    TFileValue val;
+    const bool result= _file.read(val);
+    if (result) {
+      value= val;
+      return true;
+    }
+    return false;
   }
 };
 
 template <typename TFileValue,
-			 typename TValue=TFileValue,
-			 typename TGetValue=get_value<TFileValue,TValue> >
+          typename TFile,
+          typename TValue=TFileValue,
+          typename TReader=read_value_t<TFile, TFileValue> >
 class SingleFileIterator
-  : public std::iterator< std::input_iterator_tag,
-								  TValue >
 {
+public:
+  typedef TFileValue filevalue_t;
+  typedef TFile file_t;
+  typedef TValue value_t;
+  typedef TReader reader_t;
+
 private:
-  typedef std::istream_iterator<TFileValue> file_iterator_t;
 
-  const file_iterator_t _eoi;
-  TGetValue get_v;
-
-  std::string _filename;
-  std::ifstream _file;
-  file_iterator_t*  _iterator;
+  const reader_t _reader;
+  const std::string _filename;
+  file_t _file;
+  value_t _current_value;
 
   BWTPosition _current_position;
   bool _terminated;
@@ -68,7 +84,7 @@ private:
 public:
   // Constructors
   SingleFileIterator(const std::string& filename)
-		:_filename(filename)
+    :_reader(), _filename(filename)
   {
 	 open();
   }
@@ -81,77 +97,61 @@ public:
 
 
   SingleFileIterator& operator++() {
-	 if (!_terminated) {
-		++_current_position;
-		++(*_iterator);
-		_terminated= (*_iterator == _eoi);
-	 }
-	 return *this;
+    _FAIL_IF_DBG(_terminated);
+    ++_current_position;
+    const bool valid = _reader(_file, _current_value);
+    _terminated = !valid;
+    return *this;
   }
 
 
-  TValue operator*() {
-    _FAIL_IF(_terminated);
-	 return get_v(**_iterator);
+  TValue operator*() const {
+    _FAIL_IF_DBG(_terminated);
+    return _current_value;
   }
 
 
   BWTPosition get_position() const {
-	 return _current_position;
+    return _current_position;
   }
 
 
   void reset() {
-	 close();
-	 open();
+    close();
+    open();
   }
 
 
-// This static method returns a sentinel SingleFileIterator used for testing if the stream is finished.
-  static const SingleFileIterator<TFileValue,TValue,TGetValue>&
-  end() {
-	 static const SingleFileIterator<TFileValue,TValue,TGetValue> _end;
-	 return _end;
+  bool terminated() const {
+    return _terminated;
   }
-
-
-  bool
-  operator==(const SingleFileIterator<TFileValue,TValue,TGetValue>& rhs) const {
-	 return _terminated && rhs._terminated;
-  }
-
-
-  bool
-  operator!=(const SingleFileIterator<TFileValue,TValue,TGetValue>& rhs) const {
-	 return !_terminated || !rhs._terminated;
-  }
-
 
 private:
   // no need of copy ctor nor assignment operator
-  SingleFileIterator(): _terminated(true) { }
-  SingleFileIterator(const SingleFileIterator<TFileValue,TValue,TGetValue>& other) { }
-  SingleFileIterator<TFileValue,TValue,TGetValue>&
-  operator=(const SingleFileIterator<TFileValue,TValue,TGetValue>& other) { return *this; }
+  SingleFileIterator();
+  SingleFileIterator(const SingleFileIterator<TFileValue,TFile,TValue,TReader>&);
+  SingleFileIterator<TFileValue,TValue>&
+  operator=(const SingleFileIterator<TFileValue,TFile,TValue,TReader>&);
 
   void open() {
-	 DEBUG_LOG_VERBOSE("Initializing SingleFileIterator on file: " << _filename);
-	 _file.open(_filename);
-	 _iterator= new file_iterator_t(_file);
-	 _current_position= 0;
-	 _terminated= (*_iterator == _eoi);
+    DEBUG_LOG_VERBOSE("Initializing SingleFileIterator on file: " << _filename);
+    const bool result= _file.open(_filename);
+    if (!result) {
+      DEBUG_LOG("Impossible to open file '" << _filename << "' for reading.");
+      throw std::logic_error(std::string("Impossible to open file '")
+                             + _filename + "' for reading.");
+    }
+    DEBUG_LOG_VERBOSE("File '" << _filename << "' successfully opened.");
+    const bool valid = _reader(_file, _current_value);
+    _current_position= 0;
+    _terminated = !valid;
   }
 
   void close() {
-	 DEBUG_LOG_VERBOSE("Closing SingleFileIterator on file: " << _filename);
-	 if (_iterator != NULL) {
-		delete _iterator;
-		_iterator= NULL;
-	 }
-	 if (_file.is_open())
-		_file.close();
-	 _current_position= 0;
-	 _terminated= true;
+    DEBUG_LOG_VERBOSE("Closing SingleFileIterator on file: " << _filename);
+    _file.close();
+    _current_position= 0;
+    _terminated= true;
   }
 
 };

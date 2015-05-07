@@ -36,6 +36,6 @@
 #include "types.h"
 #include "MultiFileIterator.h"
 
-typedef MultiFileIterator<char> BWTIterator;
+typedef MultiFileIterator<char, auto_file_t> BWTIterator;
 
 #endif

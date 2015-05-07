@@ -36,33 +36,31 @@
 #include <cstdlib>
 
 #include "types.h"
-#include "partialBWTReader.h"
 
-using std::vector;
-using std::string;
-
-// Read a BWT splitted in multiple files
+#include "BWTIterator.h"
 
 class BWTReader
 {
 private:
-  const vector< string > _filenamesIN;       // names of BWT sections
-  unsigned short         _nextBWTFilename;   // index of next BWTFilename in _filenamesIoN
-  partialBWTReader*      _currentBWT;        // current BWT section
-  BWTPosition            _maxPosition;       // MaxPosition of BWT
+  BWTIterator _bwt_it;
+  BWTPosition _maxPosition;
+
+  std::vector< NucleoCounter > _current_pi;
 
 public:
   // Constructor
-  BWTReader ( const vector< string >& filenamesIN );
+  BWTReader ( const std::vector< std::string >& filenamesIN )
+    : _bwt_it(filenamesIN), _maxPosition(0), _current_pi(ALPHABET_SIZE, 0)
+  {
+  }
 
   // Destructor
   ~BWTReader ( ) {
-	 delete _currentBWT;
   }
 
   // Returns current position
   BWTPosition get_position ( ) const {
-    return _currentBWT->get_position();
+    return _bwt_it.get_position();
   }
 
   // Returns max position
@@ -74,29 +72,55 @@ public:
   // Return value:
   // - true if p can be reached
   // - false otherwise
-  bool move_to ( const BWTPosition& p );
+  bool move_to ( const BWTPosition& p ) {
+    while (!_bwt_it.terminated() && (_bwt_it.get_position() < p)) {
+      const Nucleotide _current_nuc= NuclConv::cton(*_bwt_it);
+      ++_current_pi[_current_nuc];
+      ++_bwt_it;
+    }
+    return _bwt_it.get_position() == p;
+  }
 
   // Return PI vector (occurrences of every nucleotide before current position).
-  const vector< NucleoCounter >& get_Pi ( ) const {
-    return _currentBWT->get_Pi ( );
+  const std::vector< NucleoCounter >& get_Pi ( ) const {
+    return _current_pi;
   }
 
   // Return C (count)
-  vector< NucleoCounter > get_C ( );
+  std::vector< NucleoCounter > get_C ( ) {
+    reset();
+    while (!_bwt_it.terminated()) {
+      const Nucleotide _current_nuc= NuclConv::cton(*_bwt_it);
+      ++_current_pi[_current_nuc];
+      ++_bwt_it;
+    }
+    std::vector< NucleoCounter > C(ALPHABET_SIZE, 0);
+    for (size_t i= 1; i<ALPHABET_SIZE; ++i) {
+      C[i] = C[i-1] + _current_pi[i-1];
+    }
+    _maxPosition= _bwt_it.get_position();
+    reset();
+    return C;
+  }
 
   // Reset BWT
-  void reset ( );
+  void reset ( ) {
+    for (size_t i= 0; i<ALPHABET_SIZE; ++i) {
+      _current_pi[i]= 0;
+    }
+    _bwt_it.reset();
+  }
 
   // Get current nucleotide
-  Nucleotide get_current_nucleotide() const;
+  Nucleotide get_current_nucleotide() {
+    return NuclConv::cton(*_bwt_it);
+  }
 
 private:
   // no need of copy ctor nor assignment operator
-  BWTReader ( ) { };
-  BWTReader ( const BWTReader& other )
-  { }
-  BWTReader& operator= ( const BWTReader& other )
-  { return *this; }
+  BWTReader ( );
+  BWTReader ( const BWTReader& );
+  BWTReader& operator= ( const BWTReader& );
 
 };
 

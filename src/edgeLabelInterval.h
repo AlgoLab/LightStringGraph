@@ -33,41 +33,55 @@
 
 #include "q_interval.h"
 
-class EdgeLabelInterval
+struct EdgeLabelInterval
 {
-private:
-  QInterval _forward_interval, _reverse_interval;
+  QInterval label, reverse_label;
 
-public:
-  // Constructor
-  EdgeLabelInterval( const QInterval&, const QInterval& );
-
-  // Destructor
-  ~EdgeLabelInterval( );
-
-  EdgeLabelInterval( const EdgeLabelInterval& other )
-    : _forward_interval(other.get_label()), _reverse_interval(other.get_reverse_label())
+  // Constructors
+  EdgeLabelInterval( )
+    :label(), reverse_label()
+  { };
+  EdgeLabelInterval( const QInterval& forward, const QInterval& reverse )
+    : label( forward ), reverse_label( reverse )
   { };
 
-  // get label
-  const QInterval& get_label( ) const;
-  const QInterval& get_reverse_label( ) const;
+  // Destructor
+  ~EdgeLabelInterval( )
+  { };
+
+  EdgeLabelInterval( const EdgeLabelInterval& other )
+    : label(other.label),
+      reverse_label(other.reverse_label)
+  { };
 
   // Equality operator
-  bool operator==(const EdgeLabelInterval& rhs ) const;
+  bool operator==(const EdgeLabelInterval& rhs ) const {
+    return ((label == rhs.label) &&
+            (reverse_label == rhs.reverse_label));
+  }
 
   // Inequality operator
-  bool operator!=(const EdgeLabelInterval& rhs) const;
+  bool operator!=(const EdgeLabelInterval& rhs) const {
+    return (!((*this) == rhs));
+  }
 
   // Assignement operator
-  EdgeLabelInterval& operator= ( const EdgeLabelInterval& other );
+  EdgeLabelInterval& operator= ( const EdgeLabelInterval& other ) {
+    label = other.label;
+    reverse_label = other.reverse_label;
+    return *this;
+  }
 
-  bool operator>(const EdgeLabelInterval& rhs) const;
-  bool operator<(const EdgeLabelInterval& rhs) const;
+  bool operator>(const EdgeLabelInterval& rhs) const {
+    return (label.begin < rhs.label.begin ||
+            (label.begin == rhs.label.begin &&
+             label.end >= rhs.label.end));
+  }
 
-private:
-  // No need of copu ctor nor assigment operator
-  EdgeLabelInterval( ) : _forward_interval(0,0), _reverse_interval(0, 0) { };
+  bool operator<(const EdgeLabelInterval& rhs) const {
+    return rhs > *this;
+  }
+
 };
 
 #endif
