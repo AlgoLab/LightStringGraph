@@ -37,20 +37,16 @@
 struct SeedInterval
 {
   const SequenceNumber begin;
-  const SequenceNumber end;
+  const SequenceNumber len;
 
   SeedInterval(const SequenceNumber& begin_,
-					const SequenceNumber& end_)
-		:begin(begin_), end(end_)
+					const SequenceNumber& len_)
+		:begin(begin_), len(len_)
   {}
-
-  const size_t size() const {
-	 return end-begin;
-  }
 
   bool operator==(const SeedInterval& rhs) const
   {
-    return (this->begin == rhs.begin && this->end == rhs.end);
+    return (this->begin == rhs.begin && this->len == rhs.len);
   }
   
 };

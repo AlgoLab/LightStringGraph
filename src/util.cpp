@@ -80,7 +80,7 @@ void writelen(ofstream& out, BWTPosition len)
 {
   const uint8_t shift_amount= (byte_num * 8 -1);
   const BWTPosition mask= ((1ull << shift_amount) -1);
-  while(len)
+  do
     {
       typename integer_type<byte_num>::type towrite=(len & mask);
       len >>= shift_amount;
@@ -88,6 +88,7 @@ void writelen(ofstream& out, BWTPosition len)
         towrite |= (1ull << shift_amount);
       out.write((char *)&towrite, byte_num);
     }
+  while(len);
 }
 
 template <int byte_num>
@@ -181,18 +182,17 @@ std::string now( const char* format = "%c" )
 ofstream& operator<<( ofstream& out, const SeedInterval& s )
 {
   out.write( reinterpret_cast<const char*>(&s.begin), sizeof( SequenceNumber ) );
-  writelen<1>(out, s.end-s.begin);
+  writelen<1>(out, s.len);
   return out;
 }
 
 ifstream& operator>>( ifstream& in, SeedInterval*& s )
 {
-  SequenceNumber begin =0, end=0;
+  SequenceNumber begin =0, len=0;
   in.read(reinterpret_cast<char*>(&begin), sizeof( SequenceNumber ) );
   if(in.gcount() == 0) { s = NULL; return in; }
-  end = begin + readlen<1>(in);
-  if(end == begin) s = NULL;
-  else s = new SeedInterval( begin, end );
+  len = readlen<1>(in);
+  s = new SeedInterval( begin, len );
   return in;
 }
 
