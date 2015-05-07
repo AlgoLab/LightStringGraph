@@ -312,7 +312,7 @@ void extend_arc_intervals( const int length,
                                                   sizeof(SequenceNumber));
           arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(currentInterval->seed_int.begin)),
                                                   sizeof(SequenceNumber));
-          const SequenceNumber seedend = currentInterval->seed_int.begin + currentInterval->seed_int.end;
+          const SequenceNumber seedend = currentInterval->seed_int.begin + currentInterval->seed_int.len;
           arcsOut[currentInterval->ext_len].write(reinterpret_cast<const char*>(&(seedend)),
                                                   sizeof(SequenceNumber));
           ++nwarcs;
