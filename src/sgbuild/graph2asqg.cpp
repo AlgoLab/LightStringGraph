@@ -170,13 +170,13 @@ main(const int argc, const char** argv)
       SequenceNumber seq_count= 0;
       if (opts.use_numeric_ids) {
 	while((kseq_read(seq) >= 0) && (seq_count < no_of_reads)) {
-          print_vertex(std::cout, read_pref + boost::lexical_cast<std::string>(seq_count), seq->seq.s);
+          print_vertex(std::cout, read_pref.c_str(), seq_count, seq->seq.s);
           ++seq_count;
         }
       } else {
         while ((kseq_read(seq) >= 0) && (seq_count < no_of_reads)) {
           reads_ids.push_back(seq->name.s);
-          print_vertex(std::cout, boost::lexical_cast<std::string>(seq->name.s), seq->seq.s);
+          print_vertex(std::cout, seq->name.s, seq->seq.s);
 	  ++seq_count;
         }
       }

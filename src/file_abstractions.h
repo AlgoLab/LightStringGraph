@@ -71,11 +71,18 @@ public:
   gzip_file_t() : file(Z_NULL) {}
   ~gzip_file_t() { close(); }
 
-  bool open(const std::string& filename) {
+  explicit gzip_file_t(const std::string& filename,
+                       const bool write_mode= false)
+  : file(Z_NULL)
+  {
+    open(filename, write_mode);
+  }
+
+  bool open(const std::string& filename, const bool write_mode= false) {
     bool result= true;
     if (file != Z_NULL) result= close();
     if (result) {
-      file= gzfile_open(filename, false, false);
+      file= gzfile_open(filename, write_mode, false);
       result= (file != Z_NULL);
     }
     return result;
@@ -106,6 +113,19 @@ public:
     const int byteread= gzread(file, (void*)value, sizeof(TFileValue)*len );
     return byteread/sizeof(TFileValue);
   }
+
+  template <typename TFileValue>
+  bool write(const TFileValue& value) {
+    const int bytewritten= gzwrite(file, (void*)&value, sizeof(TFileValue) );
+    return (bytewritten == sizeof(TFileValue));
+  }
+
+  template <typename TFileValue>
+  size_t write(const TFileValue * const value, const size_t len) {
+    const int bytewritten= gzwrite(file, (void*)&value, sizeof(TFileValue)*len );
+    return bytewritten/sizeof(TFileValue);
+  }
+
 };
 
 
