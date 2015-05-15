@@ -45,8 +45,10 @@ ZLIB_DIR=$(THIRDPARTY_DIR)zlib-$(ZLIB_VER)
 # Boost iostreams detection
 # Used for reading lexicographic permutation of the reads.
 #
+ifeq ($(origin HAS_BOOST_IOSTREAMS), undefined)
 HAS_BOOST_IOSTREAMS_MT:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lboost_iostreams-mt 2> /dev/null && echo yes || echo no)/
 HAS_BOOST_IOSTREAMS:=/$(shell echo "void main() {}" | $(CC) -x c -o /dev/null - -lboost_iostreams 2> /dev/null && echo yes || echo no)/
+endif
 #####################
 
 DEFINES = -DBUFFERED_FILE_BUFFERSIZE=${BUFFERED_FILE_BUFFERSIZE} -DIM_BUFFERSIZE=${IM_BUFFERSIZE}
