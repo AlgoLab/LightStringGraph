@@ -29,7 +29,7 @@
 #ifndef FILE_ABSTRACTIONS_H
 #define FILE_ABSTRACTIONS_H
 
-#include <string>
+#include <cstring>
 #include <cstdlib>
 #include <algorithm>
 #include <type_traits>
@@ -258,7 +258,7 @@ public:
       if (num == 0) {
         return false;
       }
-      memcpy((&value)+byte_copied, buffer+bpos, num);
+      memcpy(((char*)(&value))+byte_copied, buffer+bpos, num);
       byte_copied += num;
       bpos += num;
     }
