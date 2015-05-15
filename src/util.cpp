@@ -55,68 +55,6 @@ NuclConv::NuclConv() {
 }
 
 
-template <int bytenum>
-struct integer_type {
-};
-
-template <>
-struct integer_type<1> {
-  typedef uint8_t type;
-};
-
-template <>
-struct integer_type<2> {
-  typedef uint16_t type;
-};
-template <>
-struct integer_type<4> {
-  typedef uint32_t type;
-};
-// Shift 64 is war
-// template <>
-// struct integer_type<8> {
-//   typedef uint64_t type;
-// };
-
-template <int byte_num>
-void writelen(gzFile fout, BWTPosition len)
-{
-  static char intbuff[byte_num*64];
-  const uint8_t shift_amount= (byte_num * 8 -1);
-  const BWTPosition mask= ((1ull << shift_amount) -1);
-  unsigned int bpos= 0;
-  do
-    {
-      typename integer_type<byte_num>::type towrite=(len & mask);
-      len >>= shift_amount;
-      if (len)
-        towrite |= (1ull << shift_amount);
-      memcpy(intbuff+bpos, (char *)&towrite, byte_num);
-      bpos += byte_num;
-    }
-  while(len);
-  gzwrite(fout, intbuff, sizeof(char)*bpos);
-}
-
-template <int byte_num>
-BWTPosition readlen(gzFile fin)
-{
-  const unsigned int shift_amount= (byte_num * 8 -1);
-  const BWTPosition mask= ((1ull << shift_amount) -1);
-  BWTPosition p =0;
-  typename integer_type<byte_num>::type partialread =0;
-  uint8_t iter=0;
-  do{
-    partialread =0;
-    const size_t gcount= gzread(fin, (char *)(&partialread), byte_num);
-    if(gcount != byte_num)
-      return 0;
-    p |= ((partialread & mask) << (shift_amount * iter));
-    ++iter;
-  }while(partialread & (1ull << shift_amount));
-  return p;
-}
-
 void
 write_interval( gzFile fout, const QInterval& i )
 {

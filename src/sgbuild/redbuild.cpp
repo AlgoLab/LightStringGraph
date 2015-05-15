@@ -50,7 +50,9 @@ struct GZipBuilder {
 
   file_t* operator()(const std::string& name)
   {
-    return new gzip_file_t(name, WRITE_MODE);
+    file_t* res= new gzip_file_t(name, WRITE_MODE);
+    _FAIL_IF(!res->is_open());
+    return res;
   }
 
 };
@@ -247,6 +249,46 @@ parse_cmds(const int argc, const char** argv)
   return opts;
 }
 
+bool write_bucket_elem(gzip_file_t& out_bucketfile,
+                       SequenceNumber arc[4],
+                       BWTPosition label[2],
+                       SequenceLength l) {
+  out_bucketfile.write(arc[0]);
+  out_bucketfile.write_compressed<SequenceNumber, 1>(arc[1]-arc[0]);
+  out_bucketfile.write(arc[2]);
+  out_bucketfile.write_compressed<SequenceNumber, 1>(arc[3]-arc[2]);
+  out_bucketfile.write(label[0]);
+  out_bucketfile.write_compressed<BWTPosition, 2>(label[1]-label[0]);
+  out_bucketfile.write(l);
+  return true;
+}
+
+bool read_bucket_elem(gzip_file_t& in_bucketfile,
+                      SequenceNumber arc[4],
+                      BWTPosition label[2],
+                      SequenceLength& l) {
+  SequenceNumber diff_arc1(0), diff_arc2(0);
+  BWTPosition diff_label(0);
+
+  bool res= in_bucketfile.read(arc[0]);
+  if (!res) return false;
+  in_bucketfile.read_compressed<SequenceNumber, 1>(diff_arc1);
+  arc[1]= arc[0]+diff_arc1;
+
+  res= in_bucketfile.read(arc[2]);
+  if (!res) return false;
+  in_bucketfile.read_compressed<SequenceNumber, 1>(diff_arc2);
+  arc[3]= arc[2]+diff_arc2;
+
+  res= in_bucketfile.read(label[0]);
+  if (!res) return false;
+  in_bucketfile.read_compressed<BWTPosition, 2>(diff_label);
+  label[1]= label[0]+diff_label;
+
+  return in_bucketfile.read(l);
+}
+
+
 void multiplex_intervals(vector<gzip_file_t*>& in_arc_files,
                          vector<gzip_file_t*>& in_label_files,
                          bucket_outfilemanager_t& out_bucketfiles,
@@ -266,17 +308,13 @@ void multiplex_intervals(vector<gzip_file_t*>& in_arc_files,
       orig_sourceend= sourceend;
       sourceend= (bucket_no+1)*max_bucket_length;
       while (sourceend<orig_sourceend) {
-        out_bucketfiles[bucket_no].write(arc);
-        out_bucketfiles[bucket_no].write(label);
-        out_bucketfiles[bucket_no].write(l);
+        write_bucket_elem(out_bucketfiles[bucket_no], arc, label, l);
         sourcebegin= sourceend;
         sourceend += max_bucket_length;
         ++bucket_no;
       }
       sourceend= orig_sourceend;
-      out_bucketfiles[bucket_no].write(arc);
-      out_bucketfiles[bucket_no].write(label);
-      out_bucketfiles[bucket_no].write(l);
+      write_bucket_elem(out_bucketfiles[bucket_no], arc, label, l);
     }
   }
 }
@@ -296,9 +334,7 @@ void reduce_bucket(EndPosManager& eomgr,
   SequenceLength l;
   SequenceNumber &destbegin= arc[0], &destend= arc[1];
   SequenceNumber &sourcebegin= arc[2], &sourceend= arc[3];
-  while (in_bucketfile.read(reinterpret_cast<char*>(&arc), sizeof(arc)) &&
-         in_bucketfile.read(reinterpret_cast<char*>(&label), sizeof(label)) &&
-         in_bucketfile.read(reinterpret_cast<char*>(&l), sizeof(l))) {
+  while (read_bucket_elem(in_bucketfile, arc, label, l)) {
     _FAIL_IF((sourceend - base_vertex > bucket_length));
     for(SequenceNumber src= sourcebegin; src < sourceend; ++src) {
       for(SequenceNumber dst= destbegin; dst < destend; ++dst) {

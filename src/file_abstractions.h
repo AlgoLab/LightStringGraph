@@ -36,6 +36,9 @@
 
 #include <zlib.h>
 
+#include "types.h"
+#include "util_log.h"
+
 // We need zlib >= 1.2.5 for transparent writing
 #if ZLIB_VERNUM < 0x1250
 #error zlib >= 1.2.5 is required
@@ -46,6 +49,68 @@
 
 // Never write a compressed file ("transparent" writing)
 #define GZFILE_WRITE_MODE "wTb"
+
+template <int bytenum>
+struct integer_type {
+};
+
+template <>
+struct integer_type<1> {
+  typedef uint8_t type;
+};
+
+template <>
+struct integer_type<2> {
+  typedef uint16_t type;
+};
+template <>
+struct integer_type<4> {
+  typedef uint32_t type;
+};
+// Shift 64 is war
+// template <>
+// struct integer_type<8> {
+//   typedef uint64_t type;
+// };
+
+template <int byte_num>
+void writelen(gzFile fout, BWTPosition len)
+{
+  static char intbuff[byte_num*64];
+  const uint8_t shift_amount= (byte_num * 8 -1);
+  const BWTPosition mask= ((1ull << shift_amount) -1);
+  unsigned int bpos= 0;
+  do
+    {
+      typename integer_type<byte_num>::type towrite=(len & mask);
+      len >>= shift_amount;
+      if (len)
+        towrite |= (1ull << shift_amount);
+      memcpy(intbuff+bpos, (char *)&towrite, byte_num);
+      bpos += byte_num;
+    }
+  while(len);
+  gzwrite(fout, intbuff, sizeof(char)*bpos);
+}
+
+template <int byte_num>
+BWTPosition readlen(gzFile fin)
+{
+  const unsigned int shift_amount= (byte_num * 8 -1);
+  const BWTPosition mask= ((1ull << shift_amount) -1);
+  BWTPosition p =0;
+  typename integer_type<byte_num>::type partialread =0;
+  uint8_t iter=0;
+  do{
+    partialread =0;
+    const size_t gcount= gzread(fin, (char *)(&partialread), byte_num);
+    if(gcount != byte_num)
+      return 0;
+    p |= ((partialread & mask) << (shift_amount * iter));
+    ++iter;
+  }while(partialread & (1ull << shift_amount));
+  return p;
+}
 
 class gzip_file_t {
 private:
@@ -102,6 +167,10 @@ public:
     return result;
   }
 
+  bool is_open() const {
+    return (file != Z_NULL);
+  }
+
   template <typename TFileValue>
   bool read(TFileValue& value) {
     const int byteread= gzread(file, (void*)&value, sizeof(TFileValue) );
@@ -126,6 +195,19 @@ public:
     return bytewritten/sizeof(TFileValue);
   }
 
+  template <typename TFileValue, int byte_num>
+  void write_compressed(const TFileValue value) {
+    static_assert(std::is_integral<TFileValue>::value && sizeof(TFileValue)<=sizeof(BWTPosition),
+                  "write_compressed can be used only for integral types of size at most that of BWTPosition");
+    writelen<byte_num>(file, value);
+  }
+
+  template <typename TFileValue, int byte_num>
+  void read_compressed(TFileValue& value) {
+    static_assert(std::is_integral<TFileValue>::value && sizeof(TFileValue)<=sizeof(BWTPosition),
+                  "read_compressed can be used only for integral types of size at most that of BWTPosition");
+    value= readlen<byte_num>(file);
+  }
 };
 
 
