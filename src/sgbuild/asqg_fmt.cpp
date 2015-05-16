@@ -29,8 +29,16 @@
 
 void
 print_vertex(std::ostream& out,
-             const std::string& name, const char* seq) {
-  out << "VT" << ASQG_FIELD_SEP << name << ASQG_FIELD_SEP << seq << '\n';
+             const char* name, const char* seq) {
+  out << "VT" ASQG_FIELD_SEP_STR << name << ASQG_FIELD_SEP << seq << '\n';
+}
+
+
+void
+print_vertex(std::ostream& out,
+             const char* prefix, const SequenceNumber id,
+             const char* seq) {
+  out << "VT" ASQG_FIELD_SEP_STR << prefix << id << ASQG_FIELD_SEP << seq << '\n';
 }
 
 static void
@@ -62,7 +70,7 @@ print_edge(std::ostream& out,
   // 10. number of differences in overlap (0 for perfect overlaps, which is the default).
   const bool reverse_source = (reverse & 0b1);
   const bool reverse_dest   = (reverse & 0b10);
-  out << "ED" << ASQG_FIELD_SEP
+  out << "ED" ASQG_FIELD_SEP_STR
       << source_id << ' '
       << dest_id << ' ';
   if(!reverse_source)
@@ -75,7 +83,7 @@ print_edge(std::ostream& out,
     print_entry(out, 0, readslen - overlap -1, readslen);
 
   if(reverse_source ^ reverse_dest)
-    out << "1 0" << std::endl;
+    out << "1 0" << '\n';
   else
-    out << "0 0" << std::endl;
+    out << "0 0" << '\n';
 }

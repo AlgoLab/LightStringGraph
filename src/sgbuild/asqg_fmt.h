@@ -35,10 +35,16 @@
 #include "types.h"
 
 #define ASQG_FIELD_SEP '\t'
+#define ASQG_FIELD_SEP_STR "\t"
 
 void
 print_vertex(std::ostream& out,
-             const std::string& name, const char* seq);
+             const char* name, const char* seq);
+
+void
+print_vertex(std::ostream& out,
+             const char* prefix, const SequenceNumber id,
+             const char* seq);
 
 void
 print_edge(std::ostream& out,
