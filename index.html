@@ -1,37 +1,25 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en-us">
   <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="LightStringGraph : Lightweight String Graph Construction">
-
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>LightStringGraph</title>
+    <meta charset="UTF-8">
+    <title>LightStringGraph by AlgoLab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
-
   <body>
+    <section class="page-header">
+      <h1 class="project-name">LightStringGraph</h1>
+      <h2 class="project-tagline">Lightweight String Graph Construction</h2>
+      <a href="https://github.com/AlgoLab/LightStringGraph" class="btn">View on GitHub</a>
+      <a href="https://github.com/AlgoLab/LightStringGraph/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/AlgoLab/LightStringGraph/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/AlgoLab/LightStringGraph">View on GitHub</a>
-
-          <h1 id="project_title">LightStringGraph</h1>
-          <h2 id="project_tagline">Lightweight String Graph Construction</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/AlgoLab/LightStringGraph/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/AlgoLab/LightStringGraph/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1>
+    <section class="main-content">
+      <h1>
 <a id="lightstringgraph" class="anchor" href="#lightstringgraph" aria-hidden="true"><span class="octicon octicon-link"></span></a>LightStringGraph</h1>
 
 <p>Lightweight String Graph Construction</p>
@@ -44,12 +32,12 @@ Please contact <a href="http://algolab.eu/people/previtali/">Marco Previtali</a>
 
 <p>The software is composed of three different tools: <code>lsg</code> (light (string) overlap graph), <code>redbuild</code> (string graph build), and <code>graph2asqg</code> (native graph format to ASQG).</p>
 
-<p>To build both lsg and redbuild simply move in the root directory of the project and run <code>make all</code>.</p>
+<p>To build all the tools simply move in the root directory of the project and run <code>make all</code>.</p>
 
-<p>If you want to try out the software on some (simulated or real) reads follow this steps:</p>
+<p>If you want to try out the software on some (simulated or real) reads follow these steps:</p>
 
 <ol>
-<li>given a FASTA file <code>a.fa</code> containing <code>n</code> reads produce another FASTA file <code>b.fa</code> containing <code>2n</code> reads s.t. reads between position 1 and n are the same as <code>a.fa</code> and reads between position n+1 and 2n are the reverse complementd (for <code>1 &lt;= i &lt;= n</code>read in position <code>n+i</code> should be the reverse complement of read in position <code>i</code>)</li>
+<li>given a FASTA file <code>a.fa</code> containing <code>n</code> reads produce another FASTA file <code>b.fa</code> containing <code>2n</code> reads s.t. reads between position <code>1</code> and <code>n</code> are the same as those in <code>a.fa</code> and reads between position <code>n+1</code> and <code>2n</code> are their reverse and complement (for <code>1 &lt;= i &lt;= n</code>, read in position <code>n+i</code> should be the reverse complement of read in position <code>i</code>)</li>
 <li>download and compile <a href="https://github.com/AlgoLab/BEETL">BEETL</a> (<strong>please note that this is not the original repository</strong>)</li>
 <li>compile LightStringGraph <code>cd &lt;LSGPATH&gt; &amp;&amp; make all</code>
 </li>
@@ -57,24 +45,22 @@ Please contact <a href="http://algolab.eu/people/previtali/">Marco Previtali</a>
 </li>
 <li>run LightStringGraph <code>&lt;LSGPATH&gt;/bin/lsg -B &lt;BWTPrefix&gt; -T &lt;Tau&gt; -C &lt;CycNum&gt;</code> where <code>&lt;Tau&gt;</code> is the minimum overlap between reads and <code>&lt;CycNum&gt; &gt;= &lt;reads length&gt; - &lt;Tau&gt;</code>
 </li>
-<li>run redbuild <code>&lt;LSGPATH&gt;/bin/redbuild -b &lt;BWTPrefix&gt; -r a.fa -m &lt;CycNum&gt;+1</code>
+<li>run redbuild <code>&lt;LSGPATH&gt;/bin/redbuild -b &lt;BWTPrefix&gt; -r b.fa -m &lt;CycNum&gt;+1</code>
 </li>
 <li>optionally run graph2asqg <code>&lt;LSGPATH&gt;/bin/graph2asqg -b &lt;BWTPrefix&gt; -r b.fa -l &lt;readsLength&gt;</code> and redirect STDOUT (the string graph in the <a href="https://github.com/jts/sga/wiki/ASQG-Format">ASQG format</a>) to a file (you can compress it on the fly).</li>
 </ol>
 
-<p><strong>If <code>lsg</code> crashes and produces a logic error try to raise the limit of file descriptor for the user running that command (delete all the <code>*.tmplsg.*</code> files before running <code>lsg</code> again)</strong></p>
-      </section>
-    </div>
+<p><strong>If <code>lsg</code> crashes and produces a logic error try to raise the limit on the maximum number of open file descriptors for the user running that command (for example, with the <code>bash</code> built-in <code>ulimit -n</code>) and delete all the <code>*.tmplsg.*</code> files before running <code>lsg</code> again.</strong></p>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">LightStringGraph maintained by <a href="https://github.com/AlgoLab">AlgoLab</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/AlgoLab/LightStringGraph">LightStringGraph</a> is maintained by <a href="https://github.com/AlgoLab">AlgoLab</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
       </footer>
-    </div>
 
-    
+    </section>
 
+  
   </body>
 </html>
+
